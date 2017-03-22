@@ -1,8 +1,8 @@
 package org.pudding.transport.netty;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.ServerChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.pudding.transport.options.Option;
@@ -14,7 +14,7 @@ import org.pudding.transport.options.Option;
  */
 public class DefaultAcceptConfig extends NettyConfig {
 
-    private static Class<? extends Channel> channelClass = NioServerSocketChannel.class;
+    private static Class<? extends ServerChannel> channelClass = NioServerSocketChannel.class;
 
     private static ChannelInitializer initializer = new ChannelInitializer<SocketChannel>() {
         @Override

@@ -46,19 +46,25 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
     }
 
     @Override
-    public void bind(int port) throws InterruptedException, IllegalOptionException {
+    public void bind(int port) {
         bind(new InetSocketAddress(port));
     }
 
     @Override
-    public void bind(String host, int port) throws InterruptedException, IllegalOptionException {
+    public void bind(String host, int port) {
         bind(new InetSocketAddress(host, port));
     }
 
     @Override
-    public void bind(SocketAddress localAddress) throws InterruptedException, IllegalOptionException {
+    public void bind(SocketAddress localAddress) {
         this.localAddress = localAddress;
-        doBind();
+        try {
+            doBind();
+        } catch (InterruptedException e) {
+            logger.warn("bind exception", e);
+        } finally {
+            shutdownGracefully();
+        }
     }
 
     @SuppressWarnings("unchecked")

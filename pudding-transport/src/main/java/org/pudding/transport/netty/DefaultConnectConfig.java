@@ -13,6 +13,7 @@ import org.pudding.transport.options.Option;
  * @author Yohann.
  */
 public class DefaultConnectConfig extends NettyConfig {
+
     private static Class<? extends Channel> channelClass = NioSocketChannel.class;
 
     private static ChannelInitializer initializer = new ChannelInitializer<SocketChannel>() {

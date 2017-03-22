@@ -21,7 +21,7 @@ public interface Acceptor {
      *
      * @param port
      */
-    void bind(int port) throws Exception;
+    void bind(int port);
 
     /**
      * 绑定本地，启动监听.
@@ -29,14 +29,14 @@ public interface Acceptor {
      * @param host
      * @param port
      */
-    void bind(String host, int port) throws Exception;
+    void bind(String host, int port);
 
     /**
      * 绑定本地，启动监听.
      *
      * @param local
      */
-    void bind(SocketAddress local) throws Exception;
+    void bind(SocketAddress local);
 
     /**
      * 返回配置对象Config.
