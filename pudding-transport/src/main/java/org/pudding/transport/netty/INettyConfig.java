@@ -2,7 +2,6 @@ package org.pudding.transport.netty;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
 import io.netty.channel.socket.SocketChannel;
 import org.pudding.transport.abstraction.Config;
 import org.pudding.transport.options.Option;
@@ -45,12 +44,12 @@ public interface INettyConfig extends Config {
      *
      * @param channelClass
      */
-    INettyConfig channel(Class<? extends ServerChannel> channelClass);
+    INettyConfig channel(Class channelClass);
 
     /**
      * @return channel class.
      */
-    Class<? extends ServerChannel> channel();
+    Class channel();
 
     /**
      * Config ChannelInitializer.

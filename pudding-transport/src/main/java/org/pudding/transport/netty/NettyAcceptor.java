@@ -3,12 +3,8 @@ package org.pudding.transport.netty;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.log4j.Logger;
 import org.pudding.transport.abstraction.Config;
-import org.pudding.transport.abstraction.Future;
 import org.pudding.transport.exception.IllegalOptionException;
 import org.pudding.transport.options.Option;
 
@@ -32,8 +28,7 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
      * Default NettyConfig.
      */
     public NettyAcceptor() {
-        nettyConfig = new NettyConfig();
-        initConfg();
+        nettyConfig = new DefaultAcceptConfig();
     }
 
     /**
@@ -45,46 +40,29 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
         this.nettyConfig = nettyConfig;
     }
 
-    /**
-     * Init default NettyConfig.
-     */
-    private void initConfg() {
-        validate(nettyConfig);
-
-        nettyConfig.bossGroup(new NioEventLoopGroup(1))
-                .workerGroup(new NioEventLoopGroup())
-                .channel(NioServerSocketChannel.class)
-                .childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel ch) throws Exception {
-                        nettyConfig.addHandlers(ch);
-                    }
-                });
-        nettyConfig.option(Option.SO_KEEPALIVE, true);
-    }
-
     @Override
     public SocketAddress localAddress() {
         return localAddress;
     }
 
     @Override
-    public Future bind(int port) throws InterruptedException, IllegalOptionException {
-        return bind(new InetSocketAddress(port));
+    public void bind(int port) throws InterruptedException, IllegalOptionException {
+        bind(new InetSocketAddress(port));
     }
 
     @Override
-    public Future bind(String host, int port) throws InterruptedException, IllegalOptionException {
-        return bind(new InetSocketAddress(host, port));
+    public void bind(String host, int port) throws InterruptedException, IllegalOptionException {
+        bind(new InetSocketAddress(host, port));
     }
 
     @Override
-    public Future bind(SocketAddress localAddress) throws InterruptedException, IllegalOptionException {
+    public void bind(SocketAddress localAddress) throws InterruptedException, IllegalOptionException {
         this.localAddress = localAddress;
-        return doBind();
+        doBind();
     }
 
-    private Future doBind() throws InterruptedException, IllegalOptionException {
+    @SuppressWarnings("unchecked")
+    private void doBind() throws InterruptedException, IllegalOptionException {
         validate(localAddress, bootstrap);
         bootstrap.group(bossGroup(), workerGroup())
                 .channel(channel())
@@ -95,12 +73,9 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
         }
 
         ChannelFuture future = bootstrap.bind(localAddress).sync();
-
         logger.info("Server has started, listening on " + localAddress);
 
         future.channel().closeFuture().sync();
-
-        return null;
     }
 
     private boolean setOption() {
@@ -190,7 +165,7 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
     }
 
     @Override
-    public Class<? extends ServerChannel> channel() {
+    public Class channel() {
         return nettyConfig.channel();
     }
 
