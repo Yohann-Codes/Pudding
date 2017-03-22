@@ -1,152 +1,220 @@
 package org.pudding.transport.netty;
 
-import org.pudding.transport.Options;
-import org.pudding.transport.SevSocketOption;
-import org.pudding.transport.SocketOption;
-import org.pudding.transport.abstraction.Acceptor;
-import org.pudding.transport.abstraction.PudChannelFuture;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.apache.log4j.Logger;
+import org.pudding.transport.abstraction.Config;
+import org.pudding.transport.abstraction.Future;
+import org.pudding.transport.exception.IllegalOptionException;
+import org.pudding.transport.options.Option;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Map;
 
 /**
  * 基于Netty的Acceptor实现.
  *
  * @author Yohann.
  */
-public class NettyAcceptor extends Options implements Acceptor {
+public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
+
+    private static final Logger logger = Logger.getLogger(NettyAcceptor.class);
+
+    private INettyConfig nettyConfig;
+    private SocketAddress localAddress;
+
+    /**
+     * Default NettyConfig.
+     */
+    public NettyAcceptor() {
+        nettyConfig = new NettyConfig();
+        initConfg();
+    }
+
+    /**
+     * Custom NettyConfig.
+     *
+     * @param nettyConfig
+     */
+    public NettyAcceptor(INettyConfig nettyConfig) {
+        this.nettyConfig = nettyConfig;
+    }
+
+    /**
+     * Init default NettyConfig.
+     */
+    private void initConfg() {
+        validate(nettyConfig);
+
+        nettyConfig.bossGroup(new NioEventLoopGroup(1))
+                .workerGroup(new NioEventLoopGroup())
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel ch) throws Exception {
+                        nettyConfig.addHandlers(ch);
+                    }
+                });
+        nettyConfig.option(Option.SO_KEEPALIVE, true);
+    }
 
     @Override
-    public PudChannelFuture bind(int port) {
+    public SocketAddress localAddress() {
+        return localAddress;
+    }
+
+    @Override
+    public Future bind(int port) throws InterruptedException, IllegalOptionException {
         return bind(new InetSocketAddress(port));
     }
 
     @Override
-    public PudChannelFuture bind(String host, int port) {
+    public Future bind(String host, int port) throws InterruptedException, IllegalOptionException {
         return bind(new InetSocketAddress(host, port));
     }
 
     @Override
-    public PudChannelFuture bind(SocketAddress local) {
+    public Future bind(SocketAddress localAddress) throws InterruptedException, IllegalOptionException {
+        this.localAddress = localAddress;
+        return doBind();
+    }
+
+    private Future doBind() throws InterruptedException, IllegalOptionException {
+        validate(localAddress, bootstrap);
+        bootstrap.group(bossGroup(), workerGroup())
+                .channel(channel())
+                .childHandler(childHandler());
+
+        if (!setOption()) {
+            throw new IllegalOptionException("setOption Exception");
+        }
+
+        ChannelFuture future = bootstrap.bind(localAddress).sync();
+
+        logger.info("Server has started, listening on " + localAddress);
+
+        future.channel().closeFuture().sync();
+
         return null;
     }
 
-    @Override
-    public <T> Acceptor sevSocketOptions(SevSocketOption<T> option, T value) {
-        validate(option, value);
-        option.setValue(value);
+    private boolean setOption() {
+        // parent
+        Map<Option<?>, Object> options = nettyConfig.options();
+        for (Map.Entry<Option<?>, Object> entry : options.entrySet()) {
+            Option<?> option = entry.getKey();
+            Object value = entry.getValue();
+            if (option == Option.SO_BACKLOG) {
+                parent.setSoBacklog((Integer) value);
+            } else if (option == Option.SO_REUSEADDR) {
+                parent.setSoReuseaddr((Boolean) value);
+            } else if (option == Option.SO_RCVBUF) {
+                parent.setSoRcvbuf((Integer) value);
+            } else {
+                setOption0(parent, option, value);
+            }
+        }
 
-        if (option == SevSocketOption.SO_TIMEOUT) {
-            sevSocketOptionMap.put(SO_TIMEOUT, option);
-        } else if (option == SevSocketOption.SO_BACKLOG) {
-            sevSocketOptionMap.put(SO_BACKLOG, option);
-        } else if (option == SevSocketOption.SO_RCVBUF) {
-            sevSocketOptionMap.put(SO_RCVBUF, option);
-        } else if (option == SevSocketOption.SO_REUSEADDR) {
-            sevSocketOptionMap.put(SO_REUSEADDR, option);
+        // child
+        Map<Option<?>, Object> childOptions = nettyConfig.childOptions();
+        for (Map.Entry<Option<?>, Object> entry : childOptions.entrySet()) {
+            Option<?> option = entry.getKey();
+            Object value = entry.getValue();
+            if (option == Option.SO_SNDBUF) {
+                child.setSoSndbuf((Integer) value);
+            } else if (option == Option.SO_RCVBUF) {
+                child.setSoRcvbuf((Integer) value);
+            } else if (option == Option.TCP_NODELAY) {
+                child.setTcpNodelay((Boolean) value);
+            } else if (option == Option.SO_KEEPALIVE) {
+                child.setSoKeepalive((Boolean) value);
+            } else if (option == Option.SO_KEEPALIVE) {
+                child.setSoReuseaddr((Boolean) value);
+            } else if (option == Option.SO_LINGER) {
+                child.setSoLinger((Integer) value);
+            } else {
+                setOption0(child, option, value);
+            }
+        }
+
+        return true;
+    }
+
+    private boolean setOption0(Netty netty, Option<?> option, Object value) {
+        if (option == Option.CONNECT_TIMEOUT_MILLIS) {
+            netty.setConnectTimeoutMillis((Integer) value);
+        } else if (option == Option.WRITE_SPIN_COUNT) {
+            netty.setWriteSpinCount((Integer) value);
+        } else if (option == Option.ALLOCATOR) {
+            netty.setAllocator((ByteBufAllocator) value);
+        } else if (option == Option.RCVBUF_ALLOCATOR) {
+            netty.setRcvbufAllocator((RecvByteBufAllocator) value);
+        } else if (option == Option.AUTO_READ) {
+            netty.setAutoRead((Boolean) value);
+        } else if (option == Option.WRITE_BUFFER_WATER_MARK) {
+            netty.setWriteBufferWaterMark((WriteBufferWaterMark) value);
+        } else if (option == Option.MESSAGE_SIZE_ESTIMATOR) {
+            netty.setMessageSizeEstimator((MessageSizeEstimator) value);
+        } else if (option == Option.SINGLE_EVENTEXECUTOR_PER_GROUP) {
+            netty.setSingleEventexecutorPerGroup((Boolean) value);
         } else {
-            throw new IllegalArgumentException("not support option");
+            return false;
         }
-        return this;
+        return true;
     }
 
     @Override
-    public <T> T sevSocketOption(SevSocketOption<T> option) {
-        validate(option);
-        SevSocketOption<?> sevSocketOption = null;
-
-        if (option == SevSocketOption.SO_TIMEOUT) {
-            sevSocketOption = sevSocketOptionMap.get(SO_TIMEOUT);
-        } else if (option == SevSocketOption.SO_BACKLOG) {
-            sevSocketOption = sevSocketOptionMap.get(SO_BACKLOG);
-        } else if (option == SevSocketOption.SO_RCVBUF) {
-            sevSocketOption = sevSocketOptionMap.get(SO_RCVBUF);
-        } else if (option == SevSocketOption.SO_REUSEADDR) {
-            sevSocketOption = sevSocketOptionMap.get(SO_REUSEADDR);
-        } else {
-            throw new IllegalArgumentException("not config option");
-        }
-
-        return (T) sevSocketOption.getValue();
+    public Config config() {
+        return nettyConfig;
     }
 
     @Override
-    public <T> Acceptor socketOptions(SocketOption<T> option, T value) {
-        validate(option, value);
-        option.setValue(value);
-
-        if (option == SocketOption.SO_TIMEOUT) {
-            socketOptionMap.put(SO_TIMEOUT, option);
-        } else if (option == SocketOption.SO_SNDBUF) {
-            socketOptionMap.put(SO_SNDBUF, option);
-        } else if (option == SocketOption.SO_RCVBUF) {
-            socketOptionMap.put(SO_RCVBUF, option);
-        } else if (option == SocketOption.TCP_NODELAY) {
-            socketOptionMap.put(TCP_NODELAY, option);
-        } else if (option == SocketOption.SO_KEEPALIVE) {
-            socketOptionMap.put(SO_KEEPALIVE, option);
-        } else if (option == SocketOption.SO_LINGER) {
-            socketOptionMap.put(SO_LINGER, option);
-        } else {
-            throw new IllegalArgumentException("not support option");
-        }
-        return this;
+    public void shutdownGracefully() {
+        bossGroup().shutdownGracefully();
+        workerGroup().shutdownGracefully();
     }
 
     @Override
-    public <T> T socketOption(SocketOption<T> option) {
-        validate(option);
-        SocketOption<?> socketOption = null;
-
-        if (option == SocketOption.SO_TIMEOUT) {
-            socketOption = socketOptionMap.get(SO_TIMEOUT);
-        } else if (option == SocketOption.SO_SNDBUF) {
-            socketOption = socketOptionMap.get(SO_SNDBUF);
-        } else if (option == SocketOption.SO_RCVBUF) {
-            socketOption = socketOptionMap.get(SO_RCVBUF);
-        } else if (option == SocketOption.TCP_NODELAY) {
-            socketOption = socketOptionMap.get(TCP_NODELAY);
-        } else if (option == SocketOption.SO_KEEPALIVE) {
-            socketOption = socketOptionMap.get(SO_KEEPALIVE);
-        } else if (option == SocketOption.SO_LINGER) {
-            socketOption = socketOptionMap.get(SO_LINGER);
-        } else {
-            throw new IllegalArgumentException("not config option");
-        }
-        return (T) socketOption.getValue();
+    public EventLoopGroup bossGroup() {
+        return nettyConfig.bossGroup();
     }
 
     @Override
-    public <T> Acceptor otherOptions(NettyOption<T> option, T value) {
-        return null;
+    public EventLoopGroup workerGroup() {
+        return nettyConfig.workerGroup();
     }
 
     @Override
-    public <T> T otherOption(NettyOption<T> option) {
-        return null;
+    public Class<? extends ServerChannel> channel() {
+        return nettyConfig.channel();
     }
 
-    private <T> void validate(SevSocketOption<T> option, T value) {
-        if (option == null || value == null) {
-            throw new NullPointerException("option || value");
+    @Override
+    public ChannelInitializer childHandler() {
+        return nettyConfig.childHandler();
+    }
+
+    private void validate(INettyConfig INettyConfig) {
+        if (INettyConfig == null) {
+            throw new NullPointerException("nettyConfig == null");
         }
     }
 
-    private <T> void validate(SevSocketOption<T> option) {
-        if (option == null) {
-            throw new NullPointerException("option");
+    private void validate(SocketAddress localAddress, ServerBootstrap bootstrap) {
+        if (localAddress == null) {
+            throw new NullPointerException("localAddress == null");
         }
+        validate(bootstrap);
     }
 
-    private <T> void validate(SocketOption<T> option, T value) {
-        if (option == null || value == null) {
-            throw new NullPointerException("option || value");
-        }
-    }
-
-    private <T> void validate(SocketOption<T> option) {
-        if (option == null) {
-            throw new NullPointerException("option");
+    private void validate(ServerBootstrap bootstrap) {
+        if (bootstrap == null) {
+            throw new NullPointerException("bootstrap == null");
         }
     }
 }

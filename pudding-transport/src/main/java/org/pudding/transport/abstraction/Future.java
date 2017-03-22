@@ -5,5 +5,5 @@ package org.pudding.transport.abstraction;
  *
  * @author Yohann.
  */
-public interface PudChannelFuture {
+public interface Future {
 }
