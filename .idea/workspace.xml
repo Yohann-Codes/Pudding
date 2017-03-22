@@ -4,14 +4,7 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ba44e7-943b-4631-a75d-8bee941a9fae" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-transport/src/main/java/org/pudding/transport/abstraction/Acceptor.java" afterPath="$PROJECT_DIR$/pudding-transport/src/main/java/org/pudding/transport/abstraction/Acceptor.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-transport/src/main/java/org/pudding/transport/netty/DefaultAcceptConfig.java" afterPath="$PROJECT_DIR$/pudding-transport/src/main/java/org/pudding/transport/netty/DefaultAcceptConfig.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-transport/src/main/java/org/pudding/transport/netty/DefaultConnectConfig.java" afterPath="$PROJECT_DIR$/pudding-transport/src/main/java/org/pudding/transport/netty/DefaultConnectConfig.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-transport/src/main/java/org/pudding/transport/netty/NettyAcceptor.java" afterPath="$PROJECT_DIR$/pudding-transport/src/main/java/org/pudding/transport/netty/NettyAcceptor.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-transport/src/main/java/org/pudding/transport/test/Test.java" afterPath="$PROJECT_DIR$/pudding-transport/src/main/java/org/pudding/transport/test/Test.java" />
-    </list>
+    <list default="true" id="34ba44e7-943b-4631-a75d-8bee941a9fae" name="Default" comment="" />
     <ignored path="Pudding.iws" />
     <ignored path=".idea/workspace.xml" />
     <ignored path="$PROJECT_DIR$/out/" />
