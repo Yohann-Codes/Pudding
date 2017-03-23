@@ -9,18 +9,16 @@ import org.pudding.transport.options.Option;
 import java.util.Map;
 
 /**
- * Netty配置接口.
- *
  * @author Yohann.
  */
-public interface INettyConfig extends Config {
+public interface IAcceptNettyConfig extends Config {
 
     /**
      * Config bossGroup.
      *
      * @param bossGroup
      */
-    INettyConfig bossGroup(EventLoopGroup bossGroup);
+    IAcceptNettyConfig bossGroup(EventLoopGroup bossGroup);
 
     /**
      * @return bossGroup.
@@ -32,7 +30,7 @@ public interface INettyConfig extends Config {
      *
      * @param workerGroup
      */
-    INettyConfig workerGroup(EventLoopGroup workerGroup);
+    IAcceptNettyConfig workerGroup(EventLoopGroup workerGroup);
 
     /**
      * @return workerGroup.
@@ -44,7 +42,7 @@ public interface INettyConfig extends Config {
      *
      * @param channelClass
      */
-    INettyConfig channel(Class channelClass);
+    IAcceptNettyConfig channel(Class channelClass);
 
     /**
      * @return channel class.
@@ -56,17 +54,12 @@ public interface INettyConfig extends Config {
      *
      * @param initializer
      */
-    INettyConfig childHandler(ChannelInitializer initializer);
+    IAcceptNettyConfig childHandler(ChannelInitializer initializer);
 
     /**
      * @return childHandler.
      */
     ChannelInitializer childHandler();
-
-    /**
-     * Add handlers.
-     */
-    void addHandlers(SocketChannel ch);
 
     /**
      * @return options.
@@ -77,4 +70,12 @@ public interface INettyConfig extends Config {
      * @return child options.
      */
     Map<Option<?>, Object> childOptions();
+
+    /**
+     * 设置Pudding子通道选项.
+     *
+     * @param option
+     * @param <T>
+     */
+    <T> Config childOption(Option<T> option, T value);
 }

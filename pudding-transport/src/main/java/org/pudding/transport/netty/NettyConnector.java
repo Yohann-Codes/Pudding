@@ -1,6 +1,6 @@
 package org.pudding.transport.netty;
 
-import io.netty.bootstrap.ServerBootstrap;
+import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
 import org.apache.log4j.Logger;
@@ -13,23 +13,23 @@ import java.net.SocketAddress;
 import java.util.Map;
 
 /**
- * 基于Netty的Acceptor实现.
+ * 基于Netty的Connector实现.
  *
  * @author Yohann.
  */
-public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
+public class NettyConnector extends ConfigOptions implements INettyConnector {
 
-    private static final Logger logger = Logger.getLogger(NettyAcceptor.class);
+    private static final Logger logger = Logger.getLogger(NettyConnector.class);
 
-    private IAcceptNettyConfig nettyConfig;
-    private SocketAddress localAddress;
+    private IConnectNettyConfig nettyConfig;
+    private SocketAddress remoteAddress;
 
     /**
      * Default NettyConfig.
      */
-    public NettyAcceptor() {
-        super(true);
-        nettyConfig = new DefaultAcceptNettyConfig();
+    public NettyConnector() {
+        super(false);
+        nettyConfig = new DefaultConnectNettyConfig();
     }
 
     /**
@@ -37,31 +37,26 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
      *
      * @param nettyConfig
      */
-    public NettyAcceptor(IAcceptNettyConfig nettyConfig) {
-        super(true);
+    public NettyConnector(IConnectNettyConfig nettyConfig) {
+        super(false);
         this.nettyConfig = nettyConfig;
     }
 
     @Override
-    public SocketAddress localAddress() {
-        return localAddress;
+    public SocketAddress remoteAddress() {
+        return remoteAddress;
     }
 
     @Override
-    public void bind(int port) {
-        bind(new InetSocketAddress(port));
+    public void connect(String host, int port) {
+        connect(new InetSocketAddress(host, port));
     }
 
     @Override
-    public void bind(String host, int port) {
-        bind(new InetSocketAddress(host, port));
-    }
-
-    @Override
-    public void bind(SocketAddress localAddress) {
-        this.localAddress = localAddress;
+    public void connect(SocketAddress remoteAddress) {
+        this.remoteAddress = remoteAddress;
         try {
-            doBind();
+            doConnect();
         } catch (InterruptedException e) {
             logger.warn("bind exception", e);
         } catch (IllegalOptionException e) {
@@ -72,41 +67,24 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
     }
 
     @SuppressWarnings("unchecked")
-    private void doBind() throws InterruptedException, IllegalOptionException {
-        validate(localAddress, serverBootstrap);
-        serverBootstrap.group(bossGroup(), workerGroup())
+    private void doConnect() throws InterruptedException, IllegalOptionException {
+        validate(remoteAddress, bootstrap);
+        bootstrap.group(group() )
                 .channel(channel())
-                .childHandler(childHandler());
+                .handler(handler());
 
         if (!setOption()) {
             throw new IllegalOptionException("setOption Exception");
         }
 
-        ChannelFuture future = serverBootstrap.bind(localAddress).sync();
-        logger.info("Listening on " + localAddress);
+        ChannelFuture future = bootstrap.connect(remoteAddress).sync();
+        logger.info("Connect to " + remoteAddress);
 
         future.channel().closeFuture().sync();
     }
 
     private boolean setOption() {
-        // parent
-        Map<Option<?>, Object> options = nettyConfig.options();
-        for (Map.Entry<Option<?>, Object> entry : options.entrySet()) {
-            Option<?> option = entry.getKey();
-            Object value = entry.getValue();
-            if (option == Option.SO_BACKLOG) {
-                parent.setSoBacklog((Integer) value);
-            } else if (option == Option.SO_REUSEADDR) {
-                parent.setSoReuseaddr((Boolean) value);
-            } else if (option == Option.SO_RCVBUF) {
-                parent.setSoRcvbuf((Integer) value);
-            } else {
-                setOption0(parent, option, value);
-            }
-        }
-
-        // child
-        Map<Option<?>, Object> childOptions = nettyConfig.childOptions();
+        Map<Option<?>, Object> childOptions = nettyConfig.options();
         for (Map.Entry<Option<?>, Object> entry : childOptions.entrySet()) {
             Option<?> option = entry.getKey();
             Object value = entry.getValue();
@@ -126,7 +104,6 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
                 setOption0(child, option, value);
             }
         }
-
         return true;
     }
 
@@ -160,18 +137,12 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
 
     @Override
     public void shutdownGracefully() {
-        bossGroup().shutdownGracefully();
-        workerGroup().shutdownGracefully();
+        group().shutdownGracefully();
     }
 
     @Override
-    public EventLoopGroup bossGroup() {
-        return nettyConfig.bossGroup();
-    }
-
-    @Override
-    public EventLoopGroup workerGroup() {
-        return nettyConfig.workerGroup();
+    public EventLoopGroup group() {
+        return nettyConfig.group();
     }
 
     @Override
@@ -180,20 +151,20 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
     }
 
     @Override
-    public ChannelInitializer childHandler() {
-        return nettyConfig.childHandler();
+    public ChannelInitializer handler() {
+        return nettyConfig.handler();
     }
 
-    private void validate(SocketAddress localAddress, ServerBootstrap serverBootstrap) {
-        if (localAddress == null) {
-            throw new NullPointerException("localAddress == null");
+    private void validate(SocketAddress remoteAddress, Bootstrap bootstrap) {
+        if (remoteAddress == null) {
+            throw new NullPointerException("remoteAddress == null");
         }
-        validate(serverBootstrap);
+        validate(bootstrap);
     }
 
-    private void validate(ServerBootstrap serverBootstrap) {
-        if (serverBootstrap == null) {
-            throw new NullPointerException("serverBootstrap == null");
+    private void validate(Bootstrap bootstrap) {
+        if (bootstrap == null) {
+            throw new NullPointerException("bootstrap == null");
         }
     }
 }

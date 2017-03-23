@@ -12,7 +12,7 @@ import org.pudding.transport.options.Option;
  *
  * @author Yohann.
  */
-public class DefaultConnectConfig extends NettyConfig {
+public class DefaultConnectNettyConfig extends ConnectNettyConfig {
 
     private static Class<? extends Channel> channelClass = NioSocketChannel.class;
 
@@ -28,12 +28,12 @@ public class DefaultConnectConfig extends NettyConfig {
         // Add handlers
     }
 
-    public DefaultConnectConfig() {
+    public DefaultConnectNettyConfig() {
         super(channelClass, initializer);
         defaultOption();
     }
 
     private void defaultOption() {
-        childOption(Option.SO_KEEPALIVE, true);
+        option(Option.SO_KEEPALIVE, true);
     }
 }

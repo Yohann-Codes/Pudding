@@ -16,12 +16,4 @@ public interface Config {
      * @param <T>
      */
     <T> Config option(Option<T> option, T value);
-
-    /**
-     * 设置Pudding子通道选项.
-     *
-     * @param option
-     * @param <T>
-     */
-    <T> Config childOption(Option<T> option, T value);
 }

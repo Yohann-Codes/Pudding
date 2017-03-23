@@ -3,40 +3,33 @@ package org.pudding.transport.abstraction;
 import java.net.SocketAddress;
 
 /**
- * 接受端.
+ * 连接端.
  *
  * @author Yohann.
  */
-public interface Acceptor {
+public interface Connector {
 
     /**
-     * 返回绑定地址.
+     * 返回连接地址.
      *
      * @return
      */
-    SocketAddress localAddress();
+    SocketAddress remoteAddress();
 
     /**
-     * 绑定本地，启动监听.
-     *
-     * @param port
-     */
-    void bind(int port);
-
-    /**
-     * 绑定本地，启动监听.
+     * 连接对端.
      *
      * @param host
      * @param port
      */
-    void bind(String host, int port);
+    void connect(String host, int port);
 
     /**
-     * 绑定本地，启动监听.
+     * 连接对端.
      *
-     * @param localAddress
+     * @param remoteAddress
      */
-    void bind(SocketAddress localAddress);
+    void connect(SocketAddress remoteAddress);
 
     /**
      * 返回配置对象Config.

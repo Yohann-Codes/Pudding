@@ -1,5 +1,6 @@
 package org.pudding.transport.netty;
 
+import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelOption;
@@ -14,30 +15,63 @@ import io.netty.channel.WriteBufferWaterMark;
  */
 public class ConfigOptions {
 
-    protected ServerBootstrap bootstrap;
+    protected ServerBootstrap serverBootstrap;
+    protected Bootstrap bootstrap;
     protected Parent parent;
     protected Child child;
+    public boolean accept;
 
-    public ConfigOptions() {
-        this.bootstrap = new ServerBootstrap();
+    public ConfigOptions(boolean accept) {
+        this.accept = accept;
+        if (accept) {
+            initAcceptor();
+        } else {
+            initConnector();
+        }
+    }
+
+    private void initAcceptor() {
+        serverBootstrap = new ServerBootstrap();
         parent = new Parent();
         child = new Child();
+    }
+
+    private void initConnector() {
+        bootstrap = new Bootstrap();
+        child = new Child();
+    }
+
+    public Object getBootstrap() {
+        return bootstrap;
     }
 
     /**
      * parent channel options.
      */
     protected class Parent extends Netty {
+
         public void setSoBacklog(int value) {
-            bootstrap.option(ChannelOption.SO_BACKLOG, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.SO_BACKLOG, value);
+            } else {
+                bootstrap.option(ChannelOption.SO_BACKLOG, value);
+            }
         }
 
         public void setSoReuseaddr(boolean value) {
-            bootstrap.option(ChannelOption.SO_REUSEADDR, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.SO_REUSEADDR, value);
+            } else {
+                bootstrap.option(ChannelOption.SO_REUSEADDR, value);
+            }
         }
 
         public void setSoRcvbuf(int value) {
-            bootstrap.option(ChannelOption.SO_RCVBUF, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.SO_RCVBUF, value);
+            } else {
+                bootstrap.option(ChannelOption.SO_RCVBUF, value);
+            }
         }
     }
 
@@ -47,62 +81,118 @@ public class ConfigOptions {
     protected class Child extends Netty {
 
         public void setSoSndbuf(int value) {
-            bootstrap.childOption(ChannelOption.SO_SNDBUF, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.SO_SNDBUF, value);
+            } else {
+                bootstrap.option(ChannelOption.SO_SNDBUF, value);
+            }
         }
 
         public void setSoRcvbuf(int value) {
-            bootstrap.childOption(ChannelOption.SO_RCVBUF, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.SO_RCVBUF, value);
+            } else {
+                bootstrap.option(ChannelOption.SO_RCVBUF, value);
+            }
         }
 
         public void setTcpNodelay(boolean value) {
-            bootstrap.childOption(ChannelOption.TCP_NODELAY, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.TCP_NODELAY, value);
+            } else {
+                bootstrap.option(ChannelOption.TCP_NODELAY, value);
+            }
         }
 
         public void setSoKeepalive(boolean value) {
-            bootstrap.childOption(ChannelOption.SO_KEEPALIVE, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.SO_KEEPALIVE, value);
+            } else {
+                bootstrap.option(ChannelOption.SO_KEEPALIVE, value);
+            }
         }
 
         public void setSoReuseaddr(boolean value) {
-            bootstrap.childOption(ChannelOption.SO_REUSEADDR, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.SO_REUSEADDR, value);
+            } else {
+                bootstrap.option(ChannelOption.SO_REUSEADDR, value);
+            }
         }
 
         public void setSoLinger(int value) {
-            bootstrap.childOption(ChannelOption.SO_LINGER, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.SO_LINGER, value);
+            } else {
+                bootstrap.option(ChannelOption.SO_LINGER, value);
+            }
         }
     }
 
     protected class Netty {
 
         public void setConnectTimeoutMillis(int value) {
-            bootstrap.childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, value);
+            } else {
+                bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, value);
+            }
         }
 
         public void setWriteSpinCount(int value) {
-            bootstrap.childOption(ChannelOption.WRITE_SPIN_COUNT, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.WRITE_SPIN_COUNT, value);
+            } else {
+                bootstrap.option(ChannelOption.WRITE_SPIN_COUNT, value);
+            }
         }
 
         public void setAllocator(ByteBufAllocator value) {
-            bootstrap.childOption(ChannelOption.ALLOCATOR, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.ALLOCATOR, value);
+            } else {
+                bootstrap.option(ChannelOption.ALLOCATOR, value);
+            }
         }
 
         public void setRcvbufAllocator(RecvByteBufAllocator value) {
-            bootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.RCVBUF_ALLOCATOR, value);
+            } else {
+                bootstrap.option(ChannelOption.RCVBUF_ALLOCATOR, value);
+            }
         }
 
         public void setAutoRead(boolean value) {
-            bootstrap.childOption(ChannelOption.AUTO_READ, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.AUTO_READ, value);
+            } else {
+                bootstrap.option(ChannelOption.AUTO_READ, value);
+            }
         }
 
         public void setWriteBufferWaterMark(WriteBufferWaterMark value) {
-            bootstrap.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.WRITE_BUFFER_WATER_MARK, value);
+            } else {
+                bootstrap.option(ChannelOption.WRITE_BUFFER_WATER_MARK, value);
+            }
         }
 
         public void setMessageSizeEstimator(MessageSizeEstimator value) {
-            bootstrap.childOption(ChannelOption.MESSAGE_SIZE_ESTIMATOR, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, value);
+            } else {
+                bootstrap.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, value);
+            }
         }
 
         public void setSingleEventexecutorPerGroup(boolean value) {
-            bootstrap.childOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, value);
+            if (accept) {
+                serverBootstrap.option(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, value);
+            } else {
+                bootstrap.option(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, value);
+            }
         }
     }
 }

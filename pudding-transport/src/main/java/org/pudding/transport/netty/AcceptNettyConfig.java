@@ -10,11 +10,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Netty配置.
+ * 接收端Netty配置.
  *
  * @author Yohann.
  */
-public class NettyConfig implements INettyConfig {
+public class AcceptNettyConfig implements IAcceptNettyConfig {
 
     private Map<Option<?>, Object> options;  // save parent options, singleton
     private Map<Option<?>, Object> childOptions;  // save child options, singleton
@@ -27,12 +27,12 @@ public class NettyConfig implements INettyConfig {
 
     private ChannelInitializer initializer;
 
-    public NettyConfig(Class<? extends Channel> channelClass, ChannelInitializer initializer) {
+    public AcceptNettyConfig(Class<? extends Channel> channelClass, ChannelInitializer initializer) {
         this(null, null, channelClass, initializer);
     }
 
-    public NettyConfig(EventLoopGroup bossGroup, EventLoopGroup workerGroup,
-                       Class<? extends Channel> channelClass, ChannelInitializer initializer) {
+    public AcceptNettyConfig(EventLoopGroup bossGroup, EventLoopGroup workerGroup,
+                             Class<? extends Channel> channelClass, ChannelInitializer initializer) {
         checkGroup(bossGroup, workerGroup);
         validate(channelClass, initializer);
         this.channelClass = channelClass;
@@ -66,7 +66,7 @@ public class NettyConfig implements INettyConfig {
     }
 
     @Override
-    public INettyConfig bossGroup(EventLoopGroup bossGroup) {
+    public IAcceptNettyConfig bossGroup(EventLoopGroup bossGroup) {
         this.bossGroup = bossGroup;
         return this;
     }
@@ -77,7 +77,7 @@ public class NettyConfig implements INettyConfig {
     }
 
     @Override
-    public INettyConfig workerGroup(EventLoopGroup workerGroup) {
+    public IAcceptNettyConfig workerGroup(EventLoopGroup workerGroup) {
         this.workerGroup = workerGroup;
         return this;
     }
@@ -88,7 +88,8 @@ public class NettyConfig implements INettyConfig {
     }
 
     @Override
-    public INettyConfig channel(Class channelClass) {
+    @SuppressWarnings("unchecked")
+    public IAcceptNettyConfig channel(Class channelClass) {
         this.channelClass = channelClass;
         return this;
     }
@@ -99,7 +100,7 @@ public class NettyConfig implements INettyConfig {
     }
 
     @Override
-    public INettyConfig childHandler(ChannelInitializer initializer) {
+    public IAcceptNettyConfig childHandler(ChannelInitializer initializer) {
         this.initializer = initializer;
         return this;
     }
@@ -107,11 +108,6 @@ public class NettyConfig implements INettyConfig {
     @Override
     public ChannelInitializer childHandler() {
         return initializer;
-    }
-
-    @Override
-    public void addHandlers(SocketChannel ch) {
-        ChannelPipeline pipeline = ch.pipeline();
     }
 
     @Override
