@@ -1,4 +1,4 @@
-package api;
+package org.pudding.serialization.api;
 
 /**
  * The Serialization interface.

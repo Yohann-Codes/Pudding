@@ -1,4 +1,4 @@
-package api;
+package org.pudding.serialization.api;
 
 import java.util.HashMap;
 import java.util.Map;

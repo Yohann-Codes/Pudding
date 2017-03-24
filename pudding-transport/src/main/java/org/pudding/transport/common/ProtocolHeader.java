@@ -13,9 +13,10 @@ public class ProtocolHeader {
     public static final short MAGIC = (short) 0xbabe;
 
     /** Serialization Type, type的高地址4位 */
-    public static final byte KRYO = 0x01; // Kryo
-    public static final byte HESSIAN = 0x02; // Hessian
-    public static final byte PROTOSTUFF = 0x03; // ProtoStuff
+    public static final byte JAVA = 0x01; // Java
+    public static final byte KRYO = 0x02; // Kryo
+    public static final byte HESSIAN = 0x03; // Hessian
+    public static final byte PROTOSTUFF = 0x04; // ProtoStuff
 
     /** DataPacket Type, type的低地址4位 */
     public static final byte MESSAGE = 0x01; // 消息
