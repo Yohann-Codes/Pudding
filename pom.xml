@@ -18,7 +18,9 @@
 
     <properties>
         <netty.version>4.1.6.Final</netty.version>
+        <kryo.version>2.23.0</kryo.version>
         <hessian.version>4.0.38</hessian.version>
+        <gson.version>2.4</gson.version>
         <log4j.version>1.2.16</log4j.version>
         <junit.version>4.12</junit.version>
     </properties>
@@ -56,9 +58,19 @@
                 <version>${netty.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.esotericsoftware.kryo</groupId>
+                <artifactId>kryo</artifactId>
+                <version>${kryo.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.caucho</groupId>
                 <artifactId>hessian</artifactId>
                 <version>${hessian.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

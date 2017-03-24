@@ -8,6 +8,9 @@ import java.io.Serializable;
 public class Hello implements Serializable {
     private String content;
 
+    public Hello() {
+    }
+
     public Hello(String content) {
         this.content = content;
     }

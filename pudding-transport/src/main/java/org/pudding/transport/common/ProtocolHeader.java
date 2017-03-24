@@ -16,7 +16,8 @@ public class ProtocolHeader {
     public static final byte JAVA = 0x01; // Java
     public static final byte KRYO = 0x02; // Kryo
     public static final byte HESSIAN = 0x03; // Hessian
-    public static final byte PROTOSTUFF = 0x04; // ProtoStuff
+    public static final byte GSON = 0x04; // Gson
+
 
     /** DataPacket Type, type的低地址4位 */
     public static final byte MESSAGE = 0x01; // 消息
