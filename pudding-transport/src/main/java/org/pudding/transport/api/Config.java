@@ -1,6 +1,6 @@
-package org.pudding.transport.abstraction;
+package org.pudding.transport.api;
 
-import org.pudding.transport.options.Option;
+import org.pudding.transport.common.Option;
 
 /**
  * 参数配置接口.

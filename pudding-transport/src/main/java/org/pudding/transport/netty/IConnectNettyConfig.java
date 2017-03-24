@@ -2,9 +2,8 @@ package org.pudding.transport.netty;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import org.pudding.transport.abstraction.Config;
-import org.pudding.transport.options.Option;
+import org.pudding.transport.api.Config;
+import org.pudding.transport.common.Option;
 
 import java.util.Map;
 
@@ -50,7 +49,7 @@ public interface IConnectNettyConfig extends Config {
     ChannelInitializer handler();
 
     /**
-     * @return options.
+     * @return option.
      */
     Map<Option<?>, Object> options();
 }

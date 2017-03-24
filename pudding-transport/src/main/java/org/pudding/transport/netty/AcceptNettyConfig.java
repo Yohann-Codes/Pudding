@@ -1,10 +1,11 @@
 package org.pudding.transport.netty;
 
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import org.pudding.transport.abstraction.Config;
-import org.pudding.transport.options.Option;
+import org.pudding.transport.api.Config;
+import org.pudding.transport.common.Option;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,8 +17,8 @@ import java.util.Map;
  */
 public class AcceptNettyConfig implements IAcceptNettyConfig {
 
-    private Map<Option<?>, Object> options;  // save parent options, singleton
-    private Map<Option<?>, Object> childOptions;  // save child options, singleton
+    private Map<Option<?>, Object> options;  // save parent option, singleton
+    private Map<Option<?>, Object> childOptions;  // save child option, singleton
 
     // EventLoopGroup default value:
     private EventLoopGroup bossGroup = new NioEventLoopGroup(1);

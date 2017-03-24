@@ -46,7 +46,7 @@ public class ConfigOptions {
     }
 
     /**
-     * parent channel options.
+     * parent channel option.
      */
     protected class Parent extends Netty {
 
@@ -76,7 +76,7 @@ public class ConfigOptions {
     }
 
     /**
-     * child channel options.
+     * child channel option.
      */
     protected class Child extends Netty {
 

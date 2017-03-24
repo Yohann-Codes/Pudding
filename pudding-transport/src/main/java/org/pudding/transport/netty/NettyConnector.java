@@ -4,9 +4,9 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
 import org.apache.log4j.Logger;
-import org.pudding.transport.abstraction.Config;
+import org.pudding.transport.api.Config;
 import org.pudding.transport.exception.IllegalOptionException;
-import org.pudding.transport.options.Option;
+import org.pudding.transport.common.Option;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;

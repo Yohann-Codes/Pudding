@@ -2,12 +2,10 @@ package org.pudding.transport.netty;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import org.pudding.transport.abstraction.Config;
-import org.pudding.transport.options.Option;
+import org.pudding.transport.api.Config;
+import org.pudding.transport.common.Option;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +17,7 @@ import java.util.Map;
  */
 public class ConnectNettyConfig implements IConnectNettyConfig {
 
-    private Map<Option<?>, Object> options;  // save options, singleton
+    private Map<Option<?>, Object> options;  // save option, singleton
 
     // EventLoopGroup default value:
     private EventLoopGroup group = new NioEventLoopGroup();
@@ -33,7 +31,7 @@ public class ConnectNettyConfig implements IConnectNettyConfig {
     }
 
     public ConnectNettyConfig(EventLoopGroup group,
-                             Class<? extends Channel> channelClass, ChannelInitializer initializer) {
+                              Class<? extends Channel> channelClass, ChannelInitializer initializer) {
         checkGroup(group);
         validate(channelClass, initializer);
         this.channelClass = channelClass;

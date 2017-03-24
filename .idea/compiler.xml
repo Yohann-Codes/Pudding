@@ -22,11 +22,19 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
+        <module name="pudding-consumer" />
+        <module name="pudding-provider" />
+        <module name="pudding-registry" />
+        <module name="pudding-serialization" />
         <module name="pudding-transport" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="Pudding" target="1.7" />
+      <module name="pudding-consumer" target="1.7" />
+      <module name="pudding-provider" target="1.7" />
+      <module name="pudding-registry" target="1.7" />
+      <module name="pudding-serialization" target="1.7" />
       <module name="pudding-transport" target="1.7" />
     </bytecodeTargetLevel>
   </component>

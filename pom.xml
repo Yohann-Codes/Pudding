@@ -10,12 +10,20 @@
     <version>1.0.0</version>
     <modules>
         <module>pudding-transport</module>
+        <module>pudding-provider</module>
+        <module>pudding-provider</module>
+        <module>pudding-serialization</module>
+        <module>pudding-consumer</module>
+        <module>pudding-registry</module>
     </modules>
 
     <properties>
         <netty.version>4.1.6.Final</netty.version>
         <log4j.version>1.2.16</log4j.version>
         <junit.version>4.12</junit.version>
+        <hessian.version>4.0.38</hessian.version>
+        <kryo.version>2.23.0</kryo.version>
+        <protostuff.version>1.5.2</protostuff.version>
     </properties>
 
     <dependencyManagement>
@@ -24,6 +32,36 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.pudding</groupId>
+                <artifactId>pudding-transport</artifactId>
+                <version>${project.version}}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.pudding</groupId>
+                <artifactId>pudding-serialization</artifactId>
+                <version>${project.version}}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.pudding</groupId>
+                <artifactId>pudding-registry</artifactId>
+                <version>${project.version}}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.pudding</groupId>
+                <artifactId>pudding-provider</artifactId>
+                <version>${project.version}}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.pudding</groupId>
+                <artifactId>pudding-consumer</artifactId>
+                <version>${project.version}}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.caucho</groupId>
+                <artifactId>hessian</artifactId>
+                <version>${hessian.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -1,12 +1,9 @@
-package org.pudding.transport.options;
+package org.pudding.transport.common;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.MessageSizeEstimator;
 import io.netty.channel.RecvByteBufAllocator;
 import io.netty.channel.WriteBufferWaterMark;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Pudding选项.

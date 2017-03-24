@@ -5,7 +5,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.pudding.transport.options.Option;
+import org.pudding.transport.common.Option;
 
 /**
  * 接收端Netty默认配置.
@@ -25,7 +25,7 @@ public class DefaultAcceptNettyConfig extends AcceptNettyConfig {
 
     private static void addDefaultHandlers(SocketChannel ch) {
         ChannelPipeline pipeline = ch.pipeline();
-        // Add handlers
+        // Add handler
     }
 
     public DefaultAcceptNettyConfig() {

@@ -2,7 +2,7 @@ package org.pudding.transport.netty;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
-import org.pudding.transport.abstraction.Acceptor;
+import org.pudding.transport.api.Acceptor;
 
 /**
  * @author Yohann.
