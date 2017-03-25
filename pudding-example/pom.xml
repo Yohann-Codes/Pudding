@@ -9,16 +9,28 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>pudding-transport</artifactId>
+    <artifactId>pudding-example</artifactId>
 
     <dependencies>
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
+            <groupId>org.pudding</groupId>
+            <artifactId>pudding-transport</artifactId>
         </dependency>
         <dependency>
             <groupId>org.pudding</groupId>
-            <artifactId>pudding-common</artifactId>
+            <artifactId>pudding-serialization</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.pudding</groupId>
+            <artifactId>pudding-registry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.pudding</groupId>
+            <artifactId>pudding-provider</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.pudding</groupId>
+            <artifactId>pudding-consumer</artifactId>
         </dependency>
     </dependencies>
 

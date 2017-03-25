@@ -36,4 +36,9 @@ public class ProtocolEncoder extends MessageToByteEncoder<MessageHolder> {
             throw new NullPointerException("msg.getHeader() == null || msg.getBody() == null");
         }
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        super.exceptionCaught(ctx, cause);
+    }
 }

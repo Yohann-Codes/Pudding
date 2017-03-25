@@ -1,5 +1,7 @@
 package org.pudding.transport.common;
 
+import org.pudding.common.ByteUtil;
+
 /**
  * Pudding传输层协议头.
  *
@@ -43,6 +45,18 @@ public class ProtocolHeader {
     private long id; // MESSAGE, ACK
     private int errorCode; // 错误码
     private int bodyLength; // 消息体长度
+
+    public static byte serializationCode(byte code) {
+        return ByteUtil.high4(code);
+    }
+
+    public static byte dataPacketCode(byte code) {
+        return ByteUtil.low4(code);
+    }
+
+    public static byte type(byte serializationCode, byte dataPacketCode) {
+        return ByteUtil.code(serializationCode, dataPacketCode);
+    }
 
     public int getMagic() {
         return magic;

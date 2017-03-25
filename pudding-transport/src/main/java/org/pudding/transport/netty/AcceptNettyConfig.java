@@ -5,7 +5,9 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.pudding.transport.api.Config;
+import org.pudding.transport.api.Processor;
 import org.pudding.transport.common.Option;
+import org.pudding.transport.api.ProcessorHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -90,7 +92,7 @@ public class AcceptNettyConfig implements IAcceptNettyConfig {
 
     @Override
     @SuppressWarnings("unchecked")
-    public IAcceptNettyConfig channel(Class channelClass) {
+    public IAcceptNettyConfig channelClass(Class channelClass) {
         this.channelClass = channelClass;
         return this;
     }
@@ -109,6 +111,11 @@ public class AcceptNettyConfig implements IAcceptNettyConfig {
     @Override
     public ChannelInitializer childHandler() {
         return initializer;
+    }
+
+    @Override
+    public void processor(ProcessorHandler processorHandler, Processor processor) {
+        processorHandler.processor(processor);
     }
 
     @Override

@@ -24,6 +24,7 @@ public class NettyChannel implements Channel {
     @Override
     public Future write(Object msg) {
         ChannelFuture future = channel.writeAndFlush(msg);
+        @SuppressWarnings("unchecked")
         NettyFuture nettyFuture = new NettyFuture(future);
         return nettyFuture;
     }

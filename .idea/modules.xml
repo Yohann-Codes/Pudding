@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Pudding.iml" filepath="$PROJECT_DIR$/Pudding.iml" />
+      <module fileurl="file://$PROJECT_DIR$/pudding-common/pudding-common.iml" filepath="$PROJECT_DIR$/pudding-common/pudding-common.iml" />
       <module fileurl="file://$PROJECT_DIR$/pudding-consumer/pudding-consumer.iml" filepath="$PROJECT_DIR$/pudding-consumer/pudding-consumer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/pudding-example/pudding-example.iml" filepath="$PROJECT_DIR$/pudding-example/pudding-example.iml" />
       <module fileurl="file://$PROJECT_DIR$/pudding-provider/pudding-provider.iml" filepath="$PROJECT_DIR$/pudding-provider/pudding-provider.iml" />
       <module fileurl="file://$PROJECT_DIR$/pudding-registry/pudding-registry.iml" filepath="$PROJECT_DIR$/pudding-registry/pudding-registry.iml" />
       <module fileurl="file://$PROJECT_DIR$/pudding-serialization/pudding-serialization.iml" filepath="$PROJECT_DIR$/pudding-serialization/pudding-serialization.iml" />

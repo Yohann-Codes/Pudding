@@ -14,6 +14,8 @@
         <module>pudding-provider</module>
         <module>pudding-consumer</module>
         <module>pudding-registry</module>
+        <module>pudding-example</module>
+        <module>pudding-common</module>
     </modules>
 
     <properties>
@@ -30,27 +32,37 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>pudding-transport</artifactId>
-                <version>${project.version}}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>pudding-serialization</artifactId>
-                <version>${project.version}}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>pudding-registry</artifactId>
-                <version>${project.version}}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>pudding-provider</artifactId>
-                <version>${project.version}}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>pudding-consumer</artifactId>
-                <version>${project.version}}</version>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>pudding-example</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>pudding-common</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>

@@ -6,6 +6,7 @@ import io.netty.channel.*;
 import org.apache.log4j.Logger;
 import org.pudding.transport.api.Config;
 import org.pudding.transport.api.Future;
+import org.pudding.transport.api.Processor;
 import org.pudding.transport.common.Option;
 import org.pudding.transport.exception.IllegalOptionException;
 
@@ -31,9 +32,9 @@ public class NettyConnector extends ConfigOptions implements INettyConnector {
     /**
      * Default NettyConfig.
      */
-    public NettyConnector() {
+    public NettyConnector(Processor processor) {
         super(false);
-        nettyConfig = new DefaultConnectNettyConfig();
+        nettyConfig = new DefaultConnectNettyConfig(processor);
     }
 
     /**

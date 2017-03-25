@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
 import org.apache.log4j.Logger;
 import org.pudding.transport.api.Config;
+import org.pudding.transport.api.Processor;
 import org.pudding.transport.exception.IllegalOptionException;
 import org.pudding.transport.common.Option;
 
@@ -27,9 +28,9 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
     /**
      * Default NettyConfig.
      */
-    public NettyAcceptor() {
+    public NettyAcceptor(Processor processor) {
         super(true);
-        nettyConfig = new DefaultAcceptNettyConfig();
+        nettyConfig = new DefaultAcceptNettyConfig(processor);
     }
 
     /**

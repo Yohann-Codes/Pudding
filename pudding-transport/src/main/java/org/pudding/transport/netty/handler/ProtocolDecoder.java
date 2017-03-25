@@ -55,4 +55,9 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
 
         out.add(holder);
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        super.exceptionCaught(ctx, cause);
+    }
 }
