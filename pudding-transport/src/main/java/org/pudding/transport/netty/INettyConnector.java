@@ -17,7 +17,7 @@ public interface INettyConnector extends Connector {
     /**
      * @return channel class.
      */
-    Class channel();
+    Class channelClass();
 
     /**
      * @return handler.

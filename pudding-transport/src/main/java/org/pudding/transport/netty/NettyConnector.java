@@ -5,8 +5,9 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
 import org.apache.log4j.Logger;
 import org.pudding.transport.api.Config;
-import org.pudding.transport.exception.IllegalOptionException;
+import org.pudding.transport.api.Future;
 import org.pudding.transport.common.Option;
+import org.pudding.transport.exception.IllegalOptionException;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -23,6 +24,9 @@ public class NettyConnector extends ConfigOptions implements INettyConnector {
 
     private IConnectNettyConfig nettyConfig;
     private SocketAddress remoteAddress;
+
+    private volatile Future future; // 可以用此future获取channel进行写操作
+    private volatile boolean failed = false; // 自旋控制
 
     /**
      * Default NettyConfig.
@@ -48,29 +52,44 @@ public class NettyConnector extends ConfigOptions implements INettyConnector {
     }
 
     @Override
-    public void connect(String host, int port) {
-        connect(new InetSocketAddress(host, port));
+    public Future connect(String host, int port) {
+        return connect(new InetSocketAddress(host, port));
     }
 
     @Override
-    public void connect(SocketAddress remoteAddress) {
+    public Future connect(SocketAddress remoteAddress) {
         this.remoteAddress = remoteAddress;
-        try {
-            doConnect();
-        } catch (InterruptedException e) {
-            logger.warn("bind exception", e);
-        } catch (IllegalOptionException e) {
-            logger.warn("option exception", e);
-        } finally {
-            shutdownGracefully();
-        }
+        // 异步连接
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    doConnect();
+                } catch (InterruptedException e) {
+                    failed = true;
+                    logger.warn("bind exception", e);
+                } catch (IllegalOptionException e) {
+                    failed = true;
+                    logger.warn("option exception", e);
+                } catch (Exception e) {
+                    failed = true;
+                    logger.warn("bind exception", e);
+                } finally {
+                    shutdownGracefully();
+                }
+            }
+        }.start();
+
+        // Spin until future not null
+        while (!failed && future == null) { }
+        return future;
     }
 
     @SuppressWarnings("unchecked")
     private void doConnect() throws InterruptedException, IllegalOptionException {
         validate(remoteAddress, bootstrap);
-        bootstrap.group(group() )
-                .channel(channel())
+        bootstrap.group(group())
+                .channel(channelClass())
                 .handler(handler());
 
         if (!setOption()) {
@@ -79,6 +98,8 @@ public class NettyConnector extends ConfigOptions implements INettyConnector {
 
         ChannelFuture future = bootstrap.connect(remoteAddress).sync();
         logger.info("Connect to " + remoteAddress);
+
+        this.future = new NettyFuture(future);
 
         future.channel().closeFuture().sync();
     }
@@ -146,8 +167,8 @@ public class NettyConnector extends ConfigOptions implements INettyConnector {
     }
 
     @Override
-    public Class channel() {
-        return nettyConfig.channel();
+    public Class channelClass() {
+        return nettyConfig.channelClass();
     }
 
     @Override

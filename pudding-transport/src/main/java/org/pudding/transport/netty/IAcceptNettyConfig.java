@@ -46,7 +46,7 @@ public interface IAcceptNettyConfig extends Config {
     /**
      * @return channel class.
      */
-    Class channel();
+    Class channelClass();
 
     /**
      * Config ChannelInitializer.

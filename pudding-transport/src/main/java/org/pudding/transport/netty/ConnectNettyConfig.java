@@ -72,7 +72,7 @@ public class ConnectNettyConfig implements IConnectNettyConfig {
     }
 
     @Override
-    public Class channel() {
+    public Class channelClass() {
         return channelClass;
     }
 

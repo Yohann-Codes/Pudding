@@ -66,6 +66,8 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
             logger.warn("bind exception", e);
         } catch (IllegalOptionException e) {
             logger.warn("option exception", e);
+        } catch (Exception e) {
+            logger.warn("bind exception", e);
         } finally {
             shutdownGracefully();
         }
@@ -75,7 +77,7 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
     private void doBind() throws InterruptedException, IllegalOptionException {
         validate(localAddress, serverBootstrap);
         serverBootstrap.group(bossGroup(), workerGroup())
-                .channel(channel())
+                .channel(channelClass())
                 .childHandler(childHandler());
 
         if (!setOption()) {
@@ -175,8 +177,8 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
     }
 
     @Override
-    public Class channel() {
-        return nettyConfig.channel();
+    public Class channelClass() {
+        return nettyConfig.channelClass();
     }
 
     @Override

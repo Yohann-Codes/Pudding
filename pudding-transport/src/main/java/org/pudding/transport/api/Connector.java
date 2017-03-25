@@ -22,14 +22,15 @@ public interface Connector {
      * @param host
      * @param port
      */
-    void connect(String host, int port);
+    Future connect(String host, int port);
 
     /**
      * 连接对端.
      *
      * @param remoteAddress
+     * @return if failed, return null.
      */
-    void connect(SocketAddress remoteAddress);
+    Future connect(SocketAddress remoteAddress);
 
     /**
      * 返回配置对象Config.

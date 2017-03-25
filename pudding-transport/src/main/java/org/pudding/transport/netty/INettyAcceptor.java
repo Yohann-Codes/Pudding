@@ -22,7 +22,7 @@ public interface INettyAcceptor extends Acceptor {
     /**
      * @return channel class.
      */
-    Class channel();
+    Class channelClass();
 
     /**
      * @return childHandler.

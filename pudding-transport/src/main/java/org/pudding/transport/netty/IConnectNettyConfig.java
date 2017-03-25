@@ -34,7 +34,7 @@ public interface IConnectNettyConfig extends Config {
     /**
      * @return channel class.
      */
-    Class channel();
+    Class channelClass();
 
     /**
      * Config ChannelInitializer.

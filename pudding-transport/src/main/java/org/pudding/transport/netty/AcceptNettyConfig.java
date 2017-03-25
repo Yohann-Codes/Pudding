@@ -96,7 +96,7 @@ public class AcceptNettyConfig implements IAcceptNettyConfig {
     }
 
     @Override
-    public Class channel() {
+    public Class channelClass() {
         return channelClass;
     }
 
