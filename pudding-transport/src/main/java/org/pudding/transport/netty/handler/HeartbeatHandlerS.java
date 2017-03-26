@@ -52,7 +52,7 @@ public class HeartbeatHandlerS extends ChannelInboundHandlerAdapter {
             if (packetCode == ProtocolHeader.HEATBEAT) {
                 // 心跳丢失清零
                 count = 0;
-                logger.info("收到心跳包 " + ctx.channel());
+//                logger.info("收到心跳包 " + ctx.channel());
                 ReferenceCountUtil.release(msg);
             } else {
                 ctx.fireChannelRead(msg);
