@@ -11,5 +11,19 @@
 
     <artifactId>pudding-rpc</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.pudding</groupId>
+            <artifactId>pudding-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.pudding</groupId>
+            <artifactId>pudding-transport</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.pudding</groupId>
+            <artifactId>pudding-serialization</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
