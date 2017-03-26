@@ -1,12 +1,8 @@
 package org.pudding.example;
 
-import org.pudding.serialization.api.Serializer;
-import org.pudding.serialization.api.SerializerFactory;
-import org.pudding.serialization.api.SerializerType;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Processor;
-import org.pudding.common.MessageHolder;
-import org.pudding.common.ProtocolHeader;
+import org.pudding.common.protocol.MessageHolder;
 
 /**
  * @author Yohann.

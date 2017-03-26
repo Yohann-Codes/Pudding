@@ -7,8 +7,8 @@ import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Connector;
 import org.pudding.transport.api.Future;
 import org.pudding.transport.api.FutureListener;
-import org.pudding.common.MessageHolder;
-import org.pudding.common.ProtocolHeader;
+import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.protocol.ProtocolHeader;
 import org.pudding.transport.netty.NettyConnector;
 
 /**

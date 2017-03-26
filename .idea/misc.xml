@@ -11,6 +11,7 @@
     </option>
     <option name="ignoredFiles">
       <set>
+        <option value="$PROJECT_DIR$/pudding-consumer/pom.xml" />
         <option value="$PROJECT_DIR$/pudding-provider/pom.xml" />
       </set>
     </option>

@@ -2,7 +2,7 @@ package org.pudding.example;
 
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Processor;
-import org.pudding.common.MessageHolder;
+import org.pudding.common.protocol.MessageHolder;
 
 /**
  * @author Yohann.

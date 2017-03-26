@@ -26,11 +26,7 @@
         </dependency>
         <dependency>
             <groupId>org.pudding</groupId>
-            <artifactId>pudding-provider</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.pudding</groupId>
-            <artifactId>pudding-consumer</artifactId>
+            <artifactId>pudding-rpc</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

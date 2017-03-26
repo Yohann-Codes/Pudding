@@ -11,11 +11,10 @@
     <modules>
         <module>pudding-transport</module>
         <module>pudding-serialization</module>
-        <module>pudding-provider</module>
-        <module>pudding-consumer</module>
         <module>pudding-registry</module>
         <module>pudding-example</module>
         <module>pudding-common</module>
+        <module>pudding-rpc</module>
     </modules>
 
     <properties>
@@ -46,22 +45,17 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>pudding-provider</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>pudding-consumer</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>pudding-example</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>pudding-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>pudding-rpc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
