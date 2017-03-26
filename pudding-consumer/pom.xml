@@ -20,6 +20,10 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>pudding-serialization</artifactId>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>pudding-common</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

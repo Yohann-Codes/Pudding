@@ -1,6 +1,6 @@
-package org.pudding.transport.common;
+package org.pudding.common;
 
-import org.pudding.common.ByteUtil;
+import org.pudding.common.utils.ByteUtil;
 
 /**
  * Pudding传输层协议头.
@@ -10,14 +10,14 @@ import org.pudding.common.ByteUtil;
 public class ProtocolHeader {
 
     /** 协议头长度 */
-    public static final int HEAD_LENGTH = 22;
+    public static final int HEAD_LENGTH = 20;
     /** Magic */
     public static final short MAGIC = (short) 0xbabe;
 
     /** Serialization Type, type的高地址4位 */
     public static final byte JAVA = 0x01; // Java
     public static final byte KRYO = 0x02; // Kryo
-    public static final byte HESSIAN = 0x03; // Hessi an
+    public static final byte HESSIAN = 0x03; // Hessian
     public static final byte GSON = 0x04; // Gson
 
 
@@ -39,7 +39,7 @@ public class ProtocolHeader {
     /** errorCode, Sign不是ERROR时, errorCode = 0 */
     //...
 
-    private int magic;
+    private short magic;
     private byte type; // 高4位: serializerType, 低4位: dataPacketType
     private byte sign;
     private long id; // MESSAGE, ACK
@@ -58,11 +58,11 @@ public class ProtocolHeader {
         return ByteUtil.code(serializationCode, dataPacketCode);
     }
 
-    public int getMagic() {
+    public short getMagic() {
         return magic;
     }
 
-    public void setMagic(int magic) {
+    public void setMagic(short magic) {
         this.magic = magic;
     }
 

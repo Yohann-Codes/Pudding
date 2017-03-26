@@ -1,4 +1,4 @@
-package org.pudding.common;
+package org.pudding.common.utils;
 
 /**
  * @author Yohann.

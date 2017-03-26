@@ -1,4 +1,4 @@
-package org.pudding.transport.common;
+package org.pudding.common;
 
 /**
  * 消息载体.

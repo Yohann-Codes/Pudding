@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Processor;
 import org.pudding.transport.api.ProcessorHandler;
-import org.pudding.transport.common.MessageHolder;
+import org.pudding.common.MessageHolder;
 import org.pudding.transport.exception.ProcessorIsNullException;
 import org.pudding.transport.netty.NettyChannel;
 
@@ -26,11 +26,23 @@ public class AcceptorHandler extends ChannelInboundHandlerAdapter implements Pro
         if (msg instanceof MessageHolder) {
             validate(processor);
             Channel channel = new NettyChannel(ctx.channel());
-            processor.handleMessage(channel, (MessageHolder) msg);
+            processor.channelRead(channel, (MessageHolder) msg);
         } else {
             logger.warn("Unexpected msg type received: " + msg.getClass());
             ReferenceCountUtil.release(msg);
         }
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        validate(processor);
+        processor.channelActive(new NettyChannel(ctx.channel()));
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        validate(processor);
+        processor.channelInactive(new NettyChannel(ctx.channel()));
     }
 
     private void validate(Processor processor) {

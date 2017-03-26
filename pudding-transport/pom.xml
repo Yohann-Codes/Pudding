@@ -17,7 +17,7 @@
             <artifactId>netty-all</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.pudding</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pudding-common</artifactId>
         </dependency>
     </dependencies>

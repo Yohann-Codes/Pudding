@@ -3,8 +3,8 @@ package org.pudding.transport.netty.handler;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import org.pudding.transport.common.MessageHolder;
-import org.pudding.transport.common.ProtocolHeader;
+import org.pudding.common.MessageHolder;
+import org.pudding.common.ProtocolHeader;
 
 /**
  * 编码Handler.

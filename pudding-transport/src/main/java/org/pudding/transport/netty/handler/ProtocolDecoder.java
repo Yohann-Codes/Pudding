@@ -3,8 +3,9 @@ package org.pudding.transport.netty.handler;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import org.pudding.transport.common.MessageHolder;
-import org.pudding.transport.common.ProtocolHeader;
+import org.apache.log4j.Logger;
+import org.pudding.common.MessageHolder;
+import org.pudding.common.ProtocolHeader;
 
 import java.util.List;
 
@@ -14,15 +15,19 @@ import java.util.List;
  * @author Yohann.
  */
 public class ProtocolDecoder extends ByteToMessageDecoder {
+    private static final Logger logger = Logger.getLogger(ProtocolDecoder.class);
+
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 
         if (in.readableBytes() < ProtocolHeader.HEAD_LENGTH) {
+            logger.info("数据包长度小于协议头长度 " + in.readableBytes() + " < " + ProtocolHeader.HEAD_LENGTH);
             return;
         }
         in.markReaderIndex();
 
         if (in.readShort() != ProtocolHeader.MAGIC) {
+            logger.info("Magic不一致 " + in.readShort() + " != " + ProtocolHeader.MAGIC);
             in.resetReaderIndex();
             return;
         }
@@ -34,6 +39,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         int bodyLength = in.readInt();
 
         if (in.readableBytes() != bodyLength) {
+            logger.info("协议体长度不一致 " + in.readableBytes() + " != " + bodyLength);
             in.resetReaderIndex();
             return;
         }
@@ -54,6 +60,16 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         holder.setBody(body);
 
         out.add(holder);
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        super.channelActive(ctx);
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
     }
 
     @Override

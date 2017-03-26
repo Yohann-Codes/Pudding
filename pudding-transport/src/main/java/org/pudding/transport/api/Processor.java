@@ -1,6 +1,6 @@
 package org.pudding.transport.api;
 
-import org.pudding.transport.common.MessageHolder;
+import org.pudding.common.MessageHolder;
 
 /**
  * 由其它模块实现.
@@ -10,10 +10,24 @@ import org.pudding.transport.common.MessageHolder;
 public interface Processor {
 
     /**
-     * 处理网络数据.
+     * 读取网络数据.
      *
      * @param channel
      * @param holder
      */
-    void handleMessage(Channel channel, MessageHolder holder);
+    void channelRead(Channel channel, MessageHolder holder);
+
+    /**
+     * Channel连接.
+     *
+     * @param channel
+     */
+    void channelActive(Channel channel);
+
+    /**
+     * Channel断开连接,
+     *
+     * @param channel
+     */
+    void channelInactive(Channel channel);
 }

@@ -45,7 +45,7 @@ public class DefaultAcceptNettyConfig extends AcceptNettyConfig {
     private static void addDefaultHandlers(SocketChannel ch) {
         ChannelPipeline pipeline = ch.pipeline();
         // Add handler
-        pipeline.addLast(decoder, encoder,
+        pipeline.addLast(decoder, encoder, idleStateHandler,
                 heartbeatHandler, acceptorHandler, exceptionHandler);
     }
 
