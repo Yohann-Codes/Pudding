@@ -1,4 +1,4 @@
-package org.pudding.transport.common;
+package org.pudding.transport.netty;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.MessageSizeEstimator;

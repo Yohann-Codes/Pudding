@@ -1,6 +1,6 @@
 package org.pudding.transport.api;
 
-import org.pudding.transport.common.Option;
+import org.pudding.transport.netty.Option;
 
 /**
  * 参数配置接口.

@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.apache.log4j.Logger;
-import org.pudding.common.MessageHolder;
-import org.pudding.common.ProtocolHeader;
+import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.protocol.ProtocolHeader;
 
 import java.util.List;
 

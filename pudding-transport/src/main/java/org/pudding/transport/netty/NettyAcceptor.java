@@ -6,8 +6,7 @@ import io.netty.channel.*;
 import org.apache.log4j.Logger;
 import org.pudding.transport.api.Config;
 import org.pudding.transport.api.Processor;
-import org.pudding.transport.exception.IllegalOptionException;
-import org.pudding.transport.common.Option;
+import org.pudding.common.exception.IllegalOptionException;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -61,17 +60,23 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
     @Override
     public void bind(SocketAddress localAddress) {
         this.localAddress = localAddress;
-        try {
-            doBind();
-        } catch (InterruptedException e) {
-            logger.warn("bind exception", e);
-        } catch (IllegalOptionException e) {
-            logger.warn("option exception", e);
-        } catch (Exception e) {
-            logger.warn("bind exception", e);
-        } finally {
-            shutdownGracefully();
-        }
+        // 异步绑定
+        new Thread("BindThread") {
+            @Override
+            public void run() {
+                try {
+                    doBind();
+                } catch (InterruptedException e) {
+                    logger.warn("bind exception", e);
+                } catch (IllegalOptionException e) {
+                    logger.warn("option exception", e);
+                } catch (Exception e) {
+                    logger.warn("bind exception", e);
+                } finally {
+                    shutdownGracefully();
+                }
+            }
+        }.start();
     }
 
     @SuppressWarnings("unchecked")

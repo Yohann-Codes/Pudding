@@ -4,7 +4,6 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import org.pudding.transport.api.Config;
 import org.pudding.transport.api.Processor;
-import org.pudding.transport.common.Option;
 import org.pudding.transport.api.ProcessorHandler;
 
 import java.util.Map;

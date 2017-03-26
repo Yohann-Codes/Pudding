@@ -7,7 +7,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.pudding.transport.api.Processor;
-import org.pudding.transport.common.Option;
 import org.pudding.transport.netty.handler.*;
 
 /**

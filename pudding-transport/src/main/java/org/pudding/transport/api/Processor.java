@@ -1,6 +1,6 @@
 package org.pudding.transport.api;
 
-import org.pudding.common.MessageHolder;
+import org.pudding.common.protocol.MessageHolder;
 
 /**
  * 由其它模块实现.

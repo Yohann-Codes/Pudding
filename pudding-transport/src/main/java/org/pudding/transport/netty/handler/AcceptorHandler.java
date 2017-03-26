@@ -7,8 +7,8 @@ import org.apache.log4j.Logger;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Processor;
 import org.pudding.transport.api.ProcessorHandler;
-import org.pudding.common.MessageHolder;
-import org.pudding.transport.exception.ProcessorIsNullException;
+import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.exception.ProcessorIsNullException;
 import org.pudding.transport.netty.NettyChannel;
 
 /**

@@ -7,8 +7,7 @@ import org.apache.log4j.Logger;
 import org.pudding.transport.api.Config;
 import org.pudding.transport.api.Future;
 import org.pudding.transport.api.Processor;
-import org.pudding.transport.common.Option;
-import org.pudding.transport.exception.IllegalOptionException;
+import org.pudding.common.exception.IllegalOptionException;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -61,7 +60,7 @@ public class NettyConnector extends ConfigOptions implements INettyConnector {
     public Future connect(SocketAddress remoteAddress) {
         this.remoteAddress = remoteAddress;
         // 异步连接
-        new Thread() {
+        new Thread("ConnectThread") {
             @Override
             public void run() {
                 try {

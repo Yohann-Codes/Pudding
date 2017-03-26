@@ -5,8 +5,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.log4j.Logger;
-import org.pudding.common.MessageHolder;
-import org.pudding.common.ProtocolHeader;
+import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.protocol.ProtocolHeader;
 
 /**
  * Acceptor心跳检测Handler.
