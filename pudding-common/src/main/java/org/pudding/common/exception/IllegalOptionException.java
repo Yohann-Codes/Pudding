@@ -1,4 +1,4 @@
-package org.pudding.transport.exception;
+package org.pudding.common.exception;
 
 /**
  * @author Yohann.

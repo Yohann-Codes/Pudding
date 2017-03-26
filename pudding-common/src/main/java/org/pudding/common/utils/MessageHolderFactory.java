@@ -1,7 +1,7 @@
 package org.pudding.common.utils;
 
-import org.pudding.common.MessageHolder;
-import org.pudding.common.ProtocolHeader;
+import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.protocol.ProtocolHeader;
 
 /**
  * MessageHolder Factory.

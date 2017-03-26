@@ -1,7 +1,6 @@
 package org.pudding.common.utils;
 
-import org.pudding.common.ProtocolHeader;
-import org.pudding.common.config.PuddingConfig;
+import org.pudding.common.protocol.ProtocolHeader;
 
 /**
  * ProtocolHeader Factory.

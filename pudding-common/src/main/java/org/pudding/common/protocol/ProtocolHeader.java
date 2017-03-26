@@ -1,4 +1,4 @@
-package org.pudding.common;
+package org.pudding.common.protocol;
 
 import org.pudding.common.utils.ByteUtil;
 
