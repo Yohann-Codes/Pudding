@@ -1,4 +1,4 @@
-package org.pudding.rpc.model;
+package org.pudding.common.model;
 
 import java.io.Serializable;
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.Map;
  *
  * @author Yohann.
  */
-public class Service implements Serializable {
+public class ServiceMeta implements Serializable {
 
     // 服务名称（接口名称）
     private String name;
@@ -22,7 +22,7 @@ public class Service implements Serializable {
     // 服务地址 [host:port]
     private String address;
 
-    public Service(String name, Map<String, List<Class<?>[]>> methods, String address) {
+    public ServiceMeta(String name, Map<String, List<Class<?>[]>> methods, String address) {
         this.name = name;
         this.methods = methods;
         this.address = address;
