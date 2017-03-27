@@ -1,41 +1,50 @@
 package org.pudding.rpc.provider;
 
 import org.apache.log4j.Logger;
+import org.pudding.common.config.PuddingConfig;
 import org.pudding.common.exception.NotConnectRegistryException;
 import org.pudding.common.exception.RepeatConnectRegistryException;
 import org.pudding.common.exception.ServiceNotPublishedException;
-import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.model.ServiceMeta;
+import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.utils.AddressUtil;
+import org.pudding.common.utils.MessageHolderFactory;
 import org.pudding.rpc.processor.ProviderProcessor;
-import org.pudding.transport.api.Acceptor;
-import org.pudding.transport.api.Channel;
-import org.pudding.transport.api.Connector;
-import org.pudding.transport.api.Future;
+import org.pudding.serialization.api.Serializer;
+import org.pudding.serialization.api.SerializerFactory;
+import org.pudding.transport.api.*;
 import org.pudding.transport.netty.NettyAcceptor;
 import org.pudding.transport.netty.NettyConnector;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * 默认的服务提供者实现.
+ * 默认的服务提供者实现，建议单例使用.
  *
  * @author Yohann.
  */
 public class DefaultServiceProvider implements ServiceProvider {
     private static final Logger logger = Logger.getLogger(DefaultServiceProvider.class);
 
-    private Channel channel;
+    private Channel registryChannel;
     private Connector connector;
     private Acceptor acceptor;
 
     private ServiceMeta serviceMeta;
 
+    private Map<ServiceMeta, Channel> services; // 保存已发布并启动的服务，用于取消发布和停止服务.
+    private Future future;
+
     public DefaultServiceProvider() {
         connector = new NettyConnector(ProviderProcessor.PROCESSOR);
         acceptor = new NettyAcceptor(ProviderProcessor.PROCESSOR);
+        services = new HashMap<>();
     }
 
     @Override
     public ServiceProvider connectRegistry(String registryAddress) {
-        if (channel != null) {
+        if (registryChannel != null) {
             throw new RepeatConnectRegistryException("Registry has connected: " + registryAddress);
         }
         AddressUtil.checkFormat(registryAddress);
@@ -48,20 +57,34 @@ public class DefaultServiceProvider implements ServiceProvider {
     private void doConnectRegisry(String host, int port) {
         connector = new NettyConnector(new ProviderProcessor());
         Future future = connector.connect(host, port);
-        channel = future.channel();
+        if (future != null) {
+            registryChannel = future.channel();
+        }
     }
 
     @Override
-    public ServiceProvider publishService(ServiceMeta serviceMeta) {
+    public ServiceProvider publishService(final ServiceMeta serviceMeta) {
         checkConnection();
         validate(serviceMeta);
         this.serviceMeta = serviceMeta;
-
+        // 序列化
+        final Serializer serializer = SerializerFactory.getSerializer(PuddingConfig.serializerType);
+        byte[] body = serializer.writeObject(serviceMeta);
+        MessageHolder holder = MessageHolderFactory.newPublishServiceHolder(body);
+        Future future = registryChannel.write(holder);
+        future.addListener(new FutureListener() {
+            @Override
+            public void operationComplete(boolean isSuccess) {
+                if (!isSuccess) {
+                    logger.info("Publishing service failure: " + serviceMeta);
+                }
+            }
+        });
         return this;
     }
 
     private void checkConnection() {
-        if (channel == null) {
+        if (registryChannel == null) {
             throw new NotConnectRegistryException("Not connect to Registry");
         }
     }
@@ -82,13 +105,19 @@ public class DefaultServiceProvider implements ServiceProvider {
         String address = serviceMeta.getAddress();
         AddressUtil.checkFormat(address);
         int port = AddressUtil.port(address);
-        doStart(port);
+
+        doStart(port); // bind local port
+
+        if (future == null) {
+            throw new NullPointerException("future == null");
+        }
+        services.put(serviceMeta, future.channel());
         serviceMeta = null;
         return this;
     }
 
     private void doStart(int port) {
-        acceptor.bind(port);
+        future = acceptor.bind(port);
     }
 
     @Override
