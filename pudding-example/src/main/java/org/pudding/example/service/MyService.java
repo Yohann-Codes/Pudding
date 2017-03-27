@@ -1,4 +1,4 @@
-package org.pudding.example;
+package org.pudding.example.service;
 
 /**
  * @author Yohann.
