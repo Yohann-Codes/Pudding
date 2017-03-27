@@ -3,7 +3,7 @@ package org.pudding.common.exception;
 /**
  * @author Yohann.
  */
-public class RepeatConnectRegistryException extends Exception {
+public class RepeatConnectRegistryException extends RuntimeException {
 
     public RepeatConnectRegistryException() {
         super();

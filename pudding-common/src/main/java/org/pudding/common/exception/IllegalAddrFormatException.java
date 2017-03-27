@@ -3,7 +3,7 @@ package org.pudding.common.exception;
 /**
  * @author Yohann.
  */
-public class IllegalAddrFormatException extends Exception {
+public class IllegalAddrFormatException extends RuntimeException {
 
     public IllegalAddrFormatException() {
         super();

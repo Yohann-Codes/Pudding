@@ -3,7 +3,7 @@ package org.pudding.common.exception;
 /**
  * @author Yohann.
  */
-public class ServiceNotPublishedException extends Exception {
+public class ServiceNotPublishedException extends RuntimeException {
 
     public ServiceNotPublishedException() {
         super();

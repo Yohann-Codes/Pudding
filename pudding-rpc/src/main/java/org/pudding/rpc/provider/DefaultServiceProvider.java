@@ -5,7 +5,7 @@ import org.pudding.common.exception.NotConnectRegistryException;
 import org.pudding.common.exception.RepeatConnectRegistryException;
 import org.pudding.common.exception.ServiceNotPublishedException;
 import org.pudding.common.utils.AddressUtil;
-import org.pudding.rpc.model.Service;
+import org.pudding.common.model.ServiceMeta;
 import org.pudding.rpc.processor.ProviderProcessor;
 import org.pudding.transport.api.Acceptor;
 import org.pudding.transport.api.Channel;
@@ -26,7 +26,7 @@ public class DefaultServiceProvider implements ServiceProvider {
     private Connector connector;
     private Acceptor acceptor;
 
-    private Service service;
+    private ServiceMeta serviceMeta;
 
     public DefaultServiceProvider() {
         connector = new NettyConnector(ProviderProcessor.PROCESSOR);
@@ -34,7 +34,7 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public ServiceProvider connectRegistry(String registryAddress) throws RepeatConnectRegistryException {
+    public ServiceProvider connectRegistry(String registryAddress) {
         if (channel != null) {
             throw new RepeatConnectRegistryException("Registry has connected: " + registryAddress);
         }
@@ -52,30 +52,38 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public ServiceProvider publishService(Service service) throws NotConnectRegistryException {
-        validate(service);
-        this.service = service;
-        return null;
+    public ServiceProvider publishService(ServiceMeta serviceMeta) {
+        checkConnection();
+        validate(serviceMeta);
+        this.serviceMeta = serviceMeta;
+
+        return this;
+    }
+
+    private void checkConnection() {
+        if (channel == null) {
+            throw new NotConnectRegistryException("Not connect to Registry");
+        }
     }
 
     @Override
-    public ServiceProvider publishServices(Service... services) throws NotConnectRegistryException {
-        for (Service s : services) {
+    public ServiceProvider publishServices(ServiceMeta... serviceMetas) {
+        for (ServiceMeta s : serviceMetas) {
             publishService(s);
         }
         return this;
     }
 
     @Override
-    public ServiceProvider startService() throws ServiceNotPublishedException {
-        if (service == null) {
+    public ServiceProvider startService() {
+        if (serviceMeta == null) {
             throw new ServiceNotPublishedException("Please publish it before start the service");
         }
-        String address = service.getAddress();
+        String address = serviceMeta.getAddress();
         AddressUtil.checkFormat(address);
         int port = AddressUtil.port(address);
         doStart(port);
-        service = null;
+        serviceMeta = null;
         return this;
     }
 
@@ -84,22 +92,22 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public ServiceProvider publishAndStartService(Service service) throws NotConnectRegistryException {
-        publishService(service);
+    public ServiceProvider publishAndStartService(ServiceMeta serviceMeta) {
+        publishService(serviceMeta);
         startService();
         return this;
     }
 
     @Override
-    public ServiceProvider publishAndStartServices(Service... services) throws NotConnectRegistryException {
-        for (Service s : services) {
+    public ServiceProvider publishAndStartServices(ServiceMeta... serviceMetas) {
+        for (ServiceMeta s : serviceMetas) {
             publishAndStartService(s);
         }
         return this;
     }
 
-    private void validate(Service service) {
-        if (service == null) {
+    private void validate(ServiceMeta serviceMeta) {
+        if (serviceMeta == null) {
             throw new NullPointerException("service == null");
         }
     }

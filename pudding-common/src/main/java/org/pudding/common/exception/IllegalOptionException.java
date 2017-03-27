@@ -3,7 +3,7 @@ package org.pudding.common.exception;
 /**
  * @author Yohann.
  */
-public class IllegalOptionException extends Exception {
+public class IllegalOptionException extends RuntimeException {
 
     public IllegalOptionException() {
         super();

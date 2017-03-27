@@ -3,7 +3,7 @@ package org.pudding.common.exception;
 /**
  * @author Yohann.
  */
-public class ProcessorIsNullException extends Exception {
+public class ProcessorIsNullException extends RuntimeException {
 
     public ProcessorIsNullException() {
         super();

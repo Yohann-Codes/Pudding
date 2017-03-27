@@ -1,16 +1,13 @@
 package org.pudding.rpc.provider;
 
-import org.pudding.common.exception.NotConnectRegistryException;
-import org.pudding.common.exception.RepeatConnectRegistryException;
-import org.pudding.common.exception.ServiceNotPublishedException;
-import org.pudding.rpc.model.Service;
+import org.pudding.common.model.ServiceMeta;
 
 /**
  * 服务提供者.
- *
+ * <p>
  * 最终要的两个功能:
- *      1) 连接注册中心发布服务.
- *      2) 启动本地服务.
+ * 1) 连接注册中心发布服务.
+ * 2) 启动本地服务.
  *
  * @author Yohann.
  */
@@ -21,39 +18,39 @@ public interface ServiceProvider {
      *
      * @param registryAddress 格式: "host:port"  例如: "127.0.0.1:20000"
      */
-    ServiceProvider connectRegistry(String registryAddress) throws RepeatConnectRegistryException;
+    ServiceProvider connectRegistry(String registryAddress);
 
     /**
      * 发布一个服务.
      *
-     * @param service
+     * @param serviceMeta
      */
-    ServiceProvider publishService(Service service) throws NotConnectRegistryException;
+    ServiceProvider publishService(ServiceMeta serviceMeta);
 
     /**
      * 发布多个服务.
      *
-     * @param services
+     * @param serviceMetas
      */
-    ServiceProvider publishServices(Service... services) throws NotConnectRegistryException;
+    ServiceProvider publishServices(ServiceMeta... serviceMetas);
 
     /**
      * 启动本地服务(绑定端口监听远程调用).
      * 注意: 调用此方法之前必须先发布服务.
      */
-    ServiceProvider startService() throws ServiceNotPublishedException;
+    ServiceProvider startService();
 
     /**
      * 发布并启动一个服务.
      *
-     * @param service
+     * @param serviceMeta
      */
-    ServiceProvider publishAndStartService(Service service) throws NotConnectRegistryException;
+    ServiceProvider publishAndStartService(ServiceMeta serviceMeta);
 
     /**
      * 发布并启动多个服务.
      *
-     * @param services
+     * @param serviceMetas
      */
-    ServiceProvider publishAndStartServices(Service... services) throws NotConnectRegistryException;
+    ServiceProvider publishAndStartServices(ServiceMeta... serviceMetas);
 }

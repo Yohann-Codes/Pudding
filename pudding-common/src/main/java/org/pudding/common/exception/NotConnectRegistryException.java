@@ -3,7 +3,7 @@ package org.pudding.common.exception;
 /**
  * @author Yohann.
  */
-public class NotConnectRegistryException extends Exception {
+public class NotConnectRegistryException extends RuntimeException {
 
     public NotConnectRegistryException() {
         super();
