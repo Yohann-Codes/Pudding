@@ -1,4 +1,0 @@
-org.pudding.serialization.java.JavaSerializer
-org.pudding.serialization.kryo.KryoSerializer
-org.pudding.serialization.hessian.HessianSerializer
-org.pudding.serialization.gson.GsonSerializer

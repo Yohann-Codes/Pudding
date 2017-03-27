@@ -20,7 +20,7 @@ public class ProtocolHeaderFactory {
         header.setType(ProtocolHeader.type((byte) 0, ProtocolHeader.HEATBEAT));
         header.setSign((byte) 0);
         header.setInvokeId(0);
-        header.setErrorCode(0);
+        header.setResultCode(0);
         header.setBodyLength(0);
         return header;
     }
@@ -34,7 +34,21 @@ public class ProtocolHeaderFactory {
         header.setType(ProtocolHeader.type(PuddingConfig.serializerType, ProtocolHeader.MESSAGE));
         header.setSign(ProtocolHeader.PUBLISH_SERVICE);
         header.setInvokeId(0);
-        header.setErrorCode(0);
+        header.setResultCode(0);
+        header.setBodyLength(bodyLength);
+        return header;
+    }
+
+    /**
+     * Create UnpublishService ProtocolHeader.
+     */
+    public static ProtocolHeader newUnpublishServiceHeader(int bodyLength) {
+        ProtocolHeader header = new ProtocolHeader();
+        header.setMagic(ProtocolHeader.MAGIC);
+        header.setType(ProtocolHeader.type(PuddingConfig.serializerType, ProtocolHeader.MESSAGE));
+        header.setSign(ProtocolHeader.UNPUBLISH_SERVICE);
+        header.setInvokeId(0);
+        header.setResultCode(0);
         header.setBodyLength(bodyLength);
         return header;
     }

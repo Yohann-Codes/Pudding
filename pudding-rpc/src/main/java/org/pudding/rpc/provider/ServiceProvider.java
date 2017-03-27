@@ -54,5 +54,15 @@ public interface ServiceProvider {
      */
     ServiceProvider publishAndStartServices(ServiceMeta... serviceMetas);
 
+    /**
+     * 取消发布并停止服务.
+     *
+     * @param serviceMeta
+     */
+    ServiceProvider unpublishAndStopService(ServiceMeta serviceMeta);
 
+    /**
+     * 取消发布并停止在此实例上的全部服务.
+     */
+    ServiceProvider unpublishAndStopAll();
 }

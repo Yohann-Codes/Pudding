@@ -31,4 +31,15 @@ public class MessageHolderFactory {
         holder.setBody(body);
         return holder;
     }
+
+    /**
+     * Create UnpublishService MessageHolder.
+     */
+    public static MessageHolder newUnpublishServiceHolder(byte[] body) {
+        ProtocolHeader header = ProtocolHeaderFactory.newUnpublishServiceHeader(body.length);
+        MessageHolder holder = new MessageHolder();
+        holder.setHeader(header);
+        holder.setBody(body);
+        return holder;
+    }
 }

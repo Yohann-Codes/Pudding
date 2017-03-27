@@ -5,6 +5,7 @@ import org.pudding.common.config.PuddingConfig;
 import org.pudding.common.exception.NotConnectRegistryException;
 import org.pudding.common.exception.RepeatConnectRegistryException;
 import org.pudding.common.exception.ServiceNotPublishedException;
+import org.pudding.common.exception.ServiceNotStartedException;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.protocol.MessageHolder;
 import org.pudding.common.utils.AddressUtil;
@@ -50,6 +51,7 @@ public class DefaultServiceProvider implements ServiceProvider {
         AddressUtil.checkFormat(registryAddress);
         String host = AddressUtil.host(registryAddress);
         int port = AddressUtil.port(registryAddress);
+
         doConnectRegisry(host, port);
         return this;
     }
@@ -67,19 +69,23 @@ public class DefaultServiceProvider implements ServiceProvider {
         checkConnection();
         validate(serviceMeta);
         this.serviceMeta = serviceMeta;
+
         // 序列化
         final Serializer serializer = SerializerFactory.getSerializer(PuddingConfig.serializerType);
         byte[] body = serializer.writeObject(serviceMeta);
         MessageHolder holder = MessageHolderFactory.newPublishServiceHolder(body);
-        Future future = registryChannel.write(holder);
-        future.addListener(new FutureListener() {
-            @Override
-            public void operationComplete(boolean isSuccess) {
-                if (!isSuccess) {
-                    logger.info("Publishing service failure: " + serviceMeta);
+
+        if (registryChannel.isActive()) {
+            Future future = registryChannel.write(holder);
+            future.addListener(new FutureListener() {
+                @Override
+                public void operationComplete(boolean isSuccess) {
+                    if (!isSuccess) {
+                        logger.info("Publishing service failure: " + serviceMeta);
+                    }
                 }
-            }
-        });
+            });
+        }
         return this;
     }
 
@@ -131,6 +137,57 @@ public class DefaultServiceProvider implements ServiceProvider {
     public ServiceProvider publishAndStartServices(ServiceMeta... serviceMetas) {
         for (ServiceMeta s : serviceMetas) {
             publishAndStartService(s);
+        }
+        return this;
+    }
+
+    @Override
+    public ServiceProvider unpublishAndStopService(ServiceMeta serviceMeta) {
+        validate(serviceMeta);
+        if (!services.containsKey(serviceMeta)) {
+            throw new ServiceNotStartedException("The service did not start: " + serviceMeta);
+        }
+        // 取消并停止
+        unpublishService(serviceMeta);
+        stopService(serviceMeta);
+
+        services.remove(serviceMeta);
+        return this;
+    }
+
+    private void unpublishService(final ServiceMeta serviceMeta) {
+        checkConnection();
+        this.serviceMeta = serviceMeta;
+
+        // 序列化
+        final Serializer serializer = SerializerFactory.getSerializer(PuddingConfig.serializerType);
+        byte[] body = serializer.writeObject(serviceMeta);
+        MessageHolder holder = MessageHolderFactory.newUnpublishServiceHolder(body);
+
+        if (registryChannel.isActive()) {
+            Future future = registryChannel.write(holder);
+            future.addListener(new FutureListener() {
+                @Override
+                public void operationComplete(boolean isSuccess) {
+                    if (!isSuccess) {
+                        logger.info("Unpublishing service failure: " + serviceMeta);
+                    }
+                }
+            });
+        }
+    }
+
+    private void stopService(ServiceMeta serviceMeta) {
+        Channel serviceChannel = services.get(serviceMeta);
+        serviceChannel.close(); // 关闭已绑定的Channel
+    }
+
+    @Override
+    public ServiceProvider unpublishAndStopAll() {
+        for (Map.Entry<ServiceMeta, Channel> entry : services.entrySet()) {
+            ServiceMeta serviceMeta = entry.getKey();
+            unpublishAndStopService(serviceMeta);
+            services.remove(serviceMeta);
         }
         return this;
     }

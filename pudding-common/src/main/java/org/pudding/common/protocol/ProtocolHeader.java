@@ -33,16 +33,16 @@ public class ProtocolHeader {
     public static final byte OFFLINE_SERVICE = 0x05; // 服务下线通知
     public static final byte INVOKE_SERVICE = 0x06; // 服务调用
     public static final byte RETURN_SERVICE = 0x07; // 调用返回
-    public static final byte ERROR = 0x08; // 错误
+    public static final byte RESPONSE = 0x08; // 响应
 
-    /** errorCode, Sign不是ERROR时, errorCode = 0 */
+    /** ResultCode, 如果Sign不为RESPONSE，则resultCode=0 */
     //...
 
     private short magic;
     private byte type; // 高4位: serializerType, 低4位: dataPacketType
     private byte sign;
     private long invokeId; // <invokeId, invoke, result>
-    private int errorCode; // 错误码
+    private int resultCode; // 响应码
     private int bodyLength; // 消息体长度
 
     public static byte serializationCode(byte code) {
@@ -89,12 +89,12 @@ public class ProtocolHeader {
         this.invokeId = invokeId;
     }
 
-    public int getErrorCode() {
-        return errorCode;
+    public int getResultCode() {
+        return resultCode;
     }
 
-    public void setErrorCode(int errorCode) {
-        this.errorCode = errorCode;
+    public void setResultCode(int resultCode) {
+        this.resultCode = resultCode;
     }
 
     public int getBodyLength() {
@@ -112,7 +112,7 @@ public class ProtocolHeader {
                 ", type=" + type +
                 ", sign=" + sign +
                 ", invokeId=" + invokeId +
-                ", errorCode=" + errorCode +
+                ", resultCode=" + resultCode +
                 ", bodyLength=" + bodyLength +
                 '}';
     }
