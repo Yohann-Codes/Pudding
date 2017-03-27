@@ -4,9 +4,9 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
 import org.apache.log4j.Logger;
-import org.pudding.transport.api.Config;
-import org.pudding.transport.api.Processor;
+import org.pudding.transport.api.*;
 import org.pudding.common.exception.IllegalOptionException;
+import org.pudding.transport.api.Channel;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -23,6 +23,9 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
 
     private IAcceptNettyConfig nettyConfig;
     private SocketAddress localAddress;
+
+    private volatile Future future; // 可以用此future获取channel进行写操作
+    private volatile boolean failed = false; // 自旋控制
 
     /**
      * Default NettyConfig.
@@ -48,20 +51,20 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
     }
 
     @Override
-    public void bind(int port) {
-        bind(new InetSocketAddress(port));
+    public Future bind(int port) {
+        return bind(new InetSocketAddress(port));
     }
 
     @Override
-    public void bind(String host, int port) {
-        bind(new InetSocketAddress(host, port));
+    public Future bind(String host, int port) {
+        return bind(new InetSocketAddress(host, port));
     }
 
     @Override
-    public void bind(SocketAddress localAddress) {
+    public Future bind(SocketAddress localAddress) {
         this.localAddress = localAddress;
         // 异步绑定
-        new Thread("BindThread") {
+        new Thread("AcceptThread") {
             @Override
             public void run() {
                 try {
@@ -77,6 +80,10 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
                 }
             }
         }.start();
+
+        // Spin until future not null
+        while (!failed && future == null) { }
+        return future;
     }
 
     @SuppressWarnings("unchecked")
@@ -93,7 +100,10 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
         ChannelFuture future = serverBootstrap.bind(localAddress).sync();
         logger.info("Listening on " + localAddress);
 
+        this.future = new NettyFuture(future);
+
         future.channel().closeFuture().sync();
+        logger.info("Closing on " + localAddress);
     }
 
     private boolean setOption() {

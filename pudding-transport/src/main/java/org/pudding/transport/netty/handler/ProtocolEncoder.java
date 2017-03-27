@@ -22,7 +22,7 @@ public class ProtocolEncoder extends MessageToByteEncoder<MessageHolder> {
         out.writeShort(header.getMagic())
                 .writeByte(header.getType())
                 .writeByte(header.getSign())
-                .writeLong(header.getId())
+                .writeLong(header.getInvokeId())
                 .writeInt(header.getErrorCode())
                 .writeInt(header.getBodyLength())
                 .writeBytes(body);

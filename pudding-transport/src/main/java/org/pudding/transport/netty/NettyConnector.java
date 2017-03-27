@@ -102,6 +102,7 @@ public class NettyConnector extends ConfigOptions implements INettyConnector {
         this.future = new NettyFuture(future);
 
         future.channel().closeFuture().sync();
+        logger.info("Close to " + remoteAddress);
     }
 
     private boolean setOption() {
