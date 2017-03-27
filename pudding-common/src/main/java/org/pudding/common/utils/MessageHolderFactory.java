@@ -20,4 +20,15 @@ public class MessageHolderFactory {
         holder.setBody(new byte[]{});
         return holder;
     }
+
+    /**
+     * Create PublishService MessageHolder.
+     */
+    public static MessageHolder newPublishServiceHolder(byte[] body) {
+        ProtocolHeader header = ProtocolHeaderFactory.newPublishServiceHeader(body.length);
+        MessageHolder holder = new MessageHolder();
+        holder.setHeader(header);
+        holder.setBody(body);
+        return holder;
+    }
 }

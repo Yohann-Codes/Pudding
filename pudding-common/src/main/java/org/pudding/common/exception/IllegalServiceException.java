@@ -3,21 +3,21 @@ package org.pudding.common.exception;
 /**
  * @author Yohann.
  */
-public class ServiceNotPublishedException extends RuntimeException {
+public class IllegalServiceException extends RuntimeException {
 
-    public ServiceNotPublishedException() {
+    public IllegalServiceException() {
         super();
     }
 
-    public ServiceNotPublishedException(String messge) {
+    public IllegalServiceException(String messge) {
         super(messge);
     }
 
-    public ServiceNotPublishedException(Throwable cause) {
+    public IllegalServiceException(Throwable cause) {
         super(cause);
     }
 
-    public ServiceNotPublishedException(String messge, Throwable cause) {
+    public IllegalServiceException(String messge, Throwable cause) {
         super(messge, cause);
     }
 }

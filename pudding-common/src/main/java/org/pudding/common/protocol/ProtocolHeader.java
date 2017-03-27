@@ -24,7 +24,6 @@ public class ProtocolHeader {
     /** DataPacket Type, type的低地址4位 */
     public static final byte MESSAGE = 0x01; // 消息
     public static final byte HEATBEAT = 0x02; // 心跳
-    public static final byte ACK = 0x03; // 消息确认应答
 
     /** Sign 消息标识 */
     public static final byte PUBLISH_SERVICE = 0x01; // 发布服务
@@ -42,7 +41,7 @@ public class ProtocolHeader {
     private short magic;
     private byte type; // 高4位: serializerType, 低4位: dataPacketType
     private byte sign;
-    private long id; // MESSAGE, ACK
+    private long invokeId; // <invokeId, invoke, result>
     private int errorCode; // 错误码
     private int bodyLength; // 消息体长度
 
@@ -82,12 +81,12 @@ public class ProtocolHeader {
         this.sign = sign;
     }
 
-    public long getId() {
-        return id;
+    public long getInvokeId() {
+        return invokeId;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setInvokeId(long invokeIdd) {
+        this.invokeId = invokeId;
     }
 
     public int getErrorCode() {
@@ -112,7 +111,7 @@ public class ProtocolHeader {
                 "magic=" + magic +
                 ", type=" + type +
                 ", sign=" + sign +
-                ", id=" + id +
+                ", invokeId=" + invokeId +
                 ", errorCode=" + errorCode +
                 ", bodyLength=" + bodyLength +
                 '}';

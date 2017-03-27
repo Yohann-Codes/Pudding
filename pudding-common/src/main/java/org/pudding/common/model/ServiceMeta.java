@@ -1,11 +1,12 @@
 package org.pudding.common.model;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 发布服务的数据结构.
+ * 服务元数据.
  *
  * @author Yohann.
  */
@@ -13,18 +14,14 @@ public class ServiceMeta implements Serializable {
 
     // 服务名称（接口名称）
     private String name;
-
-    // 服务中可用方法
-    // key: 方法名称
-    // value: 重载方法参数List
-    private Map<String, List<Class<?>[]>> methods;
-
+    // 方法
+    private List<MethodMeta> methodMetas;
     // 服务地址 [host:port]
     private String address;
 
-    public ServiceMeta(String name, Map<String, List<Class<?>[]>> methods, String address) {
+    public ServiceMeta(String name, List<MethodMeta> methodMetas, String address) {
         this.name = name;
-        this.methods = methods;
+        this.methodMetas = methodMetas;
         this.address = address;
     }
 
@@ -32,11 +29,20 @@ public class ServiceMeta implements Serializable {
         return name;
     }
 
-    public Map<String, List<Class<?>[]>> getMethods() {
-        return methods;
+    public List<MethodMeta> getMethodMetas() {
+        return methodMetas;
     }
 
     public String getAddress() {
         return address;
+    }
+
+    @Override
+    public String toString() {
+        return "ServiceMeta{" +
+                "name='" + name + '\'' +
+                ", methodMetas=" + methodMetas +
+                ", address='" + address + '\'' +
+                '}';
     }
 }
