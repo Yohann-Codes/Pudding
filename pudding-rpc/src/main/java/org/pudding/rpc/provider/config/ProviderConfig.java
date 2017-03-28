@@ -23,6 +23,9 @@ public class ProviderConfig {
     /** 注册中心地址, 格式: host:port */
     private String registryAddress = "";
 
+    /** 工作线程数量, 默认: 2*CPU */
+    private int nWorkers = Runtime.getRuntime().availableProcessors() * 2;
+
 
     public static void serializerType(byte serializerType) {
         PROVIDER_CONFIG.serializerType = serializerType;
@@ -38,5 +41,13 @@ public class ProviderConfig {
 
     public static String registryAddress() {
         return PROVIDER_CONFIG.registryAddress;
+    }
+
+    public static void nWorkers(int nWorkers) {
+        PROVIDER_CONFIG.nWorkers = nWorkers;
+    }
+
+    public static int nWorkers() {
+        return PROVIDER_CONFIG.nWorkers;
     }
 }

@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.protocol.MessageHolder;
 import org.pudding.common.protocol.ProtocolHeader;
+import org.pudding.rpc.provider.config.ProviderConfig;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
 import org.pudding.transport.api.Channel;
@@ -16,22 +17,33 @@ import static org.pudding.common.protocol.ProtocolHeader.dataPacketCode;
  *
  * @author Yohann.
  */
-public class ProviderProcessor implements Processor {
+public class ProviderProcessor extends ProviderExecutor implements Processor {
     private static final Logger logger = Logger.getLogger(ProviderProcessor.class);
 
     public static final ProviderProcessor PROCESSOR = new ProviderProcessor();
 
+    public ProviderProcessor() {
+        super(ProviderConfig.nWorkers());
+    }
+
     @Override
-    public void channelRead(Channel channel, MessageHolder holder) {
-        // 解析MessageHolder
-        ProtocolHeader header = holder.getHeader();
-        byte serializationType = ProtocolHeader.serializationCode(header.getType());
-        byte packetType = dataPacketCode(header.getType());
-        byte sign = header.getSign();
-        long invokeId = header.getInvokeId();
-        int resultCode = header.getResultCode();
-        byte[] body = holder.getBody();
-        dispatch(channel, serializationType, packetType, sign, invokeId, resultCode, body);
+    public void channelRead(final Channel channel, final MessageHolder holder) {
+
+        // 由线程池执行
+        execute(new Runnable() {
+            @Override
+            public void run() {
+                // 解析MessageHolder
+                ProtocolHeader header = holder.getHeader();
+                byte serializationType = ProtocolHeader.serializationCode(header.getType());
+                byte packetType = dataPacketCode(header.getType());
+                byte sign = header.getSign();
+                long invokeId = header.getInvokeId();
+                int resultCode = header.getResultCode();
+                byte[] body = holder.getBody();
+                dispatch(channel, serializationType, packetType, sign, invokeId, resultCode, body);
+            }
+        });
     }
 
     /**

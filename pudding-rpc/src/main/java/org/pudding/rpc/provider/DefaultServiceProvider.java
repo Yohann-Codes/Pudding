@@ -25,9 +25,11 @@ import java.util.Map;
 public class DefaultServiceProvider implements ServiceProvider {
     private static final Logger logger = Logger.getLogger(DefaultServiceProvider.class);
 
+    private final int nWorkers;
+    private final Connector connector;
+    private final Acceptor acceptor;
+
     private Channel registryChannel;
-    private Connector connector;
-    private Acceptor acceptor;
 
     private ServiceMeta serviceMeta;
 
@@ -35,6 +37,11 @@ public class DefaultServiceProvider implements ServiceProvider {
     private Future future;
 
     public DefaultServiceProvider() {
+        this(0);
+    }
+
+    public DefaultServiceProvider(int nWorkers) {
+        this.nWorkers = nWorkers;
         connector = new NettyConnector(ProviderProcessor.PROCESSOR);
         acceptor = new NettyAcceptor(ProviderProcessor.PROCESSOR);
         services = new HashMap<>();
@@ -64,13 +71,18 @@ public class DefaultServiceProvider implements ServiceProvider {
     public void closeRegistry() {
         registryChannel.close();
         registryChannel = null;
+        ProviderProcessor.PROCESSOR.shutdownExecutor();
     }
 
     private void doConnectRegisry(String host, int port) {
-        connector = new NettyConnector(new ProviderProcessor());
         Future future = connector.connect(host, port);
         if (future != null) {
             registryChannel = future.channel();
+        }
+        if (nWorkers == 0) {
+            ProviderProcessor.PROCESSOR.createExecutor();
+        } else {
+            ProviderProcessor.PROCESSOR.createExecutor(nWorkers);
         }
     }
 
