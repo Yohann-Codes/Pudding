@@ -1,4 +1,4 @@
-package org.pudding.registry.processor;
+package org.pudding.rpc.provider.processor;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -6,11 +6,11 @@ import java.util.concurrent.Executors;
 /**
  * @author Yohann.
  */
-public class RegistryExecutor {
+public class ProviderExecutor {
     private int nWorkers;
     private ExecutorService executor;
 
-    public RegistryExecutor(int nWorkers) {
+    public ProviderExecutor(int nWorkers) {
         this.nWorkers = nWorkers;
     }
 

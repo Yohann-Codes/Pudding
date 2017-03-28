@@ -1,4 +1,4 @@
-package org.pudding.rpc.processor;
+package org.pudding.rpc.consumer.processor;
 
 import org.pudding.common.protocol.MessageHolder;
 import org.pudding.transport.api.Channel;
@@ -11,7 +11,7 @@ import org.pudding.transport.api.Processor;
  */
 public class ConsumerProcessor implements Processor {
 
-    public static final Processor PROCESSOR = new ConsumerProcessor();
+    public static final ConsumerProcessor PROCESSOR = new ConsumerProcessor();
 
     @Override
     public void channelRead(Channel channel, MessageHolder holder) {

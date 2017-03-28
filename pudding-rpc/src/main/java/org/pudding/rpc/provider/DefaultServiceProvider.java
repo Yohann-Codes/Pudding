@@ -1,16 +1,13 @@
 package org.pudding.rpc.provider;
 
 import org.apache.log4j.Logger;
-import org.pudding.common.config.PuddingConfig;
-import org.pudding.common.exception.NotConnectRegistryException;
-import org.pudding.common.exception.RepeatConnectRegistryException;
-import org.pudding.common.exception.ServiceNotPublishedException;
-import org.pudding.common.exception.ServiceNotStartedException;
+import org.pudding.common.exception.*;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.protocol.MessageHolder;
 import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.utils.MessageHolderFactory;
-import org.pudding.rpc.processor.ProviderProcessor;
+import org.pudding.rpc.provider.processor.ProviderProcessor;
+import org.pudding.rpc.provider.config.ProviderConfig;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
 import org.pudding.transport.api.*;
@@ -44,6 +41,13 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     @Override
+    public ServiceProvider connectRegistry() {
+        String registryAddress = ProviderConfig.registryAddress();
+        connectRegistry(registryAddress);
+        return this;
+    }
+
+    @Override
     public ServiceProvider connectRegistry(String registryAddress) {
         if (registryChannel != null) {
             throw new RepeatConnectRegistryException("Registry has connected: " + registryAddress);
@@ -56,6 +60,12 @@ public class DefaultServiceProvider implements ServiceProvider {
         return this;
     }
 
+    @Override
+    public void closeRegistry() {
+        registryChannel.close();
+        registryChannel = null;
+    }
+
     private void doConnectRegisry(String host, int port) {
         connector = new NettyConnector(new ProviderProcessor());
         Future future = connector.connect(host, port);
@@ -65,15 +75,15 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public ServiceProvider publishService(final ServiceMeta serviceMeta) {
+    public ServiceProvider publishService(final ServiceMeta serviceMeta) throws ServicePublishFailedException {
         checkConnection();
         validate(serviceMeta);
         this.serviceMeta = serviceMeta;
 
         // 序列化
-        final Serializer serializer = SerializerFactory.getSerializer(PuddingConfig.serializerType);
+        final Serializer serializer = SerializerFactory.getSerializer(ProviderConfig.serializerType());
         byte[] body = serializer.writeObject(serviceMeta);
-        MessageHolder holder = MessageHolderFactory.newPublishServiceHolder(body);
+        MessageHolder holder = MessageHolderFactory.newPublishServiceRequestHolder(body, ProviderConfig.serializerType());
 
         if (registryChannel.isActive()) {
             Future future = registryChannel.write(holder);
@@ -81,10 +91,12 @@ public class DefaultServiceProvider implements ServiceProvider {
                 @Override
                 public void operationComplete(boolean isSuccess) {
                     if (!isSuccess) {
-                        logger.info("Publishing service failure: " + serviceMeta);
+                        logger.info("Publish service failed: " + serviceMeta);
                     }
                 }
             });
+        } else {
+            throw new ServicePublishFailedException("Connection inactive");
         }
         return this;
     }
@@ -96,7 +108,7 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public ServiceProvider publishServices(ServiceMeta... serviceMetas) {
+    public ServiceProvider publishServices(ServiceMeta... serviceMetas) throws ServicePublishFailedException {
         for (ServiceMeta s : serviceMetas) {
             publishService(s);
         }
@@ -104,7 +116,7 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public ServiceProvider startService() {
+    public ServiceProvider startService() throws ServiceStartFailedException {
         if (serviceMeta == null) {
             throw new ServiceNotPublishedException("Please publish it before start the service");
         }
@@ -115,7 +127,7 @@ public class DefaultServiceProvider implements ServiceProvider {
         doStart(port); // bind local port
 
         if (future == null) {
-            throw new NullPointerException("future == null");
+            throw new ServiceStartFailedException("future == null");
         }
         services.put(serviceMeta, future.channel());
         serviceMeta = null;
@@ -127,17 +139,52 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public ServiceProvider publishAndStartService(ServiceMeta serviceMeta) {
+    public ServiceProvider publishAndStartService(ServiceMeta serviceMeta)
+            throws ServicePublishFailedException, ServiceStartFailedException {
+
         publishService(serviceMeta);
         startService();
         return this;
     }
 
     @Override
-    public ServiceProvider publishAndStartServices(ServiceMeta... serviceMetas) {
+    public ServiceProvider publishAndStartServices(ServiceMeta... serviceMetas)
+            throws ServiceStartFailedException, ServicePublishFailedException {
+
         for (ServiceMeta s : serviceMetas) {
             publishAndStartService(s);
         }
+        return this;
+    }
+
+    @Override
+    public ServiceProvider unpublishService(final ServiceMeta serviceMeta) {
+        checkConnection();
+        this.serviceMeta = serviceMeta;
+
+        // 序列化
+        final Serializer serializer = SerializerFactory.getSerializer(ProviderConfig.serializerType());
+        byte[] body = serializer.writeObject(serviceMeta);
+        MessageHolder holder = MessageHolderFactory.newUnpublishServiceRequestHolder(body, ProviderConfig.serializerType());
+
+        if (registryChannel.isActive()) {
+            Future future = registryChannel.write(holder);
+            future.addListener(new FutureListener() {
+                @Override
+                public void operationComplete(boolean isSuccess) {
+                    if (!isSuccess) {
+                        logger.info("Unpublishing service failure: " + serviceMeta);
+                    }
+                }
+            });
+        }
+        return this;
+    }
+
+    @Override
+    public ServiceProvider stopService(ServiceMeta serviceMeta) {
+        Channel serviceChannel = services.get(serviceMeta);
+        serviceChannel.close(); // 关闭已绑定的Channel
         return this;
     }
 
@@ -153,33 +200,6 @@ public class DefaultServiceProvider implements ServiceProvider {
 
         services.remove(serviceMeta);
         return this;
-    }
-
-    private void unpublishService(final ServiceMeta serviceMeta) {
-        checkConnection();
-        this.serviceMeta = serviceMeta;
-
-        // 序列化
-        final Serializer serializer = SerializerFactory.getSerializer(PuddingConfig.serializerType);
-        byte[] body = serializer.writeObject(serviceMeta);
-        MessageHolder holder = MessageHolderFactory.newUnpublishServiceHolder(body);
-
-        if (registryChannel.isActive()) {
-            Future future = registryChannel.write(holder);
-            future.addListener(new FutureListener() {
-                @Override
-                public void operationComplete(boolean isSuccess) {
-                    if (!isSuccess) {
-                        logger.info("Unpublishing service failure: " + serviceMeta);
-                    }
-                }
-            });
-        }
-    }
-
-    private void stopService(ServiceMeta serviceMeta) {
-        Channel serviceChannel = services.get(serviceMeta);
-        serviceChannel.close(); // 关闭已绑定的Channel
     }
 
     @Override
