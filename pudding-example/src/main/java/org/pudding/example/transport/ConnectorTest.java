@@ -1,6 +1,6 @@
 package org.pudding.example.transport;
 
-import org.pudding.rpc.processor.ConsumerProcessor;
+import org.pudding.rpc.consumer.processor.ConsumerProcessor;
 import org.pudding.transport.api.Connector;
 import org.pudding.transport.netty.NettyConnector;
 

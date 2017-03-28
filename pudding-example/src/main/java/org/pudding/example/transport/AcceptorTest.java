@@ -1,6 +1,6 @@
 package org.pudding.example.transport;
 
-import org.pudding.rpc.processor.ProviderProcessor;
+import org.pudding.rpc.provider.processor.ProviderProcessor;
 import org.pudding.transport.api.Acceptor;
 import org.pudding.transport.netty.NettyAcceptor;
 
