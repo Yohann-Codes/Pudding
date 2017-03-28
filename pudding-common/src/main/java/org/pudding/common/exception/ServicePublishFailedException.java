@@ -3,21 +3,21 @@ package org.pudding.common.exception;
 /**
  * @author Yohann.
  */
-public class ServiceNotStartedException extends RuntimeException {
+public class ServicePublishFailedException extends Exception {
 
-    public ServiceNotStartedException() {
+    public ServicePublishFailedException() {
         super();
     }
 
-    public ServiceNotStartedException(String messge) {
+    public ServicePublishFailedException(String messge) {
         super(messge);
     }
 
-    public ServiceNotStartedException(Throwable cause) {
+    public ServicePublishFailedException(Throwable cause) {
         super(cause);
     }
 
-    public ServiceNotStartedException(String messge, Throwable cause) {
+    public ServicePublishFailedException(String messge, Throwable cause) {
         super(messge, cause);
     }
 }

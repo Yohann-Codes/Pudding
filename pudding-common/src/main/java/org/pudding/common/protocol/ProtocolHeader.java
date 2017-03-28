@@ -22,8 +22,9 @@ public class ProtocolHeader {
 
 
     /** DataPacket Type, type的低地址4位 */
-    public static final byte MESSAGE = 0x01; // 消息
-    public static final byte HEATBEAT = 0x02; // 心跳
+    public static final byte REQUEST = 0x01; // 请求
+    public static final byte RESPONSE = 0x02; // 响应
+    public static final byte HEATBEAT = 0x03; // 心跳
 
     /** Sign 消息标识 */
     public static final byte PUBLISH_SERVICE = 0x01; // 发布服务
@@ -33,10 +34,10 @@ public class ProtocolHeader {
     public static final byte OFFLINE_SERVICE = 0x05; // 服务下线通知
     public static final byte INVOKE_SERVICE = 0x06; // 服务调用
     public static final byte RETURN_SERVICE = 0x07; // 调用返回
-    public static final byte RESPONSE = 0x08; // 响应
 
-    /** ResultCode, 如果Sign不为RESPONSE，则resultCode=0 */
-    //...
+    /** ResultCode, 如果不是RESPONSE，则resultCode=0 */
+    public static final int PUBLISH_SUCCESS = 0100; // 服务发布成功
+    public static final int PUBLISH_FAILED_PUBLISHED = 0101; // 服务发布失败(该服务已发布)
 
     private short magic;
     private byte type; // 高4位: serializerType, 低4位: dataPacketType
@@ -85,7 +86,7 @@ public class ProtocolHeader {
         return invokeId;
     }
 
-    public void setInvokeId(long invokeIdd) {
+    public void setInvokeId(long invokeId) {
         this.invokeId = invokeId;
     }
 

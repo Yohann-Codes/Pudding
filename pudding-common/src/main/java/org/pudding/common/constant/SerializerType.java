@@ -5,7 +5,7 @@ package org.pudding.common.constant;
  *
  * @author Yohann.
  */
-public class Serializer {
+public class SerializerType {
 
     /** Java */
     public static final byte JAVA = 0x01;

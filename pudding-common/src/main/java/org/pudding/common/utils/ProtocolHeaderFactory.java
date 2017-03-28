@@ -1,6 +1,5 @@
 package org.pudding.common.utils;
 
-import org.pudding.common.config.PuddingConfig;
 import org.pudding.common.protocol.ProtocolHeader;
 
 /**
@@ -26,12 +25,12 @@ public class ProtocolHeaderFactory {
     }
 
     /**
-     * Create PublishService ProtocolHeader.
+     * Create PublishService Request ProtocolHeader.
      */
-    public static ProtocolHeader newPublishServiceHeader(int bodyLength) {
+    public static ProtocolHeader newPublishServiceRequestHeader(int bodyLength, byte serializerType) {
         ProtocolHeader header = new ProtocolHeader();
         header.setMagic(ProtocolHeader.MAGIC);
-        header.setType(ProtocolHeader.type(PuddingConfig.serializerType, ProtocolHeader.MESSAGE));
+        header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.REQUEST));
         header.setSign(ProtocolHeader.PUBLISH_SERVICE);
         header.setInvokeId(0);
         header.setResultCode(0);
@@ -40,12 +39,26 @@ public class ProtocolHeaderFactory {
     }
 
     /**
-     * Create UnpublishService ProtocolHeader.
+     * Create PublishService Response ProtocolHeader.
      */
-    public static ProtocolHeader newUnpublishServiceHeader(int bodyLength) {
+    public static ProtocolHeader newPublishServiceResponseHeader(int bodyLength, byte serializerType, int resultCode) {
         ProtocolHeader header = new ProtocolHeader();
         header.setMagic(ProtocolHeader.MAGIC);
-        header.setType(ProtocolHeader.type(PuddingConfig.serializerType, ProtocolHeader.MESSAGE));
+        header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.RESPONSE));
+        header.setSign(ProtocolHeader.PUBLISH_SERVICE);
+        header.setInvokeId(0);
+        header.setResultCode(resultCode);
+        header.setBodyLength(bodyLength);
+        return header;
+    }
+
+    /**
+     * Create UnpublishService Request ProtocolHeader.
+     */
+    public static ProtocolHeader newUnpublishServiceRequestHeader(int bodyLength, byte serializerType) {
+        ProtocolHeader header = new ProtocolHeader();
+        header.setMagic(ProtocolHeader.MAGIC);
+        header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.REQUEST));
         header.setSign(ProtocolHeader.UNPUBLISH_SERVICE);
         header.setInvokeId(0);
         header.setResultCode(0);

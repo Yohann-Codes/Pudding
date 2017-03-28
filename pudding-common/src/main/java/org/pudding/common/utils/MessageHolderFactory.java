@@ -22,10 +22,10 @@ public class MessageHolderFactory {
     }
 
     /**
-     * Create PublishService MessageHolder.
+     * Create PublishService Request MessageHolder.
      */
-    public static MessageHolder newPublishServiceHolder(byte[] body) {
-        ProtocolHeader header = ProtocolHeaderFactory.newPublishServiceHeader(body.length);
+    public static MessageHolder newPublishServiceRequestHolder(byte[] body, byte serializerType) {
+        ProtocolHeader header = ProtocolHeaderFactory.newPublishServiceRequestHeader(body.length, serializerType);
         MessageHolder holder = new MessageHolder();
         holder.setHeader(header);
         holder.setBody(body);
@@ -33,10 +33,21 @@ public class MessageHolderFactory {
     }
 
     /**
-     * Create UnpublishService MessageHolder.
+     * Create PublishService Response MessageHolder.
      */
-    public static MessageHolder newUnpublishServiceHolder(byte[] body) {
-        ProtocolHeader header = ProtocolHeaderFactory.newUnpublishServiceHeader(body.length);
+    public static MessageHolder newPublishServiceResponseHolder(byte[] body, byte serializerType, int resultCode) {
+        ProtocolHeader header = ProtocolHeaderFactory.newPublishServiceResponseHeader(body.length, serializerType, resultCode);
+        MessageHolder holder = new MessageHolder();
+        holder.setHeader(header);
+        holder.setBody(body);
+        return holder;
+    }
+
+    /**
+     * Create UnpublishService Request MessageHolder.
+     */
+    public static MessageHolder newUnpublishServiceRequestHolder(byte[] body, byte serializerType) {
+        ProtocolHeader header = ProtocolHeaderFactory.newUnpublishServiceRequestHeader(body.length, serializerType);
         MessageHolder holder = new MessageHolder();
         holder.setHeader(header);
         holder.setBody(body);
