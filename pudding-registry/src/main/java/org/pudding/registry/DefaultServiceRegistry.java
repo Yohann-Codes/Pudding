@@ -2,14 +2,10 @@ package org.pudding.registry;
 
 import org.apache.log4j.Logger;
 import org.pudding.registry.config.RegistryConfig;
-import org.pudding.registry.processor.RegistryExecutor;
 import org.pudding.registry.processor.RegistryProcessor;
 import org.pudding.transport.api.Acceptor;
 import org.pudding.transport.api.Future;
 import org.pudding.transport.netty.NettyAcceptor;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * 默认注册中心实现.
@@ -42,9 +38,10 @@ public class DefaultServiceRegistry implements ServiceRegistry {
     @Override
     public void startRegistry(int port, int nWorkers) {
         if (nWorkers == 0) {
-            nWorkers = RegistryConfig.nWorkers();
+            RegistryProcessor.PROCESSOR.createExecutor();
+        } else {
+            RegistryProcessor.PROCESSOR.createExecutor(nWorkers);
         }
-        RegistryProcessor.PROCESSOR.createExecutor();
         acceptor.bind(port);
     }
 

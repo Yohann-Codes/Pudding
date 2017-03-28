@@ -88,8 +88,9 @@ public class RegistryProcessor extends RegistryExecutor implements Processor {
             serviceManager.registerService(serviceMeta);
             holder = MessageHolderFactory.newPublishServiceResponseHolder(body,
                     RegistryConfig.serializerType(), ProtocolHeader.PUBLISH_SUCCESS);
+            logger.info("服务注册成功: " + serviceMeta);
         } catch (ServicePublishFailedException e) {
-            logger.info("注册失败: The service has been registered: " + serviceMeta);
+            logger.info("服务注册失败: The service has been registered: " + serviceMeta);
             holder = MessageHolderFactory.newPublishServiceResponseHolder(body,
                     RegistryConfig.serializerType(), ProtocolHeader.PUBLISH_FAILED_PUBLISHED);
         }

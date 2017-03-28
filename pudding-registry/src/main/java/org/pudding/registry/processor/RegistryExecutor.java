@@ -18,6 +18,10 @@ public class RegistryExecutor {
         executor = Executors.newFixedThreadPool(nWorkers);
     }
 
+    public void createExecutor(int nWorkers) {
+        executor = Executors.newFixedThreadPool(nWorkers);
+    }
+
     public void shutdownExecutor() {
         executor.shutdown();
     }
@@ -25,6 +29,4 @@ public class RegistryExecutor {
     protected void execute(Runnable task) {
         executor.execute(task);
     }
-
-
 }
