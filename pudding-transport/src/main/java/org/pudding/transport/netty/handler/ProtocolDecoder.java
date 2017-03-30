@@ -21,7 +21,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 
         if (in.readableBytes() < ProtocolHeader.HEAD_LENGTH) {
-            logger.info("数据包长度小于协议头长度 " + in.readableBytes() + " < " + ProtocolHeader.HEAD_LENGTH);
+            logger.info("可读字节数小于协议头长度 " + in.readableBytes() + " < " + ProtocolHeader.HEAD_LENGTH);
             return;
         }
         in.markReaderIndex();
@@ -38,8 +38,8 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         int resultCode = in.readInt();
         int bodyLength = in.readInt();
 
-        if (in.readableBytes() != bodyLength) {
-            logger.info("协议体长度不一致 " + in.readableBytes() + " != " + bodyLength);
+        if (in.readableBytes() < bodyLength) {
+            logger.info("可读字节数小于协议体长度 " + in.readableBytes() + " < " + bodyLength);
             in.resetReaderIndex();
             return;
         }

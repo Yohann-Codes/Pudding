@@ -1,63 +1,66 @@
-package org.pudding.rpc.provider;
+package org.pudding.rpc.provider.processor;
 
 import org.apache.log4j.Logger;
-import org.pudding.common.exception.*;
+import org.pudding.common.exception.NotConnectRegistryException;
+import org.pudding.common.exception.RepeatConnectRegistryException;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.protocol.ProtocolHeader;
 import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.utils.MessageHolderFactory;
-import org.pudding.rpc.provider.processor.ProviderProcessor;
+import org.pudding.rpc.provider.ServiceProvider;
 import org.pudding.rpc.provider.config.ProviderConfig;
+import org.pudding.rpc.provider.utils.ServiceMap;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
 import org.pudding.transport.api.*;
 import org.pudding.transport.netty.NettyAcceptor;
 import org.pudding.transport.netty.NettyConnector;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
 
 /**
- * 默认的服务提供者实现，建议单例使用.
- *
  * @author Yohann.
  */
 public class DefaultServiceProvider implements ServiceProvider {
     private static final Logger logger = Logger.getLogger(DefaultServiceProvider.class);
 
-    private final int nWorkers;
-    private final Connector connector;
-    private final Acceptor acceptor;
+    private Channel registryChannel; // 断开连接置为null
 
-    private Channel registryChannel;
+    private ServiceMap onlineServices; // 已上线服务(收到注册成功的响应)
+    private ServiceMap unsettledServices; // 已发布，但还未收到响应
+    private LinkedList<ServiceMeta> startedServices; // 已启用的服务(待发布服务)
 
-    private ServiceMeta serviceMeta;
-
-    private Map<ServiceMeta, Channel> services; // 保存已发布并启动的服务，用于取消发布和停止服务.
-    private Future future;
-
+    /**
+     * 默认工作线程数量: nWorkers = 2 * CPU
+     */
     public DefaultServiceProvider() {
-        this(0);
+        this(ProviderConfig.nWorkers());
     }
 
     public DefaultServiceProvider(int nWorkers) {
-        this.nWorkers = nWorkers;
-        connector = new NettyConnector(ProviderProcessor.PROCESSOR);
-        acceptor = new NettyAcceptor(ProviderProcessor.PROCESSOR);
-        services = new HashMap<>();
+        validate(nWorkers);
+        ProviderExecutor.newProviderExecutor(nWorkers);
+        onlineServices = new ServiceMap();
+        unsettledServices = new ServiceMap();
+        startedServices = new LinkedList<>();
+    }
+
+    private void validate(int nWorkers) {
+        if (nWorkers < 1) {
+            throw new IllegalArgumentException("nWorker: " + nWorkers);
+        }
     }
 
     @Override
     public ServiceProvider connectRegistry() {
-        String registryAddress = ProviderConfig.registryAddress();
-        connectRegistry(registryAddress);
-        return this;
+        return connectRegistry(ProviderConfig.registryAddress());
     }
 
     @Override
     public ServiceProvider connectRegistry(String registryAddress) {
         if (registryChannel != null) {
-            throw new RepeatConnectRegistryException("Registry has connected: " + registryAddress);
+            throw new RepeatConnectRegistryException("the registry is connected: " + registryAddress);
         }
         AddressUtil.checkFormat(registryAddress);
         String host = AddressUtil.host(registryAddress);
@@ -67,33 +70,63 @@ public class DefaultServiceProvider implements ServiceProvider {
         return this;
     }
 
-    @Override
-    public void closeRegistry() {
-        registryChannel.close();
-        registryChannel = null;
-        ProviderProcessor.PROCESSOR.shutdownExecutor();
-    }
-
     private void doConnectRegisry(String host, int port) {
+        Connector connector = newConnector();
         Future future = connector.connect(host, port);
         if (future != null) {
             registryChannel = future.channel();
         }
-        if (nWorkers == 0) {
-            ProviderProcessor.PROCESSOR.createExecutor();
-        } else {
-            ProviderProcessor.PROCESSOR.createExecutor(nWorkers);
-        }
     }
 
     @Override
-    public ServiceProvider publishService(final ServiceMeta serviceMeta) throws ServicePublishFailedException {
+    public void closeRegistry() {
+        registryChannel.close();
+        registryChannel = null;
+    }
+
+    @Override
+    public ServiceProvider startService(ServiceMeta serviceMeta) {
+        String address = serviceMeta.getAddress();
+        AddressUtil.checkFormat(address);
+        int port = AddressUtil.port(address);
+
+        Future future = doStart(port); // bind local port
+
+        if (future == null) {
+            throw new NullPointerException("future == null");
+        }
+
+        unsettledServices.put(serviceMeta, future.channel());
+        startedServices.offer(serviceMeta); // 添加到待发布队列
+
+        // ----------------------------------------------------------
+        logger.info("启动服务之后: onlineServices: " + onlineServices);
+        logger.info("启动服务之后: startedServices: " + startedServices);
+        // ----------------------------------------------------------
+
+        return this;
+    }
+
+    private Future doStart(int port) {
+        Acceptor acceptor = newAcceptor();
+        return acceptor.bind(port);
+    }
+
+    @Override
+    public ServiceProvider startServices(ServiceMeta... serviceMetas) {
+        for (ServiceMeta serviceMeta : serviceMetas) {
+            startService(serviceMeta);
+        }
+        return this;
+    }
+
+    @Override
+    public ServiceProvider publishService(final ServiceMeta serviceMeta) {
         checkConnection();
-        validate(serviceMeta);
-        this.serviceMeta = serviceMeta;
+        checkNotNull(serviceMeta, ServiceMeta.class);
 
         // 序列化
-        final Serializer serializer = SerializerFactory.getSerializer(ProviderConfig.serializerType());
+        Serializer serializer = SerializerFactory.getSerializer(ProviderConfig.serializerType());
         byte[] body = serializer.writeObject(serviceMeta);
         MessageHolder holder = MessageHolderFactory.newPublishServiceRequestHolder(body, ProviderConfig.serializerType());
 
@@ -102,131 +135,114 @@ public class DefaultServiceProvider implements ServiceProvider {
             future.addListener(new FutureListener() {
                 @Override
                 public void operationComplete(boolean isSuccess) {
-                    if (!isSuccess) {
-                        logger.info("Publish service failed: " + serviceMeta);
+                    if (isSuccess) {
+                        startedServices.remove(serviceMeta);
                     }
                 }
             });
-        } else {
-            throw new ServicePublishFailedException("Connection inactive");
         }
+
+        // ----------------------------------------------------------
+        logger.info("发布服务之后: startedServices: " + startedServices);
+        // ----------------------------------------------------------
+
         return this;
     }
 
     private void checkConnection() {
         if (registryChannel == null) {
-            throw new NotConnectRegistryException("Not connect to Registry");
+            throw new NotConnectRegistryException("not connect to registry");
         }
     }
 
     @Override
-    public ServiceProvider publishServices(ServiceMeta... serviceMetas) throws ServicePublishFailedException {
-        for (ServiceMeta s : serviceMetas) {
-            publishService(s);
+    public ServiceProvider publishServices(ServiceMeta... serviceMetas) {
+        for (ServiceMeta serviceMeta : serviceMetas) {
+            publishService(serviceMeta);
         }
         return this;
     }
 
     @Override
-    public ServiceProvider startService() throws ServiceStartFailedException {
-        if (serviceMeta == null) {
-            throw new ServiceNotPublishedException("Please publish it before start the service");
+    public ServiceProvider publishAllService() {
+        for (; ; ) {
+            ServiceMeta serviceMeta = startedServices.poll();
+            if (serviceMeta == null) {
+                break;
+            }
+            publishService(serviceMeta);
         }
-        String address = serviceMeta.getAddress();
-        AddressUtil.checkFormat(address);
-        int port = AddressUtil.port(address);
-
-        doStart(port); // bind local port
-
-        if (future == null) {
-            throw new ServiceStartFailedException("future == null");
-        }
-        services.put(serviceMeta, future.channel());
-        serviceMeta = null;
         return this;
     }
 
-    private void doStart(int port) {
-        future = acceptor.bind(port);
-    }
-
     @Override
-    public ServiceProvider publishAndStartService(ServiceMeta serviceMeta)
-            throws ServicePublishFailedException, ServiceStartFailedException {
-
+    public ServiceProvider startAndPublishService(ServiceMeta serviceMeta) {
+        startService(serviceMeta);
         publishService(serviceMeta);
-        startService();
         return this;
     }
 
     @Override
-    public ServiceProvider publishAndStartServices(ServiceMeta... serviceMetas)
-            throws ServiceStartFailedException, ServicePublishFailedException {
-
-        for (ServiceMeta s : serviceMetas) {
-            publishAndStartService(s);
+    public ServiceProvider startAndPublishServices(ServiceMeta... serviceMetas) {
+        for (ServiceMeta serviceMeta : serviceMetas) {
+            startAndPublishService(serviceMeta);
         }
         return this;
     }
 
     @Override
-    public ServiceProvider unpublishService(final ServiceMeta serviceMeta) {
-        checkConnection();
-        this.serviceMeta = serviceMeta;
-
-        // 序列化
-        final Serializer serializer = SerializerFactory.getSerializer(ProviderConfig.serializerType());
-        byte[] body = serializer.writeObject(serviceMeta);
-        MessageHolder holder = MessageHolderFactory.newUnpublishServiceRequestHolder(body, ProviderConfig.serializerType());
-
-        if (registryChannel.isActive()) {
-            Future future = registryChannel.write(holder);
-            future.addListener(new FutureListener() {
-                @Override
-                public void operationComplete(boolean isSuccess) {
-                    if (!isSuccess) {
-                        logger.info("Unpublishing service failure: " + serviceMeta);
-                    }
-                }
-            });
-        }
-        return this;
+    public ServiceProvider unpublishService(ServiceMeta serviceMeta) {
+        return null;
     }
 
     @Override
     public ServiceProvider stopService(ServiceMeta serviceMeta) {
-        Channel serviceChannel = services.get(serviceMeta);
-        serviceChannel.close(); // 关闭已绑定的Channel
-        return this;
+        return null;
     }
 
     @Override
     public ServiceProvider unpublishAndStopService(ServiceMeta serviceMeta) {
-        validate(serviceMeta);
-        if (!services.containsKey(serviceMeta)) {
-            throw new ServiceNotStartedException("The service did not start: " + serviceMeta);
-        }
-        // 取消并停止
-        unpublishService(serviceMeta);
-        stopService(serviceMeta);
-
-        services.remove(serviceMeta);
-        return this;
+        return null;
     }
 
     @Override
     public ServiceProvider unpublishAndStopAll() {
-        for (Map.Entry<ServiceMeta, Channel> entry : services.entrySet()) {
-            ServiceMeta serviceMeta = entry.getKey();
-            unpublishAndStopService(serviceMeta);
-            services.remove(serviceMeta);
-        }
-        return this;
+        return null;
     }
 
-    private void validate(ServiceMeta serviceMeta) {
-        if (serviceMeta == null) {
-            throw new NullPointerException("service == null");
+    /**
+     * 根据服务发布响应后续处理.
+     *
+     * @param serviceMeta
+     * @param resultCode
+     */
+    public void processPublishResult(ServiceMeta serviceMeta, int resultCode) {
+        if (resultCode == ProtocolHeader.PUBLISH_SUCCESS) {
+            onlineServices.put(serviceMeta, unsettledServices.get(serviceMeta));
+            logger.info("服务发布成功: " + serviceMeta);
+        } else if (resultCode == ProtocolHeader.PUBLISH_FAILED) {
+            logger.info("服务发布失败: " + serviceMeta);
+        }
+        unsettledServices.remove(serviceMeta);
+        logger.info("onlineServices: " + onlineServices);
+        logger.info("startedServices: " + startedServices);
+    }
+
+    private Connector newConnector() {
+        return new NettyConnector(getProcessor());
+    }
+
+    private Acceptor newAcceptor() {
+        return new NettyAcceptor(getProcessor());
+    }
+
+    private ProviderProcessor getProcessor() {
+        return new ProviderProcessor(this);
+    }
+
+    private void checkNotNull(Object object, Class<?> clazz) {
+        if (object == null) {
+            throw new NullPointerException(clazz.getName());
         }
     }
 }
