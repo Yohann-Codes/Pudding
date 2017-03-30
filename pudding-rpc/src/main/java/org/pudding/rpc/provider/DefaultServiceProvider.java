@@ -1,15 +1,16 @@
-package org.pudding.rpc.provider.processor;
+package org.pudding.rpc.provider;
 
 import org.apache.log4j.Logger;
 import org.pudding.common.exception.NotConnectRegistryException;
 import org.pudding.common.exception.RepeatConnectRegistryException;
+import org.pudding.common.exception.ServiceNotStartedException;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.protocol.MessageHolder;
 import org.pudding.common.protocol.ProtocolHeader;
 import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.utils.MessageHolderFactory;
-import org.pudding.rpc.provider.ServiceProvider;
 import org.pudding.rpc.provider.config.ProviderConfig;
+import org.pudding.rpc.provider.processor.ProviderProcessor;
 import org.pudding.rpc.provider.utils.ServiceMap;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
@@ -18,6 +19,8 @@ import org.pudding.transport.netty.NettyAcceptor;
 import org.pudding.transport.netty.NettyConnector;
 
 import java.util.LinkedList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * @author Yohann.
@@ -25,11 +28,15 @@ import java.util.LinkedList;
 public class DefaultServiceProvider implements ServiceProvider {
     private static final Logger logger = Logger.getLogger(DefaultServiceProvider.class);
 
+    private final int nWorkers;
+
     private Channel registryChannel; // 断开连接置为null
 
     private ServiceMap onlineServices; // 已上线服务(收到注册成功的响应)
     private ServiceMap unsettledServices; // 已发布，但还未收到响应
     private LinkedList<ServiceMeta> startedServices; // 已启用的服务(待发布服务)
+
+    private BlockingQueue<ServiceMeta> publishQueue;
 
     /**
      * 默认工作线程数量: nWorkers = 2 * CPU
@@ -40,10 +47,11 @@ public class DefaultServiceProvider implements ServiceProvider {
 
     public DefaultServiceProvider(int nWorkers) {
         validate(nWorkers);
-        ProviderExecutor.newProviderExecutor(nWorkers);
+        this.nWorkers = nWorkers;
         onlineServices = new ServiceMap();
         unsettledServices = new ServiceMap();
         startedServices = new LinkedList<>();
+        publishQueue = new LinkedBlockingQueue<>();
     }
 
     private void validate(int nWorkers) {
@@ -67,6 +75,7 @@ public class DefaultServiceProvider implements ServiceProvider {
         int port = AddressUtil.port(registryAddress);
 
         doConnectRegisry(host, port);
+        initPublishQueue();
         return this;
     }
 
@@ -78,6 +87,23 @@ public class DefaultServiceProvider implements ServiceProvider {
         }
     }
 
+    private void initPublishQueue() {
+        new Thread() {
+            @Override
+            public void run() {
+                for (; ; ) {
+                    try {
+                        ServiceMeta serviceMeta = publishQueue.take();
+                        send(serviceMeta);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        break;
+                    }
+                }
+            }
+        }.start();
+    }
+
     @Override
     public void closeRegistry() {
         registryChannel.close();
@@ -86,6 +112,7 @@ public class DefaultServiceProvider implements ServiceProvider {
 
     @Override
     public ServiceProvider startService(ServiceMeta serviceMeta) {
+        checkNotNull(serviceMeta, ServiceMeta.class);
         String address = serviceMeta.getAddress();
         AddressUtil.checkFormat(address);
         int port = AddressUtil.port(address);
@@ -98,11 +125,6 @@ public class DefaultServiceProvider implements ServiceProvider {
 
         unsettledServices.put(serviceMeta, future.channel());
         startedServices.offer(serviceMeta); // 添加到待发布队列
-
-        // ----------------------------------------------------------
-        logger.info("启动服务之后: onlineServices: " + onlineServices);
-        logger.info("启动服务之后: startedServices: " + startedServices);
-        // ----------------------------------------------------------
 
         return this;
     }
@@ -121,10 +143,27 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public ServiceProvider publishService(final ServiceMeta serviceMeta) {
+    public ServiceProvider publishService(ServiceMeta serviceMeta) {
+        if (!startedServices.contains(serviceMeta)) {
+            throw new ServiceNotStartedException("you must start it before publish service");
+        }
+        return doPublish(serviceMeta);
+    }
+
+    private ServiceProvider doPublish(ServiceMeta serviceMeta) {
         checkConnection();
         checkNotNull(serviceMeta, ServiceMeta.class);
 
+        try {
+            publishQueue.put(serviceMeta);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return this;
+    }
+
+    private void send(final ServiceMeta serviceMeta) {
         // 序列化
         Serializer serializer = SerializerFactory.getSerializer(ProviderConfig.serializerType());
         byte[] body = serializer.writeObject(serviceMeta);
@@ -141,12 +180,6 @@ public class DefaultServiceProvider implements ServiceProvider {
                 }
             });
         }
-
-        // ----------------------------------------------------------
-        logger.info("发布服务之后: startedServices: " + startedServices);
-        // ----------------------------------------------------------
-
-        return this;
     }
 
     private void checkConnection() {
@@ -165,12 +198,15 @@ public class DefaultServiceProvider implements ServiceProvider {
 
     @Override
     public ServiceProvider publishAllService() {
+        if (startedServices.size() < 1) {
+            throw new ServiceNotStartedException("you must start it before publish service");
+        }
         for (; ; ) {
             ServiceMeta serviceMeta = startedServices.poll();
             if (serviceMeta == null) {
                 break;
             }
-            publishService(serviceMeta);
+            doPublish(serviceMeta);
         }
         return this;
     }
@@ -224,8 +260,6 @@ public class DefaultServiceProvider implements ServiceProvider {
             logger.info("服务发布失败: " + serviceMeta);
         }
         unsettledServices.remove(serviceMeta);
-        logger.info("onlineServices: " + onlineServices);
-        logger.info("startedServices: " + startedServices);
     }
 
     private Connector newConnector() {
@@ -237,7 +271,7 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     private ProviderProcessor getProcessor() {
-        return new ProviderProcessor(this);
+        return new ProviderProcessor(this, nWorkers);
     }
 
     private void checkNotNull(Object object, Class<?> clazz) {

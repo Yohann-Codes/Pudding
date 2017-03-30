@@ -1,16 +1,15 @@
 package org.pudding.rpc.provider;
 
-import org.pudding.common.exception.ServicePublishFailedException;
-import org.pudding.common.exception.ServiceStartFailedException;
 import org.pudding.common.model.ServiceMeta;
 
 /**
  * 服务提供者.
  * <p>
  * 1) 连接注册中心.
- * 2) 发布服务.
- * 3) 启动服务.
- * 4) 取消已发布服务.
+ * 2) 启动服务.
+ * 3) 发布服务.
+ * 4) 取消服务.
+ * 5) 停止服务。
  *
  * @author Yohann.
  */
@@ -37,47 +36,54 @@ public interface ServiceProvider {
     void closeRegistry();
 
     /**
+     * 启用一个服务.
+     */
+    ServiceProvider startService(ServiceMeta serviceMeta);
+
+    /**
+     * 启用多个服务.
+     */
+    ServiceProvider startServices(ServiceMeta... serviceMetas);
+
+    /**
      * 发布一个服务.
      *
      * @param serviceMeta
      */
-    ServiceProvider publishService(ServiceMeta serviceMeta) throws ServicePublishFailedException;
+    ServiceProvider publishService(ServiceMeta serviceMeta);
 
     /**
      * 发布多个服务.
      *
      * @param serviceMetas
      */
-    ServiceProvider publishServices(ServiceMeta... serviceMetas) throws ServicePublishFailedException;
+    ServiceProvider publishServices(ServiceMeta... serviceMetas);
 
     /**
-     * 启用本地服务(绑定端口监听远程调用).
-     * 注意: 调用此方法之前必须先发布服务.
+     * 发布在此实例上启用的所有服务.
      */
-    ServiceProvider startService() throws ServiceStartFailedException;
+    ServiceProvider publishAllService();
 
     /**
-     * 发布并启用一个服务.
+     * 启用并发布一个服务.
      *
      * @param serviceMeta
      */
-    ServiceProvider publishAndStartService(ServiceMeta serviceMeta)
-            throws ServicePublishFailedException, ServiceStartFailedException;
+    ServiceProvider startAndPublishService(ServiceMeta serviceMeta);
 
     /**
-     * 发布并启用多个服务.
+     * 启用并发布多个服务.
      *
      * @param serviceMetas
      */
-    ServiceProvider publishAndStartServices(ServiceMeta... serviceMetas)
-            throws ServiceStartFailedException, ServicePublishFailedException;
+    ServiceProvider startAndPublishServices(ServiceMeta... serviceMetas);
 
     /**
      * 取消已发布的服务.
      *
      * @param serviceMeta
      */
-    ServiceProvider unpublishService(final ServiceMeta serviceMeta);
+    ServiceProvider unpublishService(ServiceMeta serviceMeta);
 
     /**
      * 停止服务.
@@ -86,11 +92,11 @@ public interface ServiceProvider {
      */
     ServiceProvider stopService(ServiceMeta serviceMeta);
 
-        /**
-         * 取消发布并停止服务.
-         *
-         * @param serviceMeta
-         */
+    /**
+     * 取消发布并停止服务.
+     *
+     * @param serviceMeta
+     */
     ServiceProvider unpublishAndStopService(ServiceMeta serviceMeta);
 
     /**

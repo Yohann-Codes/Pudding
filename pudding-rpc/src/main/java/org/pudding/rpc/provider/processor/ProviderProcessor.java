@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.protocol.MessageHolder;
 import org.pudding.common.protocol.ProtocolHeader;
+import org.pudding.rpc.provider.DefaultServiceProvider;
 import org.pudding.rpc.provider.config.ProviderConfig;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
@@ -20,10 +21,11 @@ import static org.pudding.common.protocol.ProtocolHeader.dataPacketCode;
 public class ProviderProcessor extends ProviderExecutor implements Processor {
     private static final Logger logger = Logger.getLogger(ProviderProcessor.class);
 
-    public static final ProviderProcessor PROCESSOR = new ProviderProcessor();
+    private DefaultServiceProvider serviceProvider;
 
-    public ProviderProcessor() {
-        super(ProviderConfig.nWorkers());
+    public ProviderProcessor(DefaultServiceProvider serviceProvider, int nWorkers) {
+        super(nWorkers);
+        this.serviceProvider = serviceProvider;
     }
 
     @Override
@@ -69,18 +71,10 @@ public class ProviderProcessor extends ProviderExecutor implements Processor {
                 switch (sign) {
                     case ProtocolHeader.PUBLISH_SERVICE:
                         ServiceMeta serviceMeta = serializer.readObject(body, ServiceMeta.class);
-                        publishServiceResponse(resultCode, serviceMeta);
+                        serviceProvider.processPublishResult(serviceMeta, resultCode);
                         break;
                 }
                 break;
-        }
-    }
-
-    private void publishServiceResponse(int resultCode, ServiceMeta serviceMeta) {
-        if (resultCode == ProtocolHeader.PUBLISH_SUCCESS) {
-            logger.info("服务发布成功: " + serviceMeta);
-        } else if (resultCode == ProtocolHeader.PUBLISH_FAILED_PUBLISHED) {
-            logger.info("服务发布失败，该服务已发布：" + serviceMeta);
         }
     }
 
