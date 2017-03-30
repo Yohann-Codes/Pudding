@@ -1,19 +1,19 @@
-package org.pudding.rpc.provider.config;
+package org.pudding.rpc.consumer.config;
 
 import org.pudding.common.constant.SerializerType;
 
 /**
- * 服务提供者配置.
+ * 服务消费者配置.
  *
  * @author Yohann.
  */
-public class ProviderConfig {
+public class ConsumerConfig {
 
-    // Provider唯一的配置实例
-    private static final ProviderConfig PROVIDER_CONFIG;
+    // Consumer唯一的配置实例
+    private static final ConsumerConfig CONSUMER_CONFIG;
 
     static {
-        PROVIDER_CONFIG = new ProviderConfig();
+        CONSUMER_CONFIG = new ConsumerConfig();
     }
 
 
@@ -23,31 +23,20 @@ public class ProviderConfig {
     /** 注册中心地址, 格式: host:port */
     private String registryAddress = "";
 
-    /** 工作线程数量, 默认: 2*CPU */
-    private int nWorkers = Runtime.getRuntime().availableProcessors() * 2;
-
 
     public static void serializerType(byte serializerType) {
-        PROVIDER_CONFIG.serializerType = serializerType;
+        CONSUMER_CONFIG.serializerType = serializerType;
     }
 
     public static byte serializerType() {
-        return PROVIDER_CONFIG.serializerType;
+        return CONSUMER_CONFIG.serializerType;
     }
 
     public static void registryAddress(String registryAddress) {
-        PROVIDER_CONFIG.registryAddress = registryAddress;
+        CONSUMER_CONFIG.registryAddress = registryAddress;
     }
 
     public static String registryAddress() {
-        return PROVIDER_CONFIG.registryAddress;
-    }
-
-    public static void nWorkers(int nWorkers) {
-        PROVIDER_CONFIG.nWorkers = nWorkers;
-    }
-
-    public static int nWorkers() {
-        return PROVIDER_CONFIG.nWorkers;
+        return CONSUMER_CONFIG.registryAddress;
     }
 }

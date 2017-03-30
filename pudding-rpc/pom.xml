@@ -13,16 +13,20 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.pudding</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pudding-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.pudding</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pudding-transport</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.pudding</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pudding-serialization</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib-nodep</artifactId>
         </dependency>
     </dependencies>
 

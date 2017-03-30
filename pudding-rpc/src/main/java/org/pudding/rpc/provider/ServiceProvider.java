@@ -8,8 +8,6 @@ import org.pudding.common.model.ServiceMeta;
  * 1) 连接注册中心.
  * 2) 启动服务.
  * 3) 发布服务.
- * 4) 取消服务.
- * 5) 停止服务。
  *
  * @author Yohann.
  */
@@ -77,30 +75,4 @@ public interface ServiceProvider {
      * @param serviceMetas
      */
     ServiceProvider startAndPublishServices(ServiceMeta... serviceMetas);
-
-    /**
-     * 取消已发布的服务.
-     *
-     * @param serviceMeta
-     */
-    ServiceProvider unpublishService(ServiceMeta serviceMeta);
-
-    /**
-     * 停止服务.
-     *
-     * @param serviceMeta
-     */
-    ServiceProvider stopService(ServiceMeta serviceMeta);
-
-    /**
-     * 取消发布并停止服务.
-     *
-     * @param serviceMeta
-     */
-    ServiceProvider unpublishAndStopService(ServiceMeta serviceMeta);
-
-    /**
-     * 取消发布并停止在此实例上的全部服务.
-     */
-    ServiceProvider unpublishAndStopAll();
 }

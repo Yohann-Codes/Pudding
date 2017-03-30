@@ -226,26 +226,6 @@ public class DefaultServiceProvider implements ServiceProvider {
         return this;
     }
 
-    @Override
-    public ServiceProvider unpublishService(ServiceMeta serviceMeta) {
-        return null;
-    }
-
-    @Override
-    public ServiceProvider stopService(ServiceMeta serviceMeta) {
-        return null;
-    }
-
-    @Override
-    public ServiceProvider unpublishAndStopService(ServiceMeta serviceMeta) {
-        return null;
-    }
-
-    @Override
-    public ServiceProvider unpublishAndStopAll() {
-        return null;
-    }
-
     /**
      * 根据服务发布响应后续处理.
      *
@@ -253,10 +233,10 @@ public class DefaultServiceProvider implements ServiceProvider {
      * @param resultCode
      */
     public void processPublishResult(ServiceMeta serviceMeta, int resultCode) {
-        if (resultCode == ProtocolHeader.PUBLISH_SUCCESS) {
+        if (resultCode == ProtocolHeader.SUCCESS) {
             onlineServices.put(serviceMeta, unsettledServices.get(serviceMeta));
             logger.info("服务发布成功: " + serviceMeta);
-        } else if (resultCode == ProtocolHeader.PUBLISH_FAILED) {
+        } else if (resultCode == ProtocolHeader.FAILED) {
             logger.info("服务发布失败: " + serviceMeta);
         }
         unsettledServices.remove(serviceMeta);

@@ -27,7 +27,7 @@ public class DefaultServiceWrapper implements ServiceWrapper {
         if (interfaces.length != 1) {
             throw new IllegalServiceException("Service must implement one interface: " + service.getClass().getName());
         }
-        return new ServiceMeta(interfaces[0].getName(), serviceAddress);
+        return new ServiceMeta(interfaces[0].getSimpleName(), serviceAddress);
     }
 
     private void validate(Object service) {

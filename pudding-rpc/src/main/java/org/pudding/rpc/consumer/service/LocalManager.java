@@ -7,7 +7,7 @@ import org.pudding.common.model.ServiceMeta;
  *
  * @author Yohann.
  */
-public interface ServiceManager {
+public interface LocalManager {
 
     /**
      * 将订阅结果缓存到本地.
