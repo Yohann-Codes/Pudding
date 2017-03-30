@@ -3,6 +3,7 @@ package org.pudding.registry.processor;
 import org.apache.log4j.Logger;
 import org.pudding.common.exception.ServicePublishFailedException;
 import org.pudding.common.model.ServiceMeta;
+import org.pudding.common.model.SubscribeResult;
 import org.pudding.common.protocol.MessageHolder;
 import org.pudding.common.protocol.ProtocolHeader;
 import org.pudding.common.utils.MessageHolderFactory;
@@ -65,13 +66,18 @@ public class  RegistryProcessor extends RegistryExecutor implements Processor {
     private void dispatch(Channel channel, byte serializationType,
                           byte packetType, byte sign, int resultCode, byte[] body) {
         Serializer serializer = SerializerFactory.getSerializer(serializationType);
+        ServiceMeta serviceMeta;
 
         switch (packetType) {
             case ProtocolHeader.REQUEST:
                 switch (sign) {
                     case ProtocolHeader.PUBLISH_SERVICE:
-                        ServiceMeta serviceMeta = serializer.readObject(body, ServiceMeta.class);
+                        serviceMeta = serializer.readObject(body, ServiceMeta.class);
                         registerService(channel, serviceMeta);
+                        break;
+                    case ProtocolHeader.SUBSCRIBE_SERVICE:
+                        serviceMeta = serializer.readObject(body, ServiceMeta.class);
+                        subscribeService(channel, serviceMeta);
                         break;
                 }
                 break;
@@ -81,6 +87,12 @@ public class  RegistryProcessor extends RegistryExecutor implements Processor {
         }
     }
 
+    /**
+     * 执行注册.
+     *
+     * @param channel
+     * @param serviceMeta
+     */
     private void registerService(Channel channel, ServiceMeta serviceMeta) {
         MessageHolder holder;
         Serializer serializer = SerializerFactory.getSerializer(RegistryConfig.serializerType());
@@ -89,12 +101,38 @@ public class  RegistryProcessor extends RegistryExecutor implements Processor {
         try {
             serviceManager.registerService(serviceMeta);
             holder = MessageHolderFactory.newPublishServiceResponseHolder(body,
-                    RegistryConfig.serializerType(), ProtocolHeader.PUBLISH_SUCCESS);
+                    RegistryConfig.serializerType(), ProtocolHeader.SUCCESS);
             logger.info("服务注册成功: " + serviceMeta);
         } catch (ServicePublishFailedException e) {
             logger.info("服务注册失败: the service has been registered: " + serviceMeta);
             holder = MessageHolderFactory.newPublishServiceResponseHolder(body,
-                    RegistryConfig.serializerType(), ProtocolHeader.PUBLISH_FAILED);
+                    RegistryConfig.serializerType(), ProtocolHeader.FAILED);
+        }
+        channel.write(holder);
+    }
+
+    /**
+     * 执行订阅.
+     *
+     * @param channel
+     * @param serviceMeta
+     */
+    private void subscribeService(Channel channel, ServiceMeta serviceMeta) {
+        MessageHolder holder;
+        SubscribeResult subscribeResult = serviceManager.subscribeService(serviceMeta);
+        Serializer serializer = SerializerFactory.getSerializer(RegistryConfig.serializerType());
+        byte[] body = serializer.writeObject(subscribeResult);
+
+        if (subscribeResult.getServiceMetas() != null) {
+            // 订阅成功
+            holder = MessageHolderFactory.newSubscribeServiceResponseHolder(body,
+                    RegistryConfig.serializerType(), ProtocolHeader.SUCCESS);
+            logger.info("服务订阅成功: " + subscribeResult);
+        } else {
+            // 订阅失败
+            holder = MessageHolderFactory.newSubscribeServiceResponseHolder(body,
+                    RegistryConfig.serializerType(), ProtocolHeader.FAILED);
+            logger.info("服务订阅失败: " + subscribeResult);
         }
         channel.write(holder);
     }

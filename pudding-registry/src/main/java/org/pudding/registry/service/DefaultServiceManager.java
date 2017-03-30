@@ -3,7 +3,9 @@ package org.pudding.registry.service;
 import org.apache.log4j.Logger;
 import org.pudding.common.exception.ServiceNotPublishedException;
 import org.pudding.common.exception.ServicePublishFailedException;
+import org.pudding.common.exception.ServiceSubscribeFailedException;
 import org.pudding.common.model.ServiceMeta;
+import org.pudding.common.model.SubscribeResult;
 
 import java.util.*;
 
@@ -51,28 +53,24 @@ public class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public ServiceMeta unregisterService(ServiceMeta serviceMeta) {
+    public SubscribeResult subscribeService(ServiceMeta serviceMeta) {
         validate(serviceMeta);
+
         String name = serviceMeta.getName();
-        synchronized (lock) {
-            if (services.containsKey(name)) {
-                List<ServiceMeta> serviceList = services.get(name);
-                if (serviceList.size() == 1) {
-                    services.remove(name);
-                } else {
-                    Iterator<ServiceMeta> ite = serviceList.iterator();
-                    while (ite.hasNext()) {
-                        ServiceMeta meta = ite.next();
-                        if (meta.getAddress().equals(serviceMeta.getAddress())) {
-                            ite.remove();
-                        }
-                    }
-                }
-            } else {
-                throw new ServiceNotPublishedException("there is no this service: " + serviceMeta);
+        SubscribeResult subscribeResult = new SubscribeResult();
+        subscribeResult.setName(name);
+
+        if (services.containsKey(name)) {
+            // 存在服务
+            List<ServiceMeta> serviceList = services.get(name);
+            List<ServiceMeta> serviceMetas = new ArrayList<>();
+            for (ServiceMeta s : serviceList) {
+                serviceMetas.add(s);
             }
+            subscribeResult.setServiceMetas(serviceMetas);
         }
-        return serviceMeta;
+
+        return subscribeResult;
     }
 
     private void validate(ServiceMeta serviceMeta) {
