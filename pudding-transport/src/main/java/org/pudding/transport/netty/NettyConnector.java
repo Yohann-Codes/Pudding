@@ -3,11 +3,15 @@ package org.pudding.transport.netty;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.apache.log4j.Logger;
 import org.pudding.transport.api.Config;
 import org.pudding.transport.api.Future;
 import org.pudding.transport.api.Processor;
 import org.pudding.common.exception.IllegalOptionException;
+import org.pudding.transport.netty.handler.*;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -33,7 +37,7 @@ public class NettyConnector extends ConfigOptions implements INettyConnector {
      */
     public NettyConnector(Processor processor) {
         super(false);
-        nettyConfig = new DefaultConnectNettyConfig(processor);
+        nettyConfig = newDefaultConnectNettyConfig(processor);
     }
 
     /**
@@ -44,6 +48,33 @@ public class NettyConnector extends ConfigOptions implements INettyConnector {
     public NettyConnector(IConnectNettyConfig nettyConfig) {
         super(false);
         this.nettyConfig = nettyConfig;
+    }
+
+    /**
+     * 创建默认的ConnectNettyConfig.
+     *
+     * @param processor
+     * @return
+     */
+    private IConnectNettyConfig newDefaultConnectNettyConfig(final Processor processor) {
+        IConnectNettyConfig nettyConfig = new ConnectNettyConfig(NioSocketChannel.class, new ChannelInitializer() {
+            @Override
+            protected void initChannel(io.netty.channel.Channel ch) throws Exception {
+                ChannelPipeline pipeline = ch.pipeline();
+                AcceptorHandler acceptorHandler = new AcceptorHandler();
+                acceptorHandler.processor(processor);
+
+                pipeline.addLast(new ProtocolDecoder());
+                pipeline.addLast(new ProtocolEncoder());
+                pipeline.addLast(new IdleStateHandler(0, 5, 0));
+                pipeline.addLast(new HeartbeatHandlerC());
+                pipeline.addLast(acceptorHandler);
+                pipeline.addLast(new ExceptionHandler());
+            }
+        });
+        nettyConfig.option(Option.SO_KEEPALIVE, true);
+
+        return nettyConfig;
     }
 
     @Override

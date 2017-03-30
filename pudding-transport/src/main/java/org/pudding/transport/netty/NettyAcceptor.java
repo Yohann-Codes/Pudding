@@ -3,10 +3,13 @@ package org.pudding.transport.netty;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.apache.log4j.Logger;
 import org.pudding.transport.api.*;
 import org.pudding.common.exception.IllegalOptionException;
 import org.pudding.transport.api.Channel;
+import org.pudding.transport.netty.handler.*;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -32,7 +35,7 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
      */
     public NettyAcceptor(Processor processor) {
         super(true);
-        nettyConfig = new DefaultAcceptNettyConfig(processor);
+        nettyConfig = newDefaultAcceptNettyConfig(processor);
     }
 
     /**
@@ -43,6 +46,35 @@ public class NettyAcceptor extends ConfigOptions implements INettyAcceptor {
     public NettyAcceptor(IAcceptNettyConfig nettyConfig) {
         super(true);
         this.nettyConfig = nettyConfig;
+    }
+
+    /**
+     * 创建默认的AcceptNettyConfig.
+     *
+     * @param processor
+     * @return
+     */
+    private IAcceptNettyConfig newDefaultAcceptNettyConfig(final Processor processor) {
+
+        AcceptNettyConfig nettyConfig = new AcceptNettyConfig(NioServerSocketChannel.class, new ChannelInitializer() {
+            @Override
+            protected void initChannel(io.netty.channel.Channel ch) throws Exception {
+                ChannelPipeline pipeline = ch.pipeline();
+                AcceptorHandler acceptorHandler = new AcceptorHandler();
+                acceptorHandler.processor(processor);
+
+                pipeline.addLast(new ProtocolDecoder());
+                pipeline.addLast(new ProtocolEncoder());
+                pipeline.addLast(new IdleStateHandler(6, 0, 0));
+                pipeline.addLast(new HeartbeatHandlerS());
+                pipeline.addLast(acceptorHandler);
+                pipeline.addLast(new ExceptionHandler());
+            }
+        });
+        nettyConfig.option(Option.SO_BACKLOG, 128);
+        nettyConfig.childOption(Option.SO_KEEPALIVE, true);
+
+        return nettyConfig;
     }
 
     @Override
