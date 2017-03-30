@@ -21,14 +21,6 @@ public interface ServiceRegistry {
     void startRegistry(int port);
 
     /**
-     * 启动注册中心.
-     *
-     * @param port 端口号
-     * @param nWorkers 工作线程数量
-     */
-    void startRegistry(int port, int nWorkers);
-
-    /**
      * 关闭注册中心.
      */
     void closeRegistry();

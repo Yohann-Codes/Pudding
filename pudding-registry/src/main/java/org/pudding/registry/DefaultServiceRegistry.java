@@ -16,39 +16,39 @@ public class DefaultServiceRegistry implements ServiceRegistry {
     private static final Logger logger = Logger.getLogger(DefaultServiceRegistry.class);
 
     private final Acceptor acceptor;
+    private RegistryProcessor processor;
     private Future future;
 
     public DefaultServiceRegistry() {
-        acceptor = new NettyAcceptor(RegistryProcessor.PROCESSOR);
+        this(RegistryConfig.nWorkers());
+    }
+
+    public DefaultServiceRegistry(int nWorkers) {
+        validate(nWorkers);
+        processor = new RegistryProcessor(this, nWorkers);
+        acceptor = new NettyAcceptor(processor);
+    }
+
+    private void validate(int nWorkers) {
+        if (nWorkers < 1) {
+            throw new IllegalArgumentException("nWorker: " + nWorkers);
+        }
     }
 
     @Override
     public void startRegistry() {
-        startRegistry(0);
+        startRegistry(RegistryConfig.port());
     }
 
     @Override
     public void startRegistry(int port) {
-        if (port == 0) {
-            port = RegistryConfig.port();
-        }
-        startRegistry(port, 0);
-    }
-
-    @Override
-    public void startRegistry(int port, int nWorkers) {
-        if (nWorkers == 0) {
-            RegistryProcessor.PROCESSOR.createExecutor();
-        } else {
-            RegistryProcessor.PROCESSOR.createExecutor(nWorkers);
-        }
         acceptor.bind(port);
     }
 
     @Override
     public void closeRegistry() {
         validate(future);
-        RegistryProcessor.PROCESSOR.shutdownExecutor();
+        processor.shutdownExecutor();
         future.channel().close();
     }
 

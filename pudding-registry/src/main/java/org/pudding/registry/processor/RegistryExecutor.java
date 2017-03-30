@@ -4,29 +4,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
+ * Registry Executor.
+ * 处理非IO事件.
+ *
  * @author Yohann.
  */
 public class RegistryExecutor {
-    private int nWorkers;
     private ExecutorService executor;
 
     public RegistryExecutor(int nWorkers) {
-        this.nWorkers = nWorkers;
-    }
-
-    public void createExecutor() {
         executor = Executors.newFixedThreadPool(nWorkers);
-    }
-
-    public void createExecutor(int nWorkers) {
-        executor = Executors.newFixedThreadPool(nWorkers);
-    }
-
-    public void shutdownExecutor() {
-        executor.shutdown();
     }
 
     protected void execute(Runnable task) {
         executor.execute(task);
+    }
+
+    public void shutdownExecutor() {
+        executor.shutdown();
     }
 }
