@@ -33,11 +33,10 @@ public class ProtocolHeader {
     public static final byte DISPATCH_SERVICE= 0x04; // 分派服务
     public static final byte OFFLINE_SERVICE = 0x05; // 服务下线通知
     public static final byte INVOKE_SERVICE = 0x06; // 服务调用
-    public static final byte RETURN_SERVICE = 0x07; // 调用返回
 
     /** ResultCode, 如果不是RESPONSE，则resultCode=0 */
     public static final int PUBLISH_SUCCESS = 0100; // 服务发布成功
-    public static final int PUBLISH_FAILED_PUBLISHED = 0101; // 服务发布失败(该服务已发布)
+    public static final int PUBLISH_FAILED = 0101; // 服务发布失败(该服务已发布)
 
     private short magic;
     private byte type; // 高4位: serializerType, 低4位: dataPacketType
