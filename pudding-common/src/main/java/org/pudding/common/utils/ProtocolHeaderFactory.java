@@ -53,15 +53,29 @@ public class ProtocolHeaderFactory {
     }
 
     /**
-     * Create UnpublishService Request ProtocolHeader.
+     * Create SubscribeService Request ProtocolHeader.
      */
-    public static ProtocolHeader newUnpublishServiceRequestHeader(int bodyLength, byte serializerType) {
+    public static ProtocolHeader newSubscribeServiceRequestHeader(int bodyLength, byte serializerType) {
         ProtocolHeader header = new ProtocolHeader();
         header.setMagic(ProtocolHeader.MAGIC);
         header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.REQUEST));
-        header.setSign(ProtocolHeader.UNPUBLISH_SERVICE);
+        header.setSign(ProtocolHeader.SUBSCRIBE_SERVICE);
         header.setInvokeId(0);
         header.setResultCode(0);
+        header.setBodyLength(bodyLength);
+        return header;
+    }
+
+    /**
+     * Create SubscribeService Response ProtocolHeader.
+     */
+    public static ProtocolHeader newSubscribeServiceResponseHeader(int bodyLength, byte serializerType, int resultCode) {
+        ProtocolHeader header = new ProtocolHeader();
+        header.setMagic(ProtocolHeader.MAGIC);
+        header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.RESPONSE));
+        header.setSign(ProtocolHeader.SUBSCRIBE_SERVICE);
+        header.setInvokeId(0);
+        header.setResultCode(resultCode);
         header.setBodyLength(bodyLength);
         return header;
     }

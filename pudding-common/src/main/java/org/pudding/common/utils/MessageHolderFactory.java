@@ -44,10 +44,21 @@ public class MessageHolderFactory {
     }
 
     /**
-     * Create UnpublishService Request MessageHolder.
+     * Create SubscribeService Request MessageHolder.
      */
-    public static MessageHolder newUnpublishServiceRequestHolder(byte[] body, byte serializerType) {
-        ProtocolHeader header = ProtocolHeaderFactory.newUnpublishServiceRequestHeader(body.length, serializerType);
+    public static MessageHolder newSubscribeServiceRequestHolder(byte[] body, byte serializerType) {
+        ProtocolHeader header = ProtocolHeaderFactory.newSubscribeServiceRequestHeader(body.length, serializerType);
+        MessageHolder holder = new MessageHolder();
+        holder.setHeader(header);
+        holder.setBody(body);
+        return holder;
+    }
+
+    /**
+     * Create SubscribeService Response MessageHolder.
+     */
+    public static MessageHolder newSubscribeServiceResponseHolder(byte[] body, byte serializerType, int resultCode) {
+        ProtocolHeader header = ProtocolHeaderFactory.newSubscribeServiceResponseHeader(body.length, serializerType, resultCode);
         MessageHolder holder = new MessageHolder();
         holder.setHeader(header);
         holder.setBody(body);

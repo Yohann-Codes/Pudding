@@ -13,19 +13,19 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.pudding</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pudding-transport</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.pudding</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pudding-serialization</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.pudding</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pudding-registry</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.pudding</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pudding-rpc</artifactId>
         </dependency>
         <dependency>

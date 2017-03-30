@@ -34,8 +34,5 @@ public class ProviderTest {
         provider.startServices(serviceMeta1, serviceMeta2);
         // 发布所有已启用的服务
         provider.publishAllService();
-
-        Thread.sleep(2000);
-        provider.closeRegistry();
     }
 }
