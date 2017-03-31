@@ -1,7 +1,6 @@
 package org.pudding.rpc.consumer.processor;
 
-import org.pudding.common.model.ServiceMeta;
-import org.pudding.common.model.SubscribeResult;
+import org.pudding.common.model.Services;
 import org.pudding.common.protocol.MessageHolder;
 import org.pudding.common.protocol.ProtocolHeader;
 import org.pudding.rpc.consumer.DefaultServiceConsumer;
@@ -20,6 +19,9 @@ import static org.pudding.common.protocol.ProtocolHeader.dataPacketCode;
 public class ConsumerProcessor implements Processor {
 
     private DefaultServiceConsumer serviceConsumer;
+
+    public ConsumerProcessor() {
+    }
 
     public ConsumerProcessor(DefaultServiceConsumer serviceConsumer) {
         this.serviceConsumer = serviceConsumer;
@@ -60,8 +62,8 @@ public class ConsumerProcessor implements Processor {
             case ProtocolHeader.RESPONSE:
                 switch (sign) {
                     case ProtocolHeader.SUBSCRIBE_SERVICE:
-                        SubscribeResult subscribeResult = serializer.readObject(body, SubscribeResult.class);
-                        serviceConsumer.processSubscribeResult(subscribeResult, resultCode);
+                        Services services = serializer.readObject(body, Services.class);
+                        serviceConsumer.processSubscribeResult(services, resultCode);
                         break;
                 }
                 break;

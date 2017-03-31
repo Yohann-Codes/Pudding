@@ -9,12 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 默认服务管理实现.
+ * 默认服务管理实现(单例模式).
  *
  * @author Yohann.
  */
 public class DefaultLocalManager implements LocalManager {
     private static final Logger logger = Logger.getLogger(DefaultLocalManager.class);
+
+    private static LocalManager localManager;
 
     private Object lock = new Object();
 
@@ -22,8 +24,19 @@ public class DefaultLocalManager implements LocalManager {
     // Map: key -> 服务名 , List -> 不同提供者的同名服务
     private volatile Map<String, List<ServiceMeta>> services;
 
-    public DefaultLocalManager() {
+    private DefaultLocalManager() {
         services = new HashMap<>();
+    }
+
+    public static LocalManager getLocalManager() {
+        if (localManager == null) {
+            synchronized (DefaultLocalManager.class) {
+                if (localManager == null) {
+                    localManager = new DefaultLocalManager();
+                }
+            }
+        }
+        return localManager;
     }
 
     @Override
@@ -40,8 +53,11 @@ public class DefaultLocalManager implements LocalManager {
             }
             serviceMetas.add(serviceMeta);
         }
+    }
 
-        logger.info("cacheService(): " + services);
+    @Override
+    public List<ServiceMeta> queryService(String serviceName) {
+        return services.get(serviceName);
     }
 
     private void validate(ServiceMeta serviceMeta) {

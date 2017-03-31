@@ -21,6 +21,10 @@ import org.pudding.transport.netty.NettyConnector;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Yohann.
@@ -37,6 +41,12 @@ public class DefaultServiceProvider implements ServiceProvider {
     private LinkedList<ServiceMeta> startedServices; // 已启用的服务(待发布服务)
 
     private BlockingQueue<ServiceMeta> publishQueue;
+
+    private Lock lock = new ReentrantLock();
+    private Condition notSuccess = lock.newCondition();
+
+    private int serviceCount = 0;
+    private boolean success = false;
 
     /**
      * 默认工作线程数量: nWorkers = 2 * CPU
@@ -104,65 +114,6 @@ public class DefaultServiceProvider implements ServiceProvider {
         }.start();
     }
 
-    @Override
-    public void closeRegistry() {
-        registryChannel.close();
-        registryChannel = null;
-    }
-
-    @Override
-    public ServiceProvider startService(ServiceMeta serviceMeta) {
-        checkNotNull(serviceMeta, ServiceMeta.class);
-        String address = serviceMeta.getAddress();
-        AddressUtil.checkFormat(address);
-        int port = AddressUtil.port(address);
-
-        Future future = doStart(port); // bind local port
-
-        if (future == null) {
-            throw new NullPointerException("future == null");
-        }
-
-        unsettledServices.put(serviceMeta, future.channel());
-        startedServices.offer(serviceMeta); // 添加到待发布队列
-
-        return this;
-    }
-
-    private Future doStart(int port) {
-        Acceptor acceptor = newAcceptor();
-        return acceptor.bind(port);
-    }
-
-    @Override
-    public ServiceProvider startServices(ServiceMeta... serviceMetas) {
-        for (ServiceMeta serviceMeta : serviceMetas) {
-            startService(serviceMeta);
-        }
-        return this;
-    }
-
-    @Override
-    public ServiceProvider publishService(ServiceMeta serviceMeta) {
-        if (!startedServices.contains(serviceMeta)) {
-            throw new ServiceNotStartedException("you must start it before publish service");
-        }
-        return doPublish(serviceMeta);
-    }
-
-    private ServiceProvider doPublish(ServiceMeta serviceMeta) {
-        checkConnection();
-        checkNotNull(serviceMeta, ServiceMeta.class);
-
-        try {
-            publishQueue.put(serviceMeta);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        return this;
-    }
-
     private void send(final ServiceMeta serviceMeta) {
         // 序列化
         Serializer serializer = SerializerFactory.getSerializer(ProviderConfig.serializerType());
@@ -182,16 +133,44 @@ public class DefaultServiceProvider implements ServiceProvider {
         }
     }
 
-    private void checkConnection() {
-        if (registryChannel == null) {
-            throw new NotConnectRegistryException("not connect to registry");
-        }
+    @Override
+    public void closeRegistry() {
+        registryChannel.close();
+        registryChannel = null;
     }
 
     @Override
-    public ServiceProvider publishServices(ServiceMeta... serviceMetas) {
+    public ServiceProvider startService(ServiceMeta serviceMeta) {
+        return doStart(serviceMeta);
+    }
+
+    private ServiceProvider doStart(ServiceMeta serviceMeta) {
+        checkNotNull(serviceMeta, ServiceMeta.class);
+        String address = serviceMeta.getAddress();
+        AddressUtil.checkFormat(address);
+        int port = AddressUtil.port(address);
+
+        Future future = start0(port); // bind local port
+
+        if (future == null) {
+            throw new NullPointerException("future == null");
+        }
+
+        unsettledServices.put(serviceMeta, future.channel());
+        startedServices.offer(serviceMeta); // 添加到待发布队列
+
+        return this;
+    }
+
+    private Future start0(int port) {
+        Acceptor acceptor = newAcceptor();
+        return acceptor.bind(port);
+    }
+
+    @Override
+    public ServiceProvider startServices(ServiceMeta... serviceMetas) {
         for (ServiceMeta serviceMeta : serviceMetas) {
-            publishService(serviceMeta);
+            doStart(serviceMeta);
         }
         return this;
     }
@@ -208,22 +187,49 @@ public class DefaultServiceProvider implements ServiceProvider {
             }
             doPublish(serviceMeta);
         }
+
+        blockCurrent(); // blocking
+
         return this;
     }
 
-    @Override
-    public ServiceProvider startAndPublishService(ServiceMeta serviceMeta) {
-        startService(serviceMeta);
-        publishService(serviceMeta);
-        return this;
-    }
-
-    @Override
-    public ServiceProvider startAndPublishServices(ServiceMeta... serviceMetas) {
-        for (ServiceMeta serviceMeta : serviceMetas) {
-            startAndPublishService(serviceMeta);
+    /**
+     * 阻塞当前线程.
+     */
+    private void blockCurrent() {
+        lock.lock();
+        try {
+            notSuccess.await(ProviderConfig.publishTimeout(), TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
+        if (success) {
+            logger.info("Publish services success");
+        } else {
+            logger.warn("Publish services timeout");
+        }
+    }
+
+    private ServiceProvider doPublish(ServiceMeta serviceMeta) {
+        checkConnection();
+        checkNotNull(serviceMeta, ServiceMeta.class);
+
+        try {
+            publishQueue.put(serviceMeta);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        serviceCount++;
+
         return this;
+    }
+
+    private void checkConnection() {
+        if (registryChannel == null) {
+            throw new NotConnectRegistryException("not connect to registry");
+        }
     }
 
     /**
@@ -235,9 +241,13 @@ public class DefaultServiceProvider implements ServiceProvider {
     public void processPublishResult(ServiceMeta serviceMeta, int resultCode) {
         if (resultCode == ProtocolHeader.SUCCESS) {
             onlineServices.put(serviceMeta, unsettledServices.get(serviceMeta));
-            logger.info("服务发布成功: " + serviceMeta);
-        } else if (resultCode == ProtocolHeader.FAILED) {
-            logger.info("服务发布失败: " + serviceMeta);
+            serviceCount--;
+            if (serviceCount == 0) {
+                lock.lock();
+                notSuccess.signalAll(); // 唤醒发布线程
+                lock.unlock();
+                success = true;
+            }
         }
         unsettledServices.remove(serviceMeta);
     }

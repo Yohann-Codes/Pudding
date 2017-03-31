@@ -1,8 +1,5 @@
 package org.pudding.rpc.consumer;
 
-import org.pudding.rpc.consumer.future.ConsumerFuture;
-import org.pudding.rpc.consumer.future.SubscribeFutureListener;
-
 /**
  * 服务消费者.
  * <p>
@@ -33,6 +30,7 @@ public interface ServiceConsumer {
 
     /**
      * 订阅一个服务.
+     * 注意:
      *
      * @param serviceClazz
      */
@@ -44,11 +42,4 @@ public interface ServiceConsumer {
      * @param serviceClazzs
      */
     ServiceConsumer subscribeServices(Class... serviceClazzs);
-
-    /**
-     * 添加订阅结果监听器.
-     *
-     * @param listener
-     */
-    void addSubscribeFutureListener(SubscribeFutureListener listener);
 }

@@ -44,35 +44,8 @@ public interface ServiceProvider {
     ServiceProvider startServices(ServiceMeta... serviceMetas);
 
     /**
-     * 发布一个服务.
-     *
-     * @param serviceMeta
-     */
-    ServiceProvider publishService(ServiceMeta serviceMeta);
-
-    /**
-     * 发布多个服务.
-     *
-     * @param serviceMetas
-     */
-    ServiceProvider publishServices(ServiceMeta... serviceMetas);
-
-    /**
      * 发布在此实例上启用的所有服务.
+     * 注意: 此方法会阻塞直到服务发布成功或超时.
      */
     ServiceProvider publishAllService();
-
-    /**
-     * 启用并发布一个服务.
-     *
-     * @param serviceMeta
-     */
-    ServiceProvider startAndPublishService(ServiceMeta serviceMeta);
-
-    /**
-     * 启用并发布多个服务.
-     *
-     * @param serviceMetas
-     */
-    ServiceProvider startAndPublishServices(ServiceMeta... serviceMetas);
 }

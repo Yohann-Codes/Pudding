@@ -1,6 +1,7 @@
 package org.pudding.rpc.provider.config;
 
 import org.pudding.common.constant.SerializerType;
+import org.pudding.common.constant.Timeout;
 
 /**
  * 服务提供者配置.
@@ -26,6 +27,9 @@ public class ProviderConfig {
     /** 工作线程数量, 默认: 2*CPU */
     private int nWorkers = Runtime.getRuntime().availableProcessors() * 2;
 
+    /** 服务发布超时时间, 默认: 15s */
+    private int publishTimeout = Timeout.PUBLISH_TIMEOUT;
+
 
     public static void serializerType(byte serializerType) {
         PROVIDER_CONFIG.serializerType = serializerType;
@@ -49,5 +53,13 @@ public class ProviderConfig {
 
     public static int nWorkers() {
         return PROVIDER_CONFIG.nWorkers;
+    }
+
+    public static void publishTimeout(int publishTimeout) {
+        PROVIDER_CONFIG.publishTimeout = publishTimeout;
+    }
+
+    public static int publishTimeout() {
+        return PROVIDER_CONFIG.publishTimeout;
     }
 }
