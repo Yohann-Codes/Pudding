@@ -8,7 +8,7 @@ import java.util.List;
  *
  * @author Yohann.
  */
-public class SubscribeResult implements Serializable {
+public class Services implements Serializable {
     // 服务名称
     private String name;
     // 服务地址，可能有多个
