@@ -1,11 +1,9 @@
 package org.pudding.registry.service;
 
 import org.apache.log4j.Logger;
-import org.pudding.common.exception.ServiceNotPublishedException;
 import org.pudding.common.exception.ServicePublishFailedException;
-import org.pudding.common.exception.ServiceSubscribeFailedException;
 import org.pudding.common.model.ServiceMeta;
-import org.pudding.common.model.SubscribeResult;
+import org.pudding.common.model.Services;
 
 import java.util.*;
 
@@ -53,24 +51,24 @@ public class DefaultServiceManager implements ServiceManager {
     }
 
     @Override
-    public SubscribeResult subscribeService(ServiceMeta serviceMeta) {
+    public Services subscribeService(ServiceMeta serviceMeta) {
         validate(serviceMeta);
 
         String name = serviceMeta.getName();
-        SubscribeResult subscribeResult = new SubscribeResult();
-        subscribeResult.setName(name);
+        Services services = new Services();
+        services.setName(name);
 
-        if (services.containsKey(name)) {
+        if (this.services.containsKey(name)) {
             // 存在服务
-            List<ServiceMeta> serviceList = services.get(name);
+            List<ServiceMeta> serviceList = this.services.get(name);
             List<ServiceMeta> serviceMetas = new ArrayList<>();
             for (ServiceMeta s : serviceList) {
                 serviceMetas.add(s);
             }
-            subscribeResult.setServiceMetas(serviceMetas);
+            services.setServiceMetas(serviceMetas);
         }
 
-        return subscribeResult;
+        return services;
     }
 
     private void validate(ServiceMeta serviceMeta) {

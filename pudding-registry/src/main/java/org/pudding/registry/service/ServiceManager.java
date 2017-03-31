@@ -1,9 +1,8 @@
 package org.pudding.registry.service;
 
 import org.pudding.common.exception.ServicePublishFailedException;
-import org.pudding.common.exception.ServiceSubscribeFailedException;
 import org.pudding.common.model.ServiceMeta;
-import org.pudding.common.model.SubscribeResult;
+import org.pudding.common.model.Services;
 
 /**
  * 管理和维护已发布的服务.
@@ -25,5 +24,5 @@ public interface ServiceManager {
      *
      * @param serviceMeta
      */
-    SubscribeResult subscribeService(ServiceMeta serviceMeta);
+    Services subscribeService(ServiceMeta serviceMeta);
 }

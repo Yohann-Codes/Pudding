@@ -3,7 +3,7 @@ package org.pudding.registry.processor;
 import org.apache.log4j.Logger;
 import org.pudding.common.exception.ServicePublishFailedException;
 import org.pudding.common.model.ServiceMeta;
-import org.pudding.common.model.SubscribeResult;
+import org.pudding.common.model.Services;
 import org.pudding.common.protocol.MessageHolder;
 import org.pudding.common.protocol.ProtocolHeader;
 import org.pudding.common.utils.MessageHolderFactory;
@@ -102,9 +102,9 @@ public class  RegistryProcessor extends RegistryExecutor implements Processor {
             serviceManager.registerService(serviceMeta);
             holder = MessageHolderFactory.newPublishServiceResponseHolder(body,
                     RegistryConfig.serializerType(), ProtocolHeader.SUCCESS);
-            logger.info("服务注册成功: " + serviceMeta);
+            logger.info("Register Success: " + serviceMeta);
         } catch (ServicePublishFailedException e) {
-            logger.info("服务注册失败: the service has been registered: " + serviceMeta);
+            logger.info("Register Failed: " + serviceMeta);
             holder = MessageHolderFactory.newPublishServiceResponseHolder(body,
                     RegistryConfig.serializerType(), ProtocolHeader.FAILED);
         }
@@ -119,20 +119,20 @@ public class  RegistryProcessor extends RegistryExecutor implements Processor {
      */
     private void subscribeService(Channel channel, ServiceMeta serviceMeta) {
         MessageHolder holder;
-        SubscribeResult subscribeResult = serviceManager.subscribeService(serviceMeta);
+        Services services = serviceManager.subscribeService(serviceMeta);
         Serializer serializer = SerializerFactory.getSerializer(RegistryConfig.serializerType());
-        byte[] body = serializer.writeObject(subscribeResult);
+        byte[] body = serializer.writeObject(services);
 
-        if (subscribeResult.getServiceMetas() != null) {
+        if (services.getServiceMetas() != null) {
             // 订阅成功
             holder = MessageHolderFactory.newSubscribeServiceResponseHolder(body,
                     RegistryConfig.serializerType(), ProtocolHeader.SUCCESS);
-            logger.info("服务订阅成功: " + subscribeResult);
+            logger.info("Allot Success: " + services);
         } else {
             // 订阅失败
             holder = MessageHolderFactory.newSubscribeServiceResponseHolder(body,
                     RegistryConfig.serializerType(), ProtocolHeader.FAILED);
-            logger.info("服务订阅失败: " + subscribeResult);
+            logger.info("Allot Failed: " + services);
         }
         channel.write(holder);
     }
