@@ -1,7 +1,8 @@
-package org.pudding.rpc.consumer.service.proxy;
+package org.pudding.rpc.consumer.proxy;
 
 import org.apache.log4j.Logger;
 import org.pudding.common.model.InvokeMeta;
+import org.pudding.common.model.ServiceMeta;
 import org.pudding.rpc.consumer.processor.ConsumerProcessor;
 import org.pudding.rpc.consumer.load_balance.LoadBalance;
 import org.pudding.transport.netty.INettyConnector;
@@ -39,11 +40,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
         Class<?>[] params = method.getParameterTypes();
         InvokeMeta invokeMeta = new InvokeMeta(serviceName, methodName, params);
 
-        // --------------------------------------------------------------------
-        logger.info("invoke(): " + invokeMeta);
-        // --------------------------------------------------------------------
-
-        String serviceAddress = loadBalance.selectServiceAddress(invokeMeta);
+        ServiceMeta serviceMeta = loadBalance.selectService(invokeMeta);
 
         return null;
     }

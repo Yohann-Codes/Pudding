@@ -1,4 +1,4 @@
-package org.pudding.rpc.consumer.service;
+package org.pudding.rpc.consumer.local_service;
 
 import org.pudding.common.model.ServiceMeta;
 

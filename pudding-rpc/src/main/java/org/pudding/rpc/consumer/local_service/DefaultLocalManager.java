@@ -1,4 +1,4 @@
-package org.pudding.rpc.consumer.service;
+package org.pudding.rpc.consumer.local_service;
 
 import org.apache.log4j.Logger;
 import org.pudding.common.model.ServiceMeta;
@@ -62,7 +62,7 @@ public class DefaultLocalManager implements LocalManager {
 
     private void validate(ServiceMeta serviceMeta) {
         if (serviceMeta == null) {
-            throw new NullPointerException("service == null");
+            throw new NullPointerException("local_service == null");
         }
     }
 }

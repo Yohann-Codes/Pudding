@@ -21,9 +21,6 @@ public class JavaSerializer implements Serializer {
 
     @Override
     public <T> byte[] writeObject(T object) {
-        if (object == null) {
-            throw new NullPointerException("object == null");
-        }
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream output = null;
         try {

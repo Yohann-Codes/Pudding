@@ -25,9 +25,6 @@ public class HessianSerializer implements Serializer {
 
     @Override
     public <T> byte[] writeObject(T object) {
-        if (object == null) {
-            throw new NullPointerException("object == null");
-        }
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         HessianOutput output = new HessianOutput(bos);
         try {
