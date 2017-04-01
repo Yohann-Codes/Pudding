@@ -5,15 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="34ba44e7-943b-4631-a75d-8bee941a9fae" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pudding-common/src/main/java/org/pudding/common/exception/InvokeFailedException.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pudding-common/src/main/java/org/pudding/common/model/Result.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/consumer/ConsumerTest.java" afterPath="$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/consumer/ConsumerTest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/consumer/processor/ConsumerProcessor.java" afterPath="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/consumer/processor/ConsumerProcessor.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/consumer/proxy/AsyncInvocationHandler.java" afterPath="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/consumer/proxy/AsyncInvocationHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/consumer/proxy/InvokeHandler.java" afterPath="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/consumer/proxy/InvokeHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/consumer/proxy/SyncInvocationHandler.java" afterPath="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/consumer/proxy/SyncInvocationHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/utils/ResultMap.java" afterPath="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/utils/ResultMap.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/provider/ProviderTest.java" afterPath="$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/provider/ProviderTest.java" />
     </list>
     <ignored path="Pudding.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -43,11 +35,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="ProviderTest.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="ProviderTest.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/provider/ProviderTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="21" column="42" selection-start-line="21" selection-start-column="42" selection-end-line="21" selection-end-column="42" />
+            <state relative-caret-position="204">
+              <caret line="18" column="17" selection-start-line="18" selection-start-column="17" selection-end-line="18" selection-end-column="17" />
               <folding />
             </state>
           </provider>
@@ -158,7 +150,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ConsumerTest.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="ConsumerTest.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/consumer/ConsumerTest.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="170">
@@ -227,7 +219,6 @@
         <option value="$PROJECT_DIR$/pudding-common/src/main/java/org/pudding/common/utils/ProtocolHeaderFactory.java" />
         <option value="$PROJECT_DIR$/pudding-common/src/main/java/org/pudding/common/utils/MessageHolderFactory.java" />
         <option value="$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/service/MyServiceImplA.java" />
-        <option value="$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/provider/ProviderTest.java" />
         <option value="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/utils/InvokeMap.java" />
         <option value="$PROJECT_DIR$/pudding-common/src/main/java/org/pudding/common/utils/IdUtil.java" />
         <option value="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/provider/processor/ProviderProcessor.java" />
@@ -243,6 +234,7 @@
         <option value="$PROJECT_DIR$/pudding-common/src/main/java/org/pudding/common/exception/InvokeFailedException.java" />
         <option value="$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/consumer/proxy/SyncInvocationHandler.java" />
         <option value="$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/consumer/ConsumerTest.java" />
+        <option value="$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/provider/ProviderTest.java" />
       </list>
     </option>
   </component>
@@ -1788,14 +1780,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/provider/ProviderTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="21" column="42" selection-start-line="21" selection-start-column="42" selection-end-line="21" selection-end-column="42" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pudding-rpc/src/main/java/org/pudding/rpc/consumer/processor/ConsumerProcessor.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="311">
@@ -1889,6 +1873,14 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="170">
           <caret line="15" column="33" selection-start-line="15" selection-start-column="33" selection-end-line="15" selection-end-column="33" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pudding-example/src/main/java/org/pudding/example/provider/ProviderTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="18" column="17" selection-start-line="18" selection-start-column="17" selection-end-line="18" selection-end-column="17" />
           <folding />
         </state>
       </provider>

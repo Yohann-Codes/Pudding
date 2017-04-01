@@ -17,7 +17,7 @@ public class RegistryTest {
 ### 第二步: 启动服务提供者
 ```
 public class ProviderTest {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         // 创建服务提供者和服务包装器
         ServiceProvider provider = new DefaultServiceProvider();
         ServiceWrapper serviceWrapper = new DefaultServiceWrapper();
