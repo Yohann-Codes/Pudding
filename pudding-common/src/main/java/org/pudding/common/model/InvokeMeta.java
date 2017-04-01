@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
- * 服务调用元数据.
+ * 服务调用元数据, 代表唯一的一个方法.
  *
  * @author Yohann.
  */
@@ -13,12 +13,15 @@ public class InvokeMeta implements Serializable {
     private String serviceName;
     // 方法名称
     private String methodName;
+    // 方法参数类型
+    private Class<?>[] paramTypes;
     // 方法参数
-    private Class<?>[] params;
+    private Object[] params;
 
-    public InvokeMeta(String serviceName, String methodName, Class<?>[] params) {
+    public InvokeMeta(String serviceName, String methodName, Class<?>[] paramTypes, Object[] params) {
         this.serviceName = serviceName;
         this.methodName = methodName;
+        this.paramTypes = paramTypes;
         this.params = params;
     }
 
@@ -30,7 +33,11 @@ public class InvokeMeta implements Serializable {
         return methodName;
     }
 
-    public Class<?>[] getParams() {
+    public Class<?>[] getParamTypes() {
+        return paramTypes;
+    }
+
+    public Object[] getParams() {
         return params;
     }
 
@@ -39,6 +46,7 @@ public class InvokeMeta implements Serializable {
         return "InvokeMeta{" +
                 "serviceName='" + serviceName + '\'' +
                 ", methodName='" + methodName + '\'' +
+                ", paramTypes=" + Arrays.asList(paramTypes) +
                 ", params=" + Arrays.asList(params) +
                 '}';
     }

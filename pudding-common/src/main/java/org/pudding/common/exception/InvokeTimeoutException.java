@@ -3,21 +3,21 @@ package org.pudding.common.exception;
 /**
  * @author Yohann.
  */
-public class ServiceStartFailedException extends Exception {
+public class InvokeTimeoutException extends RuntimeException {
 
-    public ServiceStartFailedException() {
+    public InvokeTimeoutException() {
         super();
     }
 
-    public ServiceStartFailedException(String messge) {
+    public InvokeTimeoutException(String messge) {
         super(messge);
     }
 
-    public ServiceStartFailedException(Throwable cause) {
+    public InvokeTimeoutException(Throwable cause) {
         super(cause);
     }
 
-    public ServiceStartFailedException(String messge, Throwable cause) {
+    public InvokeTimeoutException(String messge, Throwable cause) {
         super(messge, cause);
     }
 }

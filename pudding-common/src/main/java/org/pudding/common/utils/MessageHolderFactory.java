@@ -64,4 +64,26 @@ public class MessageHolderFactory {
         holder.setBody(body);
         return holder;
     }
+
+    /**
+     * Create Invoke Request MessageHolder.
+     */
+    public static MessageHolder newInvokeRequestHolder(byte[] body, byte serializerType, long invokeId) {
+        ProtocolHeader header = ProtocolHeaderFactory.newInvokeRequestHeader(body.length, serializerType, invokeId);
+        MessageHolder holder = new MessageHolder();
+        holder.setHeader(header);
+        holder.setBody(body);
+        return holder;
+    }
+
+    /**
+     * Create Invoke Response MessageHolder.
+     */
+    public static MessageHolder newInvokeResponseHolder(byte[] body, byte serializerType,long invokeId, int resultCode) {
+        ProtocolHeader header = ProtocolHeaderFactory.newInvokeResponseHeader(body.length, serializerType, invokeId, resultCode);
+        MessageHolder holder = new MessageHolder();
+        holder.setHeader(header);
+        holder.setBody(body);
+        return holder;
+    }
 }

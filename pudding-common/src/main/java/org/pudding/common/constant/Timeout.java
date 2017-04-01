@@ -10,4 +10,7 @@ public class Timeout {
 
     /** 服务订阅超时时间 */
     public static final int SUBSCRIBE_TIMEOUT = 15;
+
+    /** 服务调用超时时间 */
+    public static final int INVOKE_TIMEOUT = 10;
 }

@@ -3,7 +3,7 @@ package org.pudding.common.model;
 import java.io.Serializable;
 
 /**
- * 服务元数据.
+ * 服务元数据, 代表唯一的一个服务.
  *
  * @author Yohann.
  */

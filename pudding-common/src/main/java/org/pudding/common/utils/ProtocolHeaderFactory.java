@@ -79,4 +79,32 @@ public class ProtocolHeaderFactory {
         header.setBodyLength(bodyLength);
         return header;
     }
+
+    /**
+     * Create Invoke Request ProtocolHeader.
+     */
+    public static ProtocolHeader newInvokeRequestHeader(int bodyLength, byte serializerType, long invokeId) {
+        ProtocolHeader header = new ProtocolHeader();
+        header.setMagic(ProtocolHeader.MAGIC);
+        header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.REQUEST));
+        header.setSign(ProtocolHeader.INVOKE_SERVICE);
+        header.setInvokeId(invokeId);
+        header.setResultCode(0);
+        header.setBodyLength(bodyLength);
+        return header;
+    }
+
+    /**
+     * Create Invoke Response ProtocolHeader.
+     */
+    public static ProtocolHeader newInvokeResponseHeader(int bodyLength, byte serializerType, long invokeId, int resultCode) {
+        ProtocolHeader header = new ProtocolHeader();
+        header.setMagic(ProtocolHeader.MAGIC);
+        header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.RESPONSE));
+        header.setSign(ProtocolHeader.INVOKE_SERVICE);
+        header.setInvokeId(invokeId);
+        header.setResultCode(resultCode);
+        header.setBodyLength(bodyLength);
+        return header;
+    }
 }

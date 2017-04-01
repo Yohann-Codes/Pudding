@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 订阅服务响应结果.
+ * 同名的多个地址的服务.
  *
  * @author Yohann.
  */

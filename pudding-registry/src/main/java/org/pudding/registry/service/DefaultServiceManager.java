@@ -36,7 +36,7 @@ public class DefaultServiceManager implements ServiceManager {
                 // 检查是否二次注册
                 for (ServiceMeta meta : serviceList) {
                     if (meta.getAddress().equals(serviceMeta.getAddress())) {
-                        throw new ServicePublishFailedException("the service has been published: " + serviceMeta);
+                        throw new ServicePublishFailedException("the local_service has been published: " + serviceMeta);
                     }
                 }
                 serviceList.add(serviceMeta);
@@ -73,7 +73,7 @@ public class DefaultServiceManager implements ServiceManager {
 
     private void validate(ServiceMeta serviceMeta) {
         if (serviceMeta == null) {
-            throw new NullPointerException("service == null");
+            throw new NullPointerException("local_service == null");
         }
     }
 }
