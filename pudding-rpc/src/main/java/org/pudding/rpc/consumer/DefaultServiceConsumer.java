@@ -11,8 +11,8 @@ import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.utils.MessageHolderFactory;
 import org.pudding.rpc.consumer.config.ConsumerConfig;
 import org.pudding.rpc.consumer.processor.ConsumerProcessor;
-import org.pudding.rpc.consumer.service.DefaultLocalManager;
-import org.pudding.rpc.consumer.service.LocalManager;
+import org.pudding.rpc.consumer.local_service.DefaultLocalManager;
+import org.pudding.rpc.consumer.local_service.LocalManager;
 import org.pudding.rpc.provider.config.ProviderConfig;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
@@ -29,7 +29,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * 默认的服务消费者.
+ * 建议单例使用.
  *
  * @author Yohann.
  */
@@ -43,10 +43,10 @@ public class DefaultServiceConsumer implements ServiceConsumer {
     private LocalManager localManager; // 管理本地缓存服务
 
     private int serviceCount = 0;
-    private boolean success = false;
+    private boolean timeout = true;
 
     private Lock lock = new ReentrantLock();
-    private Condition notSuccess = lock.newCondition();
+    private Condition notResponse = lock.newCondition();
 
     public DefaultServiceConsumer() {
         subscribeQueue = new LinkedBlockingQueue<>();
@@ -137,23 +137,23 @@ public class DefaultServiceConsumer implements ServiceConsumer {
     private void blockCurrent() {
         lock.lock();
         try {
-            notSuccess.await(ConsumerConfig.subscribeTimeout(), TimeUnit.SECONDS);
+            notResponse.await(ConsumerConfig.subscribeTimeout(), TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
             lock.unlock();
         }
-        if (success) {
-            logger.info("Subscribe services success");
+        if (timeout) {
+            logger.warn("Service subscription timed out");
         } else {
-            logger.warn("Subscribe services timeout");
+            logger.info("Service subscription is complete");
         }
     }
 
     private void doSubscribe(Class serviceClazz) {
         checkConnection();
 
-        String serviceName = serviceClazz.getSimpleName();
+        String serviceName = serviceClazz.getName();
         ServiceMeta serviceMeta = new ServiceMeta(serviceName, null);
         try {
             subscribeQueue.put(serviceMeta);
@@ -181,12 +181,11 @@ public class DefaultServiceConsumer implements ServiceConsumer {
             for (ServiceMeta s : services.getServiceMetas()) {
                 localManager.cacheService(s);
             }
-            serviceCount--;
-            if (serviceCount == 0) {
+            if ((--serviceCount) == 0) {
+                timeout = false;
                 lock.lock();
-                notSuccess.signalAll(); // 唤醒订阅线程
+                notResponse.signalAll(); // 唤醒订阅线程
                 lock.unlock();
-                success = true;
             }
         }
     }
@@ -198,5 +197,4 @@ public class DefaultServiceConsumer implements ServiceConsumer {
     private ConsumerProcessor getProcessor() {
         return new ConsumerProcessor(this);
     }
-
 }

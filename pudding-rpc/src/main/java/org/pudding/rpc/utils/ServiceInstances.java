@@ -1,4 +1,4 @@
-package org.pudding.rpc.provider;
+package org.pudding.rpc.utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,9 +7,7 @@ import java.util.Map;
  * @author Yohann.
  */
 public class ServiceInstances {
-    private static Map<String, Object> serviceInstances;
 
-    static {
-        serviceInstances = HashMap<>();
-    }
+    /** 存放已启动的服务的实例 */
+    public static final Map<String, Object> SERVICE_INSTANCES = new HashMap<>();
 }

@@ -18,7 +18,6 @@ public class ConsumerConfig {
         CONSUMER_CONFIG = new ConsumerConfig();
     }
 
-
     /** 序列化类型, 默认Java原生 */
     private byte serializerType = SerializerType.JAVA;
 
@@ -31,6 +30,8 @@ public class ConsumerConfig {
     /** 服务订阅超时时间, 默认: 15s */
     private int subscribeTimeout = Timeout.SUBSCRIBE_TIMEOUT;
 
+    /** 服务调用超时时间, 默认: 10s */
+    private int invokeTimeout = Timeout.INVOKE_TIMEOUT;
 
     public static void serializerType(byte serializerType) {
         CONSUMER_CONFIG.serializerType = serializerType;
@@ -62,5 +63,13 @@ public class ConsumerConfig {
 
     public static int subscribeTimeout() {
         return CONSUMER_CONFIG.subscribeTimeout;
+    }
+
+    public static void invokeTimeout(int invokeTimeout) {
+        CONSUMER_CONFIG.invokeTimeout = invokeTimeout;
+    }
+
+    public static int invokeTimeout() {
+        return CONSUMER_CONFIG.invokeTimeout;
     }
 }

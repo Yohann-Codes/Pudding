@@ -1,5 +1,6 @@
 package org.pudding.rpc.provider;
 
+import org.pudding.common.model.Service;
 import org.pudding.common.model.ServiceMeta;
 
 /**
@@ -36,12 +37,12 @@ public interface ServiceProvider {
     /**
      * 启用一个服务.
      */
-    ServiceProvider startService(ServiceMeta serviceMeta);
+    ServiceProvider startService(Service service);
 
     /**
      * 启用多个服务.
      */
-    ServiceProvider startServices(ServiceMeta... serviceMetas);
+    ServiceProvider startServices(Service... services);
 
     /**
      * 发布在此实例上启用的所有服务.

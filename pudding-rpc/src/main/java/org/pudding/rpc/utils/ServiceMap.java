@@ -1,4 +1,4 @@
-package org.pudding.rpc.provider.utils;
+package org.pudding.rpc.utils;
 
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.transport.api.Channel;
@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 保存线上Service的Map.
+ * 每个服务对应一个Channel.
  *
  * @author Yohann.
  */
@@ -24,6 +24,10 @@ public class ServiceMap {
 
     public Channel get(ServiceMeta serviceMeta) {
         return services.get(key(serviceMeta));
+    }
+
+    public boolean containsKey(ServiceMeta serviceMeta) {
+        return services.containsKey(key(serviceMeta));
     }
 
     public void remove(ServiceMeta serviceMeta) {

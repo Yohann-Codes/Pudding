@@ -3,25 +3,28 @@ package org.pudding.rpc.consumer.proxy;
 import org.apache.log4j.Logger;
 import org.pudding.common.model.InvokeMeta;
 import org.pudding.common.model.ServiceMeta;
-import org.pudding.rpc.consumer.processor.ConsumerProcessor;
 import org.pudding.rpc.consumer.load_balance.LoadBalance;
+import org.pudding.rpc.consumer.processor.ConsumerProcessor;
 import org.pudding.transport.netty.INettyConnector;
 import org.pudding.transport.netty.NettyConnector;
 
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 /**
+ * 异步调用处理器.
+ *
  * @author Yohann.
  */
-public class SyncInvocationHandler implements java.lang.reflect.InvocationHandler {
-    private static final Logger logger = Logger.getLogger(SyncInvocationHandler.class);
+public class AsyncInvocationHandler implements InvocationHandler, InvokeHandler {
+    private static final Logger logger = Logger.getLogger(AsyncInvocationHandler.class);
 
     private final LoadBalance loadBalance;
     private final INettyConnector connector;
 
-    public SyncInvocationHandler() {
+    public AsyncInvocationHandler() {
         loadBalance = new LoadBalance();
-        connector = new NettyConnector(new ConsumerProcessor());
+        connector = new NettyConnector(new ConsumerProcessor(this));
     }
 
     /**
@@ -37,8 +40,8 @@ public class SyncInvocationHandler implements java.lang.reflect.InvocationHandle
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String serviceName = proxy.getClass().getInterfaces()[0].getSimpleName();
         String methodName = method.getName();
-        Class<?>[] params = method.getParameterTypes();
-        InvokeMeta invokeMeta = new InvokeMeta(serviceName, methodName, params);
+        Class<?>[] paramTypes = method.getParameterTypes();
+        InvokeMeta invokeMeta = new InvokeMeta(serviceName, methodName, paramTypes, args);
 
         ServiceMeta serviceMeta = loadBalance.selectService(invokeMeta);
 
@@ -51,6 +54,11 @@ public class SyncInvocationHandler implements java.lang.reflect.InvocationHandle
      * @param serviceAddress
      */
     private void connect(String serviceAddress) {
+
+    }
+
+    @Override
+    public void invokeComplete(Long invokeId, Object result) {
 
     }
 }

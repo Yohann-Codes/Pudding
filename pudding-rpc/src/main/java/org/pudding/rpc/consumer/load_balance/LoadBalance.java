@@ -4,8 +4,8 @@ import org.pudding.common.constant.LoadBalanceStrategy;
 import org.pudding.common.model.InvokeMeta;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.rpc.consumer.config.ConsumerConfig;
-import org.pudding.rpc.consumer.service.DefaultLocalManager;
-import org.pudding.rpc.consumer.service.LocalManager;
+import org.pudding.rpc.consumer.local_service.DefaultLocalManager;
+import org.pudding.rpc.consumer.local_service.LocalManager;
 
 import java.util.List;
 import java.util.Random;
@@ -29,25 +29,27 @@ public class LoadBalance {
      * @param invokeMeta
      * @return
      */
-    public String selectServiceAddress(InvokeMeta invokeMeta) {
+    public ServiceMeta selectService(InvokeMeta invokeMeta) {
         checkNotNull(invokeMeta);
 
-        String serviceAddress = null;
+        ServiceMeta serviceMeta = null;
         String serviceName = invokeMeta.getServiceName();
 
         switch (ConsumerConfig.loadBalanceStrategy()) {
             case LoadBalanceStrategy.RANDOM:
-                serviceAddress = random(serviceName);
+                serviceMeta = random(serviceName);
                 break;
         }
 
-        return serviceAddress;
+        return serviceMeta;
     }
 
     /**
      * Random.
+     *
+     * @param serviceName
      */
-    private String random(String serviceName) {
+    private ServiceMeta random(String serviceName) {
         ServiceMeta serviceMeta; // 被选中的服务
         List<ServiceMeta> serviceMetas = localManager.queryService(serviceName);
         int size = serviceMetas.size();
@@ -59,7 +61,7 @@ public class LoadBalance {
             int index = random.nextInt(size);
             serviceMeta = serviceMetas.get(index);
         }
-        return serviceMeta.getAddress();
+        return serviceMeta;
     }
 
     private void checkNotNull(InvokeMeta invokeMeta) {

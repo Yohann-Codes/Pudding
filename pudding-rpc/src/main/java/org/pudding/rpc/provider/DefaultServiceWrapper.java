@@ -1,6 +1,7 @@
 package org.pudding.rpc.provider;
 
 import org.pudding.common.exception.IllegalServiceException;
+import org.pudding.common.model.Service;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.utils.AddressUtil;
 
@@ -17,22 +18,22 @@ import java.util.List;
 public class DefaultServiceWrapper implements ServiceWrapper {
 
     @Override
-    public ServiceMeta build(Object service, String serviceAddress) {
-        validate(service);
+    public Service build(Object serviceInstance, String serviceAddress) {
+        validate(serviceInstance);
         // 检查地址格式
         AddressUtil.checkFormat(serviceAddress);
         // 检查服务是否合格
-        Class<?> serviceClazz = service.getClass();
+        Class<?> serviceClazz = serviceInstance.getClass();
         Class<?>[] interfaces = serviceClazz.getInterfaces();
         if (interfaces.length != 1) {
-            throw new IllegalServiceException("Service must implement one interface: " + service.getClass().getName());
+            throw new IllegalServiceException("Service must implement one interface: " + serviceInstance.getClass().getName());
         }
-        return new ServiceMeta(interfaces[0].getSimpleName(), serviceAddress);
+        return new Service(interfaces[0].getName(), serviceAddress, serviceInstance);
     }
 
     private void validate(Object service) {
         if (service == null) {
-            throw new NullPointerException("service == null");
+            throw new NullPointerException("local_service == null");
         }
     }
 }
