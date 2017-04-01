@@ -10,5 +10,5 @@ public interface InvokeHandler {
      * @param invokeId
      * @param result
      */
-    void invokeComplete(Long invokeId, Object result);
+    void invokeComplete(Long invokeId, Object result, int resultCode);
 }

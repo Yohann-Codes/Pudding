@@ -58,7 +58,7 @@ public class AsyncInvocationHandler implements InvocationHandler, InvokeHandler 
     }
 
     @Override
-    public void invokeComplete(Long invokeId, Object result) {
+    public void invokeComplete(Long invokeId, Object result, int resultCode) {
 
     }
 }

@@ -1,16 +1,19 @@
 package org.pudding.rpc.consumer.proxy;
 
 import org.apache.log4j.Logger;
+import org.pudding.common.exception.InvokeFailedException;
 import org.pudding.common.exception.InvokeTimeoutException;
 import org.pudding.common.model.InvokeMeta;
+import org.pudding.common.model.Result;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.protocol.ProtocolHeader;
 import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.utils.IdUtil;
 import org.pudding.common.utils.MessageHolderFactory;
 import org.pudding.rpc.consumer.config.ConsumerConfig;
-import org.pudding.rpc.consumer.processor.ConsumerProcessor;
 import org.pudding.rpc.consumer.load_balance.LoadBalance;
+import org.pudding.rpc.consumer.processor.ConsumerProcessor;
 import org.pudding.rpc.provider.config.ProviderConfig;
 import org.pudding.rpc.utils.ResultMap;
 import org.pudding.serialization.api.Serializer;
@@ -22,8 +25,6 @@ import org.pudding.transport.netty.NettyConnector;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -96,6 +97,7 @@ public class SyncInvocationHandler implements InvocationHandler, InvokeHandler {
 
     /**
      * 发起远程调用
+     *
      * @param channel
      * @param invokeMeta
      */
@@ -116,8 +118,11 @@ public class SyncInvocationHandler implements InvocationHandler, InvokeHandler {
         blockCurrent(); // blocking
 
         @SuppressWarnings("unchecked")
-        Object result = results.get(invokeId);
-        return result;
+        Result result = results.get(invokeId);
+        if (result.getResultCode() == ProtocolHeader.FAILED) {
+            throw new InvokeFailedException("invoke failed");
+        }
+        return result.getResult();
     }
 
     /**
@@ -138,9 +143,9 @@ public class SyncInvocationHandler implements InvocationHandler, InvokeHandler {
     }
 
     @Override
-    public void invokeComplete(Long invokeId, Object result) {
+    public void invokeComplete(Long invokeId, Object result, int resultCode) {
         // 保存调用结果
-        results.put(invokeId, result);
+        results.put(invokeId, new Result(result, resultCode));
 
         // 唤醒调用线程
         isTimeout = false;

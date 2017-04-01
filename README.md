@@ -50,9 +50,11 @@ public class ConsumerTest {
         try {
             // 发起调用
             int result = myService.add(100, 200);
-                    System.out.println("调用结果: " + result);
+            System.out.println("调用结果: " + result);
         } catch (InvokeTimeoutException e) {
-            System.out.println("远程调用超时了!");
+            System.out.println("远程调用超时");
+        } catch (InvokeFailedException e) {
+            System.out.println("远程调用失败");
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.pudding.example.consumer;
 
+import org.pudding.common.exception.InvokeFailedException;
 import org.pudding.common.exception.InvokeTimeoutException;
 import org.pudding.example.service.MyService;
 import org.pudding.rpc.consumer.DefaultServiceConsumer;
@@ -24,7 +25,9 @@ public class ConsumerTest {
             int result = myService.add(100, 200);
             System.out.println("调用结果: " + result);
         } catch (InvokeTimeoutException e) {
-            System.out.println("远程调用超时了!");
+            System.out.println("远程调用超时");
+        } catch (InvokeFailedException e) {
+            System.out.println("远程调用失败");
         }
     }
 }

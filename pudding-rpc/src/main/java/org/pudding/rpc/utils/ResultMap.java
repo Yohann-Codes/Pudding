@@ -1,5 +1,7 @@
 package org.pudding.rpc.utils;
 
+import org.pudding.common.model.Result;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,17 +9,17 @@ import java.util.Map;
  * @author Yohann.
  */
 public class ResultMap {
-    private Map<String, Object> results;
+    private Map<String, Result> results;
 
     public ResultMap() {
         results = new HashMap<>();
     }
 
-    public void put(long invokeId, Object result) {
+    public void put(long invokeId, Result result) {
         results.put(key(invokeId), result);
     }
 
-    public Object get(long invokeId) {
+    public Result get(long invokeId) {
         return results.get(key(invokeId));
     }
 

@@ -73,7 +73,7 @@ public class ConsumerProcessor implements Processor {
                         break;
                     case ProtocolHeader.INVOKE_SERVICE:
                         Object result = serializer.readObject(body, Object.class);
-                        invokeHandler.invokeComplete(invokeId, result);
+                        invokeHandler.invokeComplete(invokeId, result, resultCode);
                         break;
                 }
                 break;
