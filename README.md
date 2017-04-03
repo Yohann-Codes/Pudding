@@ -36,8 +36,9 @@ public class ProviderTest {
 ```
 
 ### 第三步: 启动服务消费者
+#### 同步调用
 ```
-public class ConsumerTest {
+public class SyncConsumerTest {
     public static void main(String[] args) {
         // 创建服务消费者
         ServiceConsumer serviceConsumer = new DefaultServiceConsumer();
@@ -56,6 +57,36 @@ public class ConsumerTest {
         } catch (InvokeFailedException e) {
             System.out.println("远程调用失败");
         }
+    }
+}
+```
+
+#### 异步调用
+```
+public class AsyncConsumerTest {
+    public static void main(String[] args) {
+        // 创建服务消费者
+        ServiceConsumer serviceConsumer = new DefaultServiceConsumer();
+        // 连接注册中心
+        serviceConsumer.connectRegistry("127.0.0.1:20000");
+        // 订阅服务
+        serviceConsumer.subscribeService(MyService.class);
+        // 创建同步服务代理
+        MyService myService = ProxyFactory.createAsyncProxy(MyService.class);
+        // 发起调用
+        myService.add(100, 200);
+        // 监听调用结果
+        InvokeFuture.addInvokeFutureListener(new InvokeFutureListener<Integer>() {
+            @Override
+            public void success(Integer result) {
+                System.out.println("调用结果: " + result);
+            }
+
+            @Override
+            public void failure(Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
 ```
