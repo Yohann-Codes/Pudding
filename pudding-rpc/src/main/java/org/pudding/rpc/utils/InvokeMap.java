@@ -1,47 +1,55 @@
 package org.pudding.rpc.utils;
 
-import org.pudding.common.model.Result;
+import org.pudding.rpc.consumer.future.InvokeFutureListener;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * ResultMap.
+ * InvokeMap.
  *   key --> invokeId
- * value --> Result
+ * value --> InvokeFutureListener
  *
  * @author Yohann.
  */
-public class ResultMap {
-    private Map<String, Result> results;
+public class InvokeMap {
+    private Map<String, InvokeFutureListener<?>> invokes;
 
-    public ResultMap() {
-        results = new HashMap<>();
+    public InvokeMap() {
+        invokes = new HashMap<>();
     }
 
-    public void put(long invokeId, Result result) {
-        results.put(key(invokeId), result);
+    public <T> void put(long invokeId, InvokeFutureListener<T> listener) {
+        invokes.put(key(invokeId), listener);
     }
 
-    public Result get(long invokeId) {
-        return results.get(key(invokeId));
+    @SuppressWarnings("unchecked")
+    public <T> InvokeFutureListener<T> get(long invokeId) {
+        return (InvokeFutureListener<T>) invokes.get(key(invokeId));
     }
 
     public boolean containsKey(long invokeId) {
-        return results.containsKey(key(invokeId));
+        return invokes.containsKey(key(invokeId));
     }
 
     public void remove(long invokeId) {
-        results.remove(key(invokeId));
+        invokes.remove(key(invokeId));
     }
 
     public int size() {
-        return results.size();
+        return invokes.size();
     }
 
     private String key(long invokeId) {
         @SuppressWarnings("unchecked")
         String key = String.valueOf(invokeId);
         return key;
+    }
+
+    @Override
+    public String toString() {
+        return "InvokeMap{" +
+                "invokes=" + invokes +
+                '}';
     }
 }

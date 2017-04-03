@@ -9,6 +9,10 @@ import java.util.Map;
 /**
  * 每个服务对应一个Channel.
  *
+ * ServiceMap.
+ *   key --> ServiceMeta
+ * value --> Channel
+ *
  * @author Yohann.
  */
 public class ServiceMap {

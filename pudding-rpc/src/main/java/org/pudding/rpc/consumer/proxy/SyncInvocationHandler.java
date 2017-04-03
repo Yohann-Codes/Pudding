@@ -143,7 +143,7 @@ public class SyncInvocationHandler implements InvocationHandler, InvokeHandler {
     }
 
     @Override
-    public void invokeComplete(Long invokeId, Object result, int resultCode) {
+    public void invokeComplete(long invokeId, Object result, int resultCode) {
         // 保存调用结果
         results.put(invokeId, new Result(result, resultCode));
 

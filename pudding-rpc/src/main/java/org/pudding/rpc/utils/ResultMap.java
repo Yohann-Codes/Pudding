@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * ResultMap.
+ *   key --> invokeId
+ * value --> Result
+ *
  * @author Yohann.
  */
 public class ResultMap {
