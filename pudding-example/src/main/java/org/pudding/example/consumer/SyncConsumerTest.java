@@ -10,7 +10,7 @@ import org.pudding.rpc.consumer.proxy.ProxyFactory;
 /**
  * @author Yohann.
  */
-public class ConsumerTest {
+public class SyncConsumerTest {
     public static void main(String[] args) {
         // 创建服务消费者
         ServiceConsumer serviceConsumer = new DefaultServiceConsumer();
