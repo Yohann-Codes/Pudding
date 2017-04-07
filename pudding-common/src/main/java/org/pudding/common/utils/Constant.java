@@ -3,5 +3,9 @@ package org.pudding.common.utils;
 /**
  * @author Yohann.
  */
-public class Constant {
+public interface Constant {
+    /**
+     * Return the name of this constant.
+     */
+    String name();
 }
