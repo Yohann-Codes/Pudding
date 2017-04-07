@@ -10,7 +10,7 @@ import org.pudding.common.protocol.ProtocolHeader;
 import java.util.List;
 
 /**
- * 解码Handler.
+ * The decoder.
  *
  * @author Yohann.
  */
@@ -21,16 +21,14 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 
         if (in.readableBytes() < ProtocolHeader.HEAD_LENGTH) {
-            logger.info("可读字节数小于协议头长度 " + in.readableBytes() + " < " + ProtocolHeader.HEAD_LENGTH);
+            logger.info("readable bytes less than protocol header "
+                    + in.readableBytes() + " < " + ProtocolHeader.HEAD_LENGTH);
             return;
         }
         in.markReaderIndex();
 
-        if (in.readShort() != ProtocolHeader.MAGIC) {
-            logger.info("Magic不一致 " + in.readShort() + " != " + ProtocolHeader.MAGIC);
-            in.resetReaderIndex();
-            return;
-        }
+        // Check magic
+        checkMagic(in);
 
         byte type = in.readByte();
         byte sign = in.readByte();
@@ -38,11 +36,8 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         int resultCode = in.readInt();
         int bodyLength = in.readInt();
 
-        if (in.readableBytes() < bodyLength) {
-            logger.info("可读字节数小于协议体长度 " + in.readableBytes() + " < " + bodyLength);
-            in.resetReaderIndex();
-            return;
-        }
+        // Check bodylength
+        checkBodyLength(in, bodyLength);
 
         byte[] body = new byte[bodyLength];
         in.readBytes(body);
@@ -62,18 +57,19 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         out.add(holder);
     }
 
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        super.channelActive(ctx);
+    private void checkMagic(ByteBuf in) {
+        if (in.readShort() != ProtocolHeader.MAGIC) {
+            logger.info("wrong magic " + in.readShort() + " != " + ProtocolHeader.MAGIC);
+            in.resetReaderIndex();
+            return;
+        }
     }
 
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        super.channelInactive(ctx);
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
+    private void checkBodyLength(ByteBuf in, int bodyLength) {
+        if (in.readableBytes() < bodyLength) {
+            logger.info("readable bytes less than body " + in.readableBytes() + " < " + bodyLength);
+            in.resetReaderIndex();
+            return;
+        }
     }
 }

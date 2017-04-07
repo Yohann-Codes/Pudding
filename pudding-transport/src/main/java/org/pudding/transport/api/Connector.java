@@ -1,48 +1,44 @@
 package org.pudding.transport.api;
 
+import org.pudding.transport.netty.ChildOption;
+
 import java.net.SocketAddress;
 
 /**
- * 连接端.
+ * The client side.
  *
  * @author Yohann.
  */
 public interface Connector {
 
     /**
-     * 返回连接地址.
-     *
-     * @return
+     * Returns the remote address where this channel is connect to.
      */
     SocketAddress remoteAddress();
 
     /**
-     * 连接对端.
+     * Connects the {@link Channel}'s socket to a remote address.
      *
      * @param host
      * @param port
      */
-    Future connect(String host, int port);
+    ChannelFuture connect(String host, int port) throws InterruptedException;
 
     /**
-     * 连接对端.
+     * Connects the {@link Channel}'s socket to a remote address.
      *
      * @param remoteAddress
      * @return if failed, return null.
      */
-    Future connect(SocketAddress remoteAddress);
+    ChannelFuture connect(SocketAddress remoteAddress) throws InterruptedException;
 
     /**
-     * 返回配置对象Config.
-     *
-     * @return
+     * Returns the option, that is {@link ChildOption} of this {@link Connector}'s instance.
      */
-    Config config();
+    OptionConfig option();
 
     /**
-     * 关闭服务资源.
-     *
-     * @return
+     * Shutdown the client gracefully;
      */
     void shutdownGracefully();
 }

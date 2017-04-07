@@ -3,52 +3,49 @@ package org.pudding.transport.api;
 import java.net.SocketAddress;
 
 /**
- * 接受端.
+ * The server side.
  *
  * @author Yohann.
  */
 public interface Acceptor {
 
     /**
-     * 返回绑定地址.
-     *
-     * @return
+     * Returns the local address where this channel is bound to.
      */
     SocketAddress localAddress();
 
     /**
-     * 绑定本地，启动监听.
+     * Binds the {@link Channel}'s socket to a local address and configures the socket
+     * to listen for connections.
      *
      * @param port
      */
-    Future bind(int port);
+    ChannelFuture bind(int port) throws InterruptedException;
 
     /**
-     * 绑定本地，启动监听.
+     * Binds the {@link Channel}'s socket to a local address and configures the socket
+     * to listen for connections.
      *
      * @param host
      * @param port
      */
-    Future bind(String host, int port);
+    ChannelFuture bind(String host, int port) throws InterruptedException;
 
     /**
-     * 绑定本地，启动监听.
+     * Binds the {@link Channel}'s socket to a local address and configures the socket
+     * to listen for connections.
      *
      * @param localAddress
      */
-    Future bind(SocketAddress localAddress);
+    ChannelFuture bind(SocketAddress localAddress) throws InterruptedException;
 
     /**
-     * 返回配置对象Config.
-     *
-     * @return
+     * Returns the {@link OptionGroup}'s instance of this {@link Acceptor}.
      */
-    Config config();
+    OptionGroup optionGroup();
 
     /**
-     * 关闭服务资源.
-     *
-     * @return
+     * Shutdown the server gracefully.
      */
     void shutdownGracefully();
 }

@@ -15,12 +15,12 @@ import org.pudding.transport.netty.NettyChannel;
  *
  * @author Yohann.
  */
-public class AcceptorHandler extends ChannelInboundHandlerAdapter {
-    private static final Logger logger = Logger.getLogger(AcceptorHandler.class);
+public class ConnectorHandler extends ChannelInboundHandlerAdapter {
+    private static final Logger logger = Logger.getLogger(ConnectorHandler.class);
 
     private Processor processor;
 
-    public AcceptorHandler(Processor processor) {
+    public ConnectorHandler(Processor processor) {
         this.processor = processor;
     }
 

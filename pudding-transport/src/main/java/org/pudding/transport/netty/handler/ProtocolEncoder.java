@@ -7,7 +7,7 @@ import org.pudding.common.protocol.MessageHolder;
 import org.pudding.common.protocol.ProtocolHeader;
 
 /**
- * 编码Handler.
+ * The encoder.
  *
  * @author Yohann.
  */
@@ -35,10 +35,5 @@ public class ProtocolEncoder extends MessageToByteEncoder<MessageHolder> {
         if (msg.getHeader() == null || msg.getBody() == null) {
             throw new NullPointerException("msg.getHeader() == null || msg.getBody() == null");
         }
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
     }
 }

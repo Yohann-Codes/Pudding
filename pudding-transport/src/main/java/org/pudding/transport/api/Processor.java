@@ -15,19 +15,5 @@ public interface Processor {
      * @param channel
      * @param holder
      */
-    void channelRead(Channel channel, MessageHolder holder);
-
-    /**
-     * Channel连接.
-     *
-     * @param channel
-     */
-    void channelActive(Channel channel);
-
-    /**
-     * Channel断开连接,
-     *
-     * @param channel
-     */
-    void channelInactive(Channel channel);
+    void handleMessage(Channel channel, MessageHolder holder);
 }

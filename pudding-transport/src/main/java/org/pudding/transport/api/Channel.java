@@ -1,5 +1,7 @@
 package org.pudding.transport.api;
 
+import java.net.SocketAddress;
+
 /**
  * Pudding Channel.
  *
@@ -8,20 +10,27 @@ package org.pudding.transport.api;
 public interface Channel {
 
     /**
-     * @return 是否处于连接状态.
+     * Returns the local address where this channel is bound to.
+     */
+    SocketAddress localAddress();
+
+    /**
+     * Returns the remote address where this channel is connected to.
+     */
+    SocketAddress remoteAddress();
+
+    /**
+     * Return {@code true} if the {@link Channel} is active and so connected.
      */
     boolean isActive();
 
     /**
-     * 向Channel写消息.
-     *
-     * @param msg
-     * @return 用于添加异步结果监听器
+     * Request write and flush all pending messages.
      */
-    Future write(Object msg);
+    ChannelFuture write(Object msg);
 
     /**
-     * 关闭当前Channel连接.
+     * Request to close the {@link Channel}.
      */
     void close();
 }

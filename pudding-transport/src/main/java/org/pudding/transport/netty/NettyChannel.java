@@ -1,11 +1,12 @@
 package org.pudding.transport.netty;
 
-import io.netty.channel.ChannelFuture;
 import org.pudding.transport.api.Channel;
-import org.pudding.transport.api.Future;
+import org.pudding.transport.api.ChannelFuture;
+
+import java.net.SocketAddress;
 
 /**
- * 基于Netty的Channel实现.
+ * The implementation of {@link Channel} based on Netty.
  *
  * @author Yohann.
  */
@@ -17,20 +18,32 @@ public class NettyChannel implements Channel {
     }
 
     @Override
+    public SocketAddress localAddress() {
+        return channel.localAddress();
+    }
+
+    @Override
+    public SocketAddress remoteAddress() {
+        return channel.remoteAddress();
+    }
+
+    @Override
     public boolean isActive() {
         return channel.isActive();
     }
 
     @Override
-    public Future write(Object msg) {
-        ChannelFuture future = channel.writeAndFlush(msg);
-        @SuppressWarnings("unchecked")
-        NettyFuture nettyFuture = new NettyFuture(future);
-        return nettyFuture;
+    public ChannelFuture write(Object msg) {
+        io.netty.channel.ChannelFuture future = channel.writeAndFlush(msg);
+        return new NettyChannelFuture(future);
     }
 
     @Override
     public void close() {
-        channel.close();
+        try {
+            channel.close().sync();
+        } catch (InterruptedException e) {
+            // ignore
+        }
     }
 }
