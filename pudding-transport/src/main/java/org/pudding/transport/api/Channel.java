@@ -27,7 +27,12 @@ public interface Channel {
     /**
      * Request write and flush all pending messages.
      */
-    ChannelFuture write(Object msg);
+    Channel write(Object msg);
+
+    /**
+     * Request write and flush all pending messages with {@link ChannelListener}.
+     */
+    Channel write(Object msg, ChannelListener listener);
 
     /**
      * Request to close the {@link Channel}.

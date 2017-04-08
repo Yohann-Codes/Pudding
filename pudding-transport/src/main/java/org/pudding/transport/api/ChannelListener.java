@@ -5,7 +5,7 @@ package org.pudding.transport.api;
  *
  * @author Yohann.
  */
-public interface ChannelFutureListener {
+public interface ChannelListener {
 
     /**
      * Means that the operation is successful.

@@ -1,6 +1,7 @@
 package org.pudding.transport.netty.handler;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import org.pudding.common.protocol.MessageHolder;
@@ -11,6 +12,7 @@ import org.pudding.common.protocol.ProtocolHeader;
  *
  * @author Yohann.
  */
+@ChannelHandler.Sharable
 public class ProtocolEncoder extends MessageToByteEncoder<MessageHolder> {
     @Override
     protected void encode(ChannelHandlerContext ctx, MessageHolder msg, ByteBuf out) throws Exception {

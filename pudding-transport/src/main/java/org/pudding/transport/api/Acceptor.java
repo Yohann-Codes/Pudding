@@ -20,7 +20,7 @@ public interface Acceptor {
      *
      * @param port
      */
-    ChannelFuture bind(int port) throws InterruptedException;
+    Channel bind(int port) throws InterruptedException;
 
     /**
      * Binds the {@link Channel}'s socket to a local address and configures the socket
@@ -29,7 +29,7 @@ public interface Acceptor {
      * @param host
      * @param port
      */
-    ChannelFuture bind(String host, int port) throws InterruptedException;
+    Channel bind(String host, int port) throws InterruptedException;
 
     /**
      * Binds the {@link Channel}'s socket to a local address and configures the socket
@@ -37,12 +37,17 @@ public interface Acceptor {
      *
      * @param localAddress
      */
-    ChannelFuture bind(SocketAddress localAddress) throws InterruptedException;
+    Channel bind(SocketAddress localAddress) throws InterruptedException;
 
     /**
-     * Returns the {@link OptionGroup}'s instance of this {@link Acceptor}.
+     * Binds the rpc processor.
      */
-    OptionGroup optionGroup();
+    void processor(Processor processor);
+
+    /**
+     * Returns the {@link ChannelManager} of this {@link Acceptor}.
+     */
+    ChannelManager channelManager();
 
     /**
      * Shutdown the server gracefully.

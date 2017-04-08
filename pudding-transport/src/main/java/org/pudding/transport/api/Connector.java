@@ -1,7 +1,5 @@
 package org.pudding.transport.api;
 
-import org.pudding.transport.netty.ChildOption;
-
 import java.net.SocketAddress;
 
 /**
@@ -22,7 +20,7 @@ public interface Connector {
      * @param host
      * @param port
      */
-    ChannelFuture connect(String host, int port) throws InterruptedException;
+    Channel connect(String host, int port) throws InterruptedException;
 
     /**
      * Connects the {@link Channel}'s socket to a remote address.
@@ -30,12 +28,17 @@ public interface Connector {
      * @param remoteAddress
      * @return if failed, return null.
      */
-    ChannelFuture connect(SocketAddress remoteAddress) throws InterruptedException;
+    Channel connect(SocketAddress remoteAddress) throws InterruptedException;
 
     /**
-     * Returns the option, that is {@link ChildOption} of this {@link Connector}'s instance.
+     * Binds the rpc processor.
      */
-    OptionConfig option();
+    void processor(Processor processor);
+
+    /**
+     * Returns the {@link ChannelManager} of this {@link Connector}.
+     */
+    ChannelManager channelManager();
 
     /**
      * Shutdown the client gracefully;

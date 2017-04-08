@@ -1,7 +1,9 @@
 package org.pudding.transport.netty;
 
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import org.pudding.transport.api.Channel;
-import org.pudding.transport.api.ChannelFuture;
+import org.pudding.transport.api.ChannelListener;
 
 import java.net.SocketAddress;
 
@@ -11,7 +13,7 @@ import java.net.SocketAddress;
  * @author Yohann.
  */
 public class NettyChannel implements Channel {
-    private io.netty.channel.Channel channel;
+    private final io.netty.channel.Channel channel;
 
     public NettyChannel(io.netty.channel.Channel channel) {
         this.channel = channel;
@@ -33,9 +35,25 @@ public class NettyChannel implements Channel {
     }
 
     @Override
-    public ChannelFuture write(Object msg) {
-        io.netty.channel.ChannelFuture future = channel.writeAndFlush(msg);
-        return new NettyChannelFuture(future);
+    public Channel write(Object msg) {
+        channel.writeAndFlush(msg);
+        return new NettyChannel(channel);
+    }
+
+    @Override
+    public Channel write(Object msg, final ChannelListener listener) {
+        final NettyChannel channel = new NettyChannel(this.channel);
+        this.channel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                if (future.isSuccess()) {
+                    listener.operationSuccess(channel);
+                } else {
+                    listener.operationFailure(channel, future.cause());
+                }
+            }
+        });
+        return channel;
     }
 
     @Override
