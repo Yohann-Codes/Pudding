@@ -8,7 +8,6 @@ import io.netty.handler.timeout.IdleStateHandler;
 import org.apache.log4j.Logger;
 import org.pudding.common.constant.IdleTime;
 import org.pudding.transport.api.Channel;
-import org.pudding.transport.api.ChannelManager;
 import org.pudding.transport.api.Processor;
 import org.pudding.transport.netty.connection.ConnectionWatchdog;
 import org.pudding.transport.netty.handler.*;
@@ -28,7 +27,7 @@ public class NettyTcpConnector extends NettyConnector {
     // Reusable handlers (stateless)
     private final ProtocolEncoder protocolEncoder = new ProtocolEncoder();
     private final HeartbeatHandlerC heartbeatHandler = new HeartbeatHandlerC();
-    private final ConnectorHandler connectorHandler = new ConnectorHandler(this);
+    private final ConnectorHandler connectorHandler = new ConnectorHandler();
 
     private boolean epoll; // Use epoll of Linux
 
@@ -68,8 +67,12 @@ public class NettyTcpConnector extends NettyConnector {
     }
 
     @Override
-    public SocketAddress remoteAddress() {
-        return remoteAddress;
+    protected void doInit() {
+        if (isSupportEpoll()) {
+            bootstrap.channelFactory(TcpChannelFactory.EPOLL_FACTORY_CONNECTOR);
+        } else {
+            bootstrap.channelFactory(TcpChannelFactory.NIO_FACTORY_CONNECTOR);
+        }
     }
 
     @Override
@@ -79,14 +82,13 @@ public class NettyTcpConnector extends NettyConnector {
 
     @Override
     public Channel connect(SocketAddress remoteAddress) throws InterruptedException {
-        super.connect(remoteAddress);
         checkProcessor();
 
         final ConnectionWatchdog watchdog = new ConnectionWatchdog(bootstrap, timer, remoteAddress) {
 
             @Override
             public ChannelHandler[] handlers() {
-                return new ChannelHandler[] {
+                return new ChannelHandler[]{
                         this,
                         new ProtocolDecoder(),
                         protocolEncoder,
@@ -97,23 +99,17 @@ public class NettyTcpConnector extends NettyConnector {
             }
         };
 
-        bootstrap.group(group());
-
-        if (isSupportEpoll()) {
-            bootstrap.channelFactory(TcpChannelFactory.EPOLL_FACTORY_CONNECTOR);
-        } else {
-            bootstrap.channelFactory(TcpChannelFactory.NIO_FACTORY_CONNECTOR);
+        ChannelFuture future;
+        synchronized (bootstrap) { // Enture atomicity
+            bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel ch) throws Exception {
+                    ChannelPipeline pipeline = ch.pipeline();
+                    pipeline.addLast(watchdog.handlers());
+                }
+            });
+            future = bootstrap.connect(remoteAddress).sync();
         }
-
-        bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            protected void initChannel(SocketChannel ch) throws Exception {
-                ChannelPipeline pipeline = ch.pipeline();
-                pipeline.addLast(watchdog.handlers());
-            }
-        });
-
-        ChannelFuture future = bootstrap.connect(remoteAddress).sync();
 
         return new NettyChannel(future.channel());
     }
@@ -123,11 +119,6 @@ public class NettyTcpConnector extends NettyConnector {
         checkNotNull(processor, "processor");
         this.processor = true;
         connectorHandler.setProcessor(processor);
-    }
-
-    @Override
-    public ChannelManager channelManager() {
-        return channelManager;
     }
 
     @Override

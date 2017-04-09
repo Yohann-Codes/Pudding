@@ -1,5 +1,6 @@
 package org.pudding.transport.test;
 
+import org.pudding.transport.api.Acceptor;
 import org.pudding.transport.netty.NettyTcpAcceptor;
 
 /**
@@ -7,7 +8,7 @@ import org.pudding.transport.netty.NettyTcpAcceptor;
  */
 public class Server {
     public static void main(String[] args) {
-        NettyTcpAcceptor acceptor = new NettyTcpAcceptor();
+        Acceptor acceptor = new NettyTcpAcceptor();
         acceptor.processor(new MyProcessor());
         try {
             acceptor.bind(20001);

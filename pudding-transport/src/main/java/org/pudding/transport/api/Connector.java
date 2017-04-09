@@ -10,11 +10,6 @@ import java.net.SocketAddress;
 public interface Connector {
 
     /**
-     * Returns the remote address where this channel is connect to.
-     */
-    SocketAddress remoteAddress();
-
-    /**
      * Connects the {@link Channel}'s socket to a remote address.
      *
      * @param host
@@ -34,11 +29,6 @@ public interface Connector {
      * Binds the rpc processor.
      */
     void processor(Processor processor);
-
-    /**
-     * Returns the {@link ChannelManager} of this {@link Connector}.
-     */
-    ChannelManager channelManager();
 
     /**
      * Shutdown the client gracefully;

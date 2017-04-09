@@ -8,7 +8,6 @@ import io.netty.handler.timeout.IdleStateHandler;
 import org.apache.log4j.Logger;
 import org.pudding.common.constant.IdleTime;
 import org.pudding.transport.api.Channel;
-import org.pudding.transport.api.ChannelManager;
 import org.pudding.transport.api.Processor;
 import org.pudding.transport.netty.handler.AcceptorHandler;
 import org.pudding.transport.netty.handler.HeartbeatHandlerS;
@@ -29,7 +28,7 @@ public class NettyTcpAcceptor extends NettyAcceptor {
 
     // Reusable handlers (stateless)
     private final ProtocolEncoder protocolEncoder = new ProtocolEncoder();
-    private final AcceptorHandler acceptorHandler = new AcceptorHandler(this);
+    private final AcceptorHandler acceptorHandler = new AcceptorHandler();
 
     private boolean epoll; // Use epoll of Linux
 
@@ -74,8 +73,12 @@ public class NettyTcpAcceptor extends NettyAcceptor {
     }
 
     @Override
-    public SocketAddress localAddress() {
-        return localAddress;
+    protected void doInit() {
+        if (isSupportEpoll()) {
+            bootstrap.channelFactory(TcpChannelFactory.EPOLL_FACTORY_ACCEPTRO);
+        } else {
+            bootstrap.channelFactory(TcpChannelFactory.NIO_FACTORY_ACCEPTRO);
+        }
     }
 
     @Override
@@ -90,16 +93,7 @@ public class NettyTcpAcceptor extends NettyAcceptor {
 
     @Override
     public Channel bind(SocketAddress localAddress) throws InterruptedException {
-        super.bind(localAddress);
         checkProcessor();
-
-        bootstrap.group(bossGroup(), workerGroup());
-
-        if (isSupportEpoll()) {
-            bootstrap.channelFactory(TcpChannelFactory.EPOLL_FACTORY_ACCEPTRO);
-        } else {
-            bootstrap.channelFactory(TcpChannelFactory.NIO_FACTORY_ACCEPTRO);
-        }
 
         bootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
             @Override
@@ -125,11 +119,6 @@ public class NettyTcpAcceptor extends NettyAcceptor {
         checkNotNull(processor, "processor");
         this.processor = true;
         acceptorHandler.setProcessor(processor);
-    }
-
-    @Override
-    public ChannelManager channelManager() {
-        return channelManager;
     }
 
     @Override

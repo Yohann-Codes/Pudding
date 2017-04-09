@@ -46,7 +46,7 @@ public class HeartbeatHandlerS extends ChannelInboundHandlerAdapter {
             if (packetCode == ProtocolHeader.HEATBEAT) {
                 // Clear the number of heatbeat failure
                 count = 0;
-                logger.info(ctx.channel() + " heatbeat");
+//                logger.info(ctx.channel() + " heatbeat");
                 ReferenceCountUtil.release(msg);
             } else {
                 ctx.fireChannelRead(msg);

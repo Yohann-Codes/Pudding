@@ -10,11 +10,6 @@ import java.net.SocketAddress;
 public interface Acceptor {
 
     /**
-     * Returns the local address where this channel is bound to.
-     */
-    SocketAddress localAddress();
-
-    /**
      * Binds the {@link Channel}'s socket to a local address and configures the socket
      * to listen for connections.
      *
@@ -43,11 +38,6 @@ public interface Acceptor {
      * Binds the rpc processor.
      */
     void processor(Processor processor);
-
-    /**
-     * Returns the {@link ChannelManager} of this {@link Acceptor}.
-     */
-    ChannelManager channelManager();
 
     /**
      * Shutdown the server gracefully.

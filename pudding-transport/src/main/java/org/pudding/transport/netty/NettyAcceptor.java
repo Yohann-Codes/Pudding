@@ -5,8 +5,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.pudding.transport.api.Acceptor;
 import org.pudding.transport.api.Channel;
-import org.pudding.transport.api.ChannelManager;
-import org.pudding.transport.api.DefaultChannelManager;
 
 import java.net.SocketAddress;
 import java.util.concurrent.ThreadFactory;
@@ -20,10 +18,9 @@ public abstract class NettyAcceptor implements Acceptor {
 
     private static final int DEFAULT_THREADS = Runtime.getRuntime().availableProcessors() << 2;
 
-    protected ChannelManager channelManager = new DefaultChannelManager();
+    protected final ServerBootstrap bootstrap;
 
     protected SocketAddress localAddress;
-    protected ServerBootstrap bootstrap;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
@@ -37,24 +34,22 @@ public abstract class NettyAcceptor implements Acceptor {
     public NettyAcceptor(int nWorkers) {
         validate(nWorkers);
         this.nWorkers = nWorkers;
+        bootstrap = new ServerBootstrap();
     }
 
     protected void init() {
-        bootstrap = new ServerBootstrap();
-
         ThreadFactory bossFacetory = new DefaultThreadFactory("acceptor-boss", Thread.MAX_PRIORITY);
         ThreadFactory workerFacetory = new DefaultThreadFactory("acceptor-worker", Thread.MAX_PRIORITY);
         bossGroup = initEventLoopGroup(1, bossFacetory);
         workerGroup = initEventLoopGroup(nWorkers, workerFacetory);
+        bootstrap.group(bossGroup, workerGroup);
+
+        doInit();
     }
+
+    protected abstract void doInit();
 
     protected abstract EventLoopGroup initEventLoopGroup(int nThreads, ThreadFactory factory);
-
-    @Override
-    public Channel bind(SocketAddress localAddress) throws InterruptedException {
-        this.localAddress = localAddress;
-        return null;
-    }
 
     protected EventLoopGroup bossGroup() {
         return bossGroup;

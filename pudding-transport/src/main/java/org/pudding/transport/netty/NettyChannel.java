@@ -64,4 +64,9 @@ public class NettyChannel implements Channel {
             // ignore
         }
     }
+
+    @Override
+    public String toString() {
+        return channel.toString();
+    }
 }
