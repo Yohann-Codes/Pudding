@@ -2,8 +2,10 @@ package org.pudding.transport.netty;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelPipeline;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.ChannelListener;
+import org.pudding.transport.netty.connection.ConnectionWatchdog;
 
 import java.net.SocketAddress;
 
@@ -13,10 +15,13 @@ import java.net.SocketAddress;
  * @author Yohann.
  */
 public class NettyChannel implements Channel {
+
     private final io.netty.channel.Channel channel;
+    private final ChannelPipeline pipeline;
 
     public NettyChannel(io.netty.channel.Channel channel) {
         this.channel = channel;
+        pipeline = channel.pipeline();
     }
 
     @Override
@@ -54,6 +59,30 @@ public class NettyChannel implements Channel {
             }
         });
         return channel;
+    }
+
+    @Override
+    public void openAutoReconnection() {
+        getWatchdog().openAutoReconnection();
+    }
+
+    @Override
+    public void closeAutoReconnection() {
+        getWatchdog().closeAutoReconnection();
+    }
+
+    @Override
+    public boolean isOpenAutoReconnection() {
+        int state = getWatchdog().autoReconnectionState();
+        boolean isOpen = false;
+        if (state == ConnectionWatchdog.ST_OPEN) {
+            isOpen = true;
+        }
+        return isOpen;
+    }
+
+    private ConnectionWatchdog getWatchdog() {
+        return pipeline.get(ConnectionWatchdog.class);
     }
 
     @Override

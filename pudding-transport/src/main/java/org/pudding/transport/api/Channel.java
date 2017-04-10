@@ -35,6 +35,21 @@ public interface Channel {
     Channel write(Object msg, ChannelListener listener);
 
     /**
+     * Open the automatic reconnection of current {@link Channel}.
+     */
+    void openAutoReconnection();
+
+    /**
+     * Close the automatic reconnection of current {@link Channel}.
+     */
+    void closeAutoReconnection();
+
+    /**
+     * Return ture if the {@link Channel} has opened the automatic reconnection, or false.
+     */
+    boolean isOpenAutoReconnection();
+
+    /**
      * Request to close the {@link Channel}.
      */
     void close();

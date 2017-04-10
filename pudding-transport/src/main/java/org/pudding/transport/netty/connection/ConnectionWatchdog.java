@@ -25,12 +25,29 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
     private final Timer timer;
     private final SocketAddress remoteAddress;
 
+    public static final int ST_OPEN = 1;  // Open automatic reconnection
+    public static final int ST_CLOSE = 2; // Close automatic reconnection
+
+    private volatile int state;
+
     private int attempts;
 
     public ConnectionWatchdog(Bootstrap bootstrap, Timer timer, SocketAddress remoteAddress) {
         this.bootstrap = bootstrap;
         this.timer = timer;
         this.remoteAddress = remoteAddress;
+    }
+
+    public void openAutoReconnection() {
+        state = ST_OPEN;
+    }
+
+    public void closeAutoReconnection() {
+        state = ST_CLOSE;
+    }
+
+    public int autoReconnectionState() {
+        return state;
     }
 
     @Override
@@ -45,15 +62,17 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         logger.info("disconnect to " + remoteAddress);
 
-        if (attempts < 12) {
-            attempts++;
-            logger.info("try to reconnect to " + remoteAddress);
-        } else {
-            logger.warn("stop trying reconnect to " + remoteAddress);
-            return;
+        if (autoReconnectionState() == ST_OPEN) {
+            if (attempts < 12) {
+                attempts++;
+                logger.info("try to reconnect to " + remoteAddress);
+            } else {
+                logger.warn("stop trying reconnect to " + remoteAddress);
+                return;
+            }
+            long timeout = 2 << attempts;
+            timer.newTimeout(this, timeout, TimeUnit.MILLISECONDS);
         }
-        long timeout = 2 << attempts;
-        timer.newTimeout(this, timeout, TimeUnit.MILLISECONDS);
 
         ctx.fireChannelInactive();
     }

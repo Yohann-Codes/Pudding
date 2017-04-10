@@ -10,7 +10,10 @@ import org.pudding.common.constant.IdleTime;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Processor;
 import org.pudding.transport.netty.connection.ConnectionWatchdog;
-import org.pudding.transport.netty.handler.*;
+import org.pudding.transport.netty.handler.ConnectorHandler;
+import org.pudding.transport.netty.handler.HeartbeatHandlerC;
+import org.pudding.transport.netty.handler.ProtocolDecoder;
+import org.pudding.transport.netty.handler.ProtocolEncoder;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -98,6 +101,7 @@ public class NettyTcpConnector extends NettyConnector {
                 };
             }
         };
+        watchdog.openAutoReconnection();
 
         ChannelFuture future;
         synchronized (bootstrap) { // Enture atomicity
@@ -111,7 +115,7 @@ public class NettyTcpConnector extends NettyConnector {
             future = bootstrap.connect(remoteAddress).sync();
         }
 
-        return new NettyChannel(future.channel());
+        return NettyChannelFactory.newChannel(future);
     }
 
     @Override
@@ -148,7 +152,7 @@ public class NettyTcpConnector extends NettyConnector {
      */
     private void checkProcessor() {
         if (!processor) {
-            throw new IllegalStateException("invalid processor");
+            throw new IllegalStateException("invalid processor, please set processor");
         }
     }
 }

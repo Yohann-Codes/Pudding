@@ -111,7 +111,7 @@ public class NettyTcpAcceptor extends NettyAcceptor {
         ChannelFuture future = bootstrap.bind(localAddress).sync();
         logger.info("listening on " + localAddress);
 
-        return new NettyChannel(future.channel());
+        return NettyChannelFactory.newChannel(future);
     }
 
     @Override
@@ -149,7 +149,7 @@ public class NettyTcpAcceptor extends NettyAcceptor {
      */
     private void checkProcessor() {
         if (!processor) {
-            throw new IllegalStateException("invalid processor");
+            throw new IllegalStateException("invalid processor, please set processor");
         }
     }
 }
