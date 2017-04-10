@@ -8,12 +8,14 @@ import org.pudding.serialization.api.SerializerType;
 import java.io.UnsupportedEncodingException;
 
 /**
+ * Gson序列化/反序列化实现.
+ *
  * @author Yohann.
  */
 public class GsonSerializer implements Serializer {
     private static final Logger logger = Logger.getLogger(GsonSerializer.class);
 
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
 
     @Override
     public byte type() {

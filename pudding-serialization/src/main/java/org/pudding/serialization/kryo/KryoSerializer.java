@@ -18,7 +18,7 @@ import java.io.ByteArrayOutputStream;
 public class KryoSerializer implements Serializer {
     private static final Logger logger = Logger.getLogger(KryoSerializer.class);
 
-    private Kryo kryo = new Kryo(); // 经测试构造此对象非常耗时
+    private final Kryo kryo = new Kryo(); // 经测试构造此对象非常耗时
 
     @Override
     public byte type() {
