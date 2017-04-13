@@ -1,15 +1,17 @@
 package org.pudding.registry.config;
 
 import org.pudding.common.constant.SerializerType;
+import org.pudding.common.utils.Lists;
+
+import java.util.List;
 
 /**
- * 注册中心配置.
+ * Congfigure registry.
  *
  * @author Yohann.
  */
 public class RegistryConfig {
 
-    // Registry唯一的配置实例
     private static final RegistryConfig REGISTRY_CONFIG;
 
     static {
@@ -17,37 +19,80 @@ public class RegistryConfig {
     }
 
 
-    /** 序列化类型, 默认: Java原生 */
+    /** The serialization type, default: Java */
     private byte serializerType = SerializerType.JAVA;
 
-    /** 绑定端口, 默认: 20000 */
+    /** The port of listening, default: 20000 */
     private int port = 20000;
 
-    /** 工作线程数量, 默认: 2*CPU */
-    private int nWorkers = Runtime.getRuntime().availableProcessors() * 2;
+    /** The cluster address, single address format: "host:port" */
+    private String[] clusterAddress = null;
+
+    /** The number of worker thread, default: 2*CPU */
+    private int workers = Runtime.getRuntime().availableProcessors() * 2;
 
 
-    public static void serializerType(byte serializerType) {
+    /**
+     * Set serialization type.
+     */
+    public static void setSerializerType(byte serializerType) {
         REGISTRY_CONFIG.serializerType = serializerType;
     }
 
-    public static byte serializerType() {
+    /**
+     * Return serialization type.
+     */
+    public static byte getSerializerType() {
         return REGISTRY_CONFIG.serializerType;
     }
 
-    public static void port(int port) {
+    /**
+     * Set port of listening.
+     */
+    public static void setPort(int port) {
         REGISTRY_CONFIG.port = port;
     }
 
-    public static int port() {
+    /**
+     * Return port of listening.
+     */
+    public static int getPort() {
         return REGISTRY_CONFIG.port;
     }
 
-    public static void nWorkers(int nWorkers) {
-        REGISTRY_CONFIG.nWorkers = nWorkers;
+    /**
+     * Set address of registry cluster.
+     */
+    public static void setClusterAddress(String... clusterAddress) {
+        List<String> addrs = Lists.newArrayList();
+        for (String addr : clusterAddress) {
+            addrs.add(addr);
+        }
+        clusterAddress = new String[addrs.size()];
+        for (int i = 0; i < clusterAddress.length; i++) {
+            clusterAddress[i] = addrs.get(i);
+        }
+        REGISTRY_CONFIG.clusterAddress = clusterAddress;
     }
 
-    public static int nWorkers() {
-        return REGISTRY_CONFIG.nWorkers;
+    /**
+     * Return address of registry cluster.
+     */
+    public static String[] getClusterAddress() {
+        return REGISTRY_CONFIG.clusterAddress;
+    }
+
+    /**
+     * Set the thread number of workers.
+     */
+    public static void setWorkers(int workers) {
+        REGISTRY_CONFIG.workers = workers;
+    }
+
+    /**
+     * Return the thread number of workers.
+     */
+    public static int getWorkers() {
+        return REGISTRY_CONFIG.workers;
     }
 }

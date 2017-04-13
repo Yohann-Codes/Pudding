@@ -1,4 +1,4 @@
-package org.pudding.registry.config;
+package org.pudding.registry;
 
 /**
  * The interface of default registry.
@@ -8,9 +8,32 @@ package org.pudding.registry.config;
 public interface PuddingServiceRegistry extends ServiceRegistry {
 
     /**
-     * Join up registry cluster, in other word,
-     *
-     * @param address all registry address
+     * Join up registry cluster, which is connect with other registry servers.
+     * <p>
+     * Notice:
+     * You must call {@link org.pudding.registry.config.RegistryConfig#setClusterAddress(String...) to configure
+     * the registry cluster address before invoke this method. Otherwise, throw {@link IllegalStateException}.
      */
-    void joinUpCluster(String... address);
+    void joinUpCluster();
+
+    /**
+     * Join up registry cluster, which is connect with other registry servers.
+     *
+     * @param clusterAddress all registry's address
+     */
+    void joinUpCluster(String... clusterAddress);
+
+    /**
+     * Drop out cluster, which is disconnect with other registry servers.
+     */
+    void dropOutCluster();
+
+    /**
+     * Shutdown the {@link PuddingServiceRegistry}.
+     * <p>
+     * Notice:
+     * If you call the method to shudown the current {@link PuddingServiceRegistry}, you must new
+     * a {@link PuddingServiceRegistry}'s instance before operate the instance. Otherwise, throw {@link IllegalStateException}.
+     */
+    void shutdown();
 }

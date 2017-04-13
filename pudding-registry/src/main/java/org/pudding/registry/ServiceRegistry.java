@@ -1,4 +1,4 @@
-package org.pudding.registry.config;
+package org.pudding.registry;
 
 import org.pudding.transport.api.Channel;
 
