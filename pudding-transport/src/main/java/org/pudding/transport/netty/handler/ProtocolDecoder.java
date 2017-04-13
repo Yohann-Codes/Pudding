@@ -1,11 +1,10 @@
 package org.pudding.transport.netty.handler;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.apache.log4j.Logger;
-import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.protocol.Message;
 import org.pudding.common.protocol.ProtocolHeader;
 
 import java.util.List;
@@ -51,7 +50,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         header.setResultCode(resultCode);
         header.setBodyLength(bodyLength);
 
-        MessageHolder holder = new MessageHolder();
+        Message holder = new Message();
         holder.setHeader(header);
         holder.setBody(body);
 

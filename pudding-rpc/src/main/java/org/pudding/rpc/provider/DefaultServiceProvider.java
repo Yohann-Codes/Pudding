@@ -1,287 +1,209 @@
 package org.pudding.rpc.provider;
 
 import org.apache.log4j.Logger;
-import org.pudding.common.exception.NotConnectRegistryException;
-import org.pudding.common.exception.RepeatConnectRegistryException;
-import org.pudding.common.exception.ServiceNotStartedException;
-import org.pudding.common.model.Service;
 import org.pudding.common.model.ServiceMeta;
-import org.pudding.common.protocol.MessageHolder;
-import org.pudding.common.protocol.ProtocolHeader;
 import org.pudding.common.utils.AddressUtil;
-import org.pudding.common.utils.MessageHolderFactory;
+import org.pudding.common.utils.Lists;
+import org.pudding.common.utils.Maps;
+import org.pudding.common.utils.ServiceLoaderUtil;
+import org.pudding.rpc.DefaultRegistryService;
+import org.pudding.rpc.RegistryService;
 import org.pudding.rpc.provider.config.ProviderConfig;
-import org.pudding.rpc.provider.processor.ProviderProcessor;
-import org.pudding.rpc.utils.ServiceMap;
-import org.pudding.serialization.api.Serializer;
-import org.pudding.serialization.api.SerializerFactory;
-import org.pudding.transport.api.*;
-import org.pudding.transport.netty.NettyAcceptor;
-import org.pudding.transport.netty.NettyConnector;
+import org.pudding.transport.api.Acceptor;
+import org.pudding.transport.api.Channel;
+import org.pudding.transport.netty.NettyTcpAcceptor;
 
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ConcurrentMap;
 
 /**
- * 建议单例使用.
+ * The default implementation of {@link ServiceProvider}.
+ * Suggest use singleton.
  *
  * @author Yohann.
  */
 public class DefaultServiceProvider implements ServiceProvider {
     private static final Logger logger = Logger.getLogger(DefaultServiceProvider.class);
 
-    private final int nWorkers;
+    // Bind service
+    private final Acceptor acceptor = new NettyTcpAcceptor();
+    // Create instance Based on SPI
+    private final RegistryService registryService = ServiceLoaderUtil.loadFirst(RegistryService.class);
 
-    private Channel registryChannel; // 断开连接置为null
+    // Hold service that has started
+    private final ConcurrentMap<ServiceMeta, Channel> startedServices = Maps.newConcurrentHashMap();
 
-    private final ServiceMap onlineServices; // 已上线服务(收到注册成功的响应)
-    private final ServiceMap unsettledServices; // 已发布，但还未收到响应
-    private final LinkedList<ServiceMeta> startedServices; // 已启用的服务(待发布服务)
+    private volatile boolean allPublished = false;
 
-    private Map<String, Object> serviceInstances; // 存放已启动服务实例
-
-    private final BlockingQueue<ServiceMeta> publishQueue;
-
-    private Lock lock = new ReentrantLock();
-    private Condition notResponse = lock.newCondition();
-
-    private int serviceCount = 0;
-    private boolean timeout = true;
-
-    /**
-     * 默认工作线程数量: nWorkers = 2 * CPU
-     */
     public DefaultServiceProvider() {
-        this(ProviderConfig.nWorkers());
-    }
-
-    public DefaultServiceProvider(int nWorkers) {
-        validate(nWorkers);
-        this.nWorkers = nWorkers;
-        onlineServices = new ServiceMap();
-        unsettledServices = new ServiceMap();
-        startedServices = new LinkedList<>();
-        publishQueue = new LinkedBlockingQueue<>();
-        serviceInstances = new HashMap<>();
-    }
-
-    private void validate(int nWorkers) {
-        if (nWorkers < 1) {
-            throw new IllegalArgumentException("nWorker: " + nWorkers);
-        }
+        acceptor.withProcessor(DefaultRegistryService.PROCESSOR);
     }
 
     @Override
     public ServiceProvider connectRegistry() {
-        return connectRegistry(ProviderConfig.registryAddress());
-    }
-
-    @Override
-    public ServiceProvider connectRegistry(String registryAddress) {
-        if (registryChannel != null) {
-            throw new RepeatConnectRegistryException("the registry is connected: " + registryAddress);
-        }
-        AddressUtil.checkFormat(registryAddress);
-        String host = AddressUtil.host(registryAddress);
-        int port = AddressUtil.port(registryAddress);
-
-        doConnectRegisry(host, port);
-        initPublishQueue();
+        String[] stringAddress = ProviderConfig.getRegistryAddress();
+        validate(stringAddress);
+        SocketAddress[] address = parseToSocketAddress(stringAddress);
+        registryService.connectRegistry(address);
         return this;
     }
 
-    private void doConnectRegisry(String host, int port) {
-        Connector connector = newConnector();
-        Future future = connector.connect(host, port);
-        if (future != null) {
-            registryChannel = future.channel();
+    @Override
+    public ServiceProvider connectRegistry(String... registryAddress) {
+        validate(registryAddress);
+        SocketAddress[] address = parseToSocketAddress(registryAddress);
+        registryService.connectRegistry(address);
+        return this;
+    }
+
+    private SocketAddress[] parseToSocketAddress(String... stringAddress) {
+        List<SocketAddress> address = Lists.newArrayList();
+        for (String addr : stringAddress) {
+            AddressUtil.checkFormat(addr);
+            String host = AddressUtil.host(addr);
+            int port = AddressUtil.port(addr);
+            address.add(new InetSocketAddress(host, port));
+        }
+        SocketAddress[] socketAddress = new SocketAddress[address.size()];
+        for (int i = 0; i < socketAddress.length; i++) {
+            socketAddress[i] = address.get(i);
+        }
+        return socketAddress;
+    }
+
+    @Override
+    public ServiceProvider startService(ServiceMeta serviceMeta) {
+        doStart(serviceMeta);
+        return this;
+    }
+
+    @Override
+    public ServiceProvider startServices(ServiceMeta... serviceMeta) {
+        for (ServiceMeta meta : serviceMeta) {
+            doStart(meta);
+        }
+        return this;
+    }
+
+    private void doStart(ServiceMeta serviceMeta) {
+        SocketAddress[] address = parseToSocketAddress(serviceMeta.getAddress());
+        Channel channel;
+        try {
+            channel = acceptor.bind(address[0]);
+            startedServices.put(serviceMeta, channel);
+
+            logger.info("start service: " + serviceMeta);
+        } catch (InterruptedException e) {
+            acceptor.shutdownGracefully();
         }
     }
 
-    private void initPublishQueue() {
-        new Thread() {
-            @Override
-            public void run() {
-                for (; ; ) {
-                    try {
-                        ServiceMeta serviceMeta = publishQueue.take();
-                        send(serviceMeta);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        break;
-                    }
-                }
+    @Override
+    public ServiceProvider publicService(ServiceMeta serviceMeta) {
+        if (!startedServices.containsKey(serviceMeta)) {
+            // Service not start
+            throw new IllegalStateException("service not start: " + serviceMeta);
+        }
+        registryService.register(serviceMeta);
+        return this;
+    }
+
+    @Override
+    public ServiceProvider publicServices(ServiceMeta... serviceMeta) {
+        for (ServiceMeta meta : serviceMeta) {
+            if (!startedServices.containsKey(meta)) {
+                // Service not start
+                throw new IllegalStateException("service not start: " + meta);
             }
-        }.start();
-    }
-
-    private void send(final ServiceMeta serviceMeta) {
-        // 序列化
-        Serializer serializer = SerializerFactory.getSerializer(ProviderConfig.serializerType());
-        byte[] body = serializer.writeObject(serviceMeta);
-        MessageHolder holder = MessageHolderFactory.newPublishServiceRequestHolder(body, ProviderConfig.serializerType());
-
-        if (registryChannel.isActive()) {
-            Future future = registryChannel.write(holder);
-            future.addListener(new FutureListener() {
-                @Override
-                public void operationComplete(boolean isSuccess) {
-                    if (isSuccess) {
-                        startedServices.remove(serviceMeta);
-                    }
-                }
-            });
-        }
-    }
-
-    @Override
-    public void closeRegistry() {
-        registryChannel.close();
-        registryChannel = null;
-    }
-
-    @Override
-    public ServiceProvider startService(Service service) {
-        return doStart(service);
-    }
-
-    private ServiceProvider doStart(Service service) {
-        ServiceMeta serviceMeta = new ServiceMeta(service.getName(), service.getAddress());
-        // 缓存服务实例，用于消费端调用
-        serviceInstances.put(service.getName(), service.getInstance());
-
-        checkNotNull(serviceMeta, ServiceMeta.class);
-        String address = serviceMeta.getAddress();
-        AddressUtil.checkFormat(address);
-        int port = AddressUtil.port(address);
-
-        Future future = start0(port); // bind local port
-
-        if (future == null) {
-            throw new NullPointerException("future == null");
         }
 
-        unsettledServices.put(serviceMeta, future.channel());
-        startedServices.offer(serviceMeta); // 添加到待发布队列
-
-        return this;
-    }
-
-    private Future start0(int port) {
-        Acceptor acceptor = newAcceptor();
-        return acceptor.bind(port);
-    }
-
-    @Override
-    public ServiceProvider startServices(Service... services) {
-        for (Service service : services) {
-            doStart(service);
+        // Entrue all services have started
+        for (ServiceMeta meta : serviceMeta) {
+            registryService.register(meta);
         }
         return this;
     }
 
     @Override
     public ServiceProvider publishAllService() {
-        if (startedServices.size() < 1) {
-            throw new ServiceNotStartedException("you must start it before publish local_service");
-        }
-        for (; ; ) {
-            ServiceMeta serviceMeta = startedServices.poll();
-            if (serviceMeta == null) {
-                break;
+        synchronized (this) {
+            if (allPublished) {
+                throw new IllegalStateException("publicAllService() can be called only once");
             }
-            doPublish(serviceMeta);
+            for (Map.Entry<ServiceMeta, Channel> entry : startedServices.entrySet()) {
+                ServiceMeta meta = entry.getKey();
+                registryService.register(meta);
+            }
+            allPublished = true;
         }
-
-        blockCurrent(); // blocking
-
         return this;
     }
 
-    /**
-     * 阻塞当前线程.
-     */
-    private void blockCurrent() {
-        lock.lock();
-        try {
-            notResponse.await(ProviderConfig.publishTimeout(), TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
-        if (timeout) {
-            logger.warn("Service release timed out");
-        } else {
-            logger.info("Service release is complete");
-        }
-    }
-
-    private ServiceProvider doPublish(ServiceMeta serviceMeta) {
-        checkConnection();
-        checkNotNull(serviceMeta, ServiceMeta.class);
-
-        try {
-            publishQueue.put(serviceMeta);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        serviceCount++;
-
+    @Override
+    public ServiceProvider unpulishService(ServiceMeta serviceMeta) {
         return this;
     }
 
-    private void checkConnection() {
-        if (registryChannel == null) {
-            throw new NotConnectRegistryException("not connect to registry");
-        }
+    @Override
+    public ServiceProvider unpulishServices(ServiceMeta... serviceMeta) {
+        return this;
     }
 
-    /**
-     * 根据服务发布响应后续处理.
-     *
-     * @param serviceMeta
-     * @param resultCode
-     */
-    public void processPublishResult(ServiceMeta serviceMeta, int resultCode) {
-        if (resultCode == ProtocolHeader.SUCCESS) {
-            onlineServices.put(serviceMeta, unsettledServices.get(serviceMeta));
-            if ((--serviceCount) == 0) {
-                timeout = false;
-                lock.lock();
-                notResponse.signalAll(); // 唤醒发布线程
-                lock.unlock();
+    @Override
+    public ServiceProvider unpublishAllService() {
+        return this;
+    }
+
+    @Override
+    public ServiceProvider stopService(ServiceMeta serviceMeta) {
+        doStop(serviceMeta);
+        return this;
+    }
+
+    @Override
+    public ServiceProvider stopServices(ServiceMeta... serviceMeta) {
+        for (ServiceMeta meta : serviceMeta) {
+            doStop(meta);
+        }
+        return this;
+    }
+
+    @Override
+    public ServiceProvider stopAllService() {
+        synchronized (startedServices) {
+            for (Map.Entry<ServiceMeta, Channel> entry : startedServices.entrySet()) {
+                entry.getValue().close();
+                startedServices.remove(entry.getKey());
+
+                logger.info("stop service: " + entry.getKey());
             }
         }
-        unsettledServices.remove(serviceMeta);
+        return this;
     }
 
-    private Connector newConnector() {
-        return new NettyConnector(getProcessor());
+    private void doStop(ServiceMeta serviceMeta) {
+        if (!startedServices.containsKey(serviceMeta)) {
+            throw new IllegalStateException("service not start: " + serviceMeta);
+        }
+
+        Channel channel = startedServices.get(serviceMeta);
+        channel.close();
+        startedServices.remove(serviceMeta);
+
+        logger.info("stop service: " + serviceMeta);
     }
 
-    private Acceptor newAcceptor() {
-        return new NettyAcceptor(getProcessor());
+    @Override
+    public void shutdown() {
+
     }
 
-    private ProviderProcessor getProcessor() {
-        return new ProviderProcessor(this, nWorkers);
-    }
-
-    public Map<String, Object> getServiceInstances() {
-        return serviceInstances;
-    }
-
-    private void checkNotNull(Object object, Class<?> clazz) {
-        if (object == null) {
-            throw new NullPointerException(clazz.getName());
+    private void validate(String[] address) {
+        if (address == null || address.length < 1) {
+            throw new IllegalStateException("invalid registry address, please check address");
         }
     }
 }

@@ -1,52 +1,118 @@
 package org.pudding.rpc.provider;
 
-import org.pudding.common.model.Service;
 import org.pudding.common.model.ServiceMeta;
 
 /**
- * 服务提供者.
+ * Service Provider:
  * <p>
- * 1) 连接注册中心.
- * 2) 启动服务.
- * 3) 发布服务.
+ * 1) connect to registry.
+ * 2) start service.
+ * 3) publish service.
+ * 4) unpublish service.
  *
  * @author Yohann.
  */
 public interface ServiceProvider {
 
     /**
-     * 连接注册中心(目前注册中心只支持单机模式)
-     * 注意: 调用此方法请必须在ProviderConfig中配置过registryAddress, 否则抛异常NullPointerException.
+     * Connect to registry (only one).
+     * <p>
+     * Notice:
+     * You must call {@link org.pudding.rpc.provider.config.ProviderConfig#setRegistryAddress(String...)}
+     * to configure the registry address before invoke this method. Otherwise, throw {@link IllegalStateException}.
      */
     ServiceProvider connectRegistry();
 
     /**
-     * 连接注册中心(目前注册中心只支持单机模式).
+     * Connect to registry (only one).
      *
-     * @param registryAddress 格式: "host:port"  例如: "127.0.0.1:20000"
+     * @param registryAddress
      */
-    ServiceProvider connectRegistry(String registryAddress);
+    ServiceProvider connectRegistry(String... registryAddress);
 
     /**
-     * 关闭与注册中心的连接.
-     * 如果发布完服务后较长一段时间不需要再发布，就可以调用此方法断开连接，
-     * 下次发布前调用connectRegistry()建立连接即可.
+     * Start a service.
+     *
+     * @param serviceMeta
      */
-    void closeRegistry();
+    ServiceProvider startService(ServiceMeta serviceMeta);
 
     /**
-     * 启用一个服务.
+     * Start multiple service.
+     *
+     * @param serviceMeta
      */
-    ServiceProvider startService(Service service);
+    ServiceProvider startServices(ServiceMeta... serviceMeta);
 
     /**
-     * 启用多个服务.
+     * Publish a service.
+     *
+     * Notice:
+     * You must start service before invoke this method. Otherwise, throw {@link IllegalStateException}.
+     *
+     * @param serviceMeta
      */
-    ServiceProvider startServices(Service... services);
+    ServiceProvider publicService(ServiceMeta serviceMeta);
 
     /**
-     * 发布在此实例上启用的所有服务.
-     * 注意: 此方法会阻塞直到服务发布成功或超时.
+     * Publish multiple service.
+     *
+     * Notice:
+     * You must start service before invoke this method. Otherwise, throw {@link IllegalStateException}.
+     *
+     * @param serviceMeta
+     */
+    ServiceProvider publicServices(ServiceMeta... serviceMeta);
+
+    /**
+     * Publish all service that has started.
+     * <p>
+     * Notice:
+     * 1). You must start service before invoke this method. Otherwise, throw {@link IllegalStateException}.
+     * 2). This method can be called only once. Otherwise, throw {@link IllegalStateException}.
      */
     ServiceProvider publishAllService();
+
+    /**
+     * Unpublish a service.
+     *
+     * @param serviceMeta
+     */
+    ServiceProvider unpulishService(ServiceMeta serviceMeta);
+
+    /**
+     * Unpublish multiple service.
+     *
+     * @param serviceMeta
+     */
+    ServiceProvider unpulishServices(ServiceMeta... serviceMeta);
+
+    /**
+     * Unpublish all service that has pushlished.
+     */
+    ServiceProvider unpublishAllService();
+
+    /**
+     * Stop a service.
+     *
+     * @param serviceMeta
+     */
+    ServiceProvider stopService(ServiceMeta serviceMeta);
+
+    /**
+     * Stop multiple service.
+     *
+     * @param serviceMeta
+     */
+    ServiceProvider stopServices(ServiceMeta... serviceMeta);
+
+    /**
+     * Stop all service that has started.
+     */
+    ServiceProvider stopAllService();
+
+    /**
+     * Shutdown the {@link ServiceProvider}.
+     */
+    void shutdown();
 }

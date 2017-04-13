@@ -5,10 +5,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.log4j.Logger;
-import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.protocol.Message;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Processor;
-import org.pudding.transport.netty.NettyChannel;
+import org.pudding.transport.netty.NettyChannelFactory;
 
 /**
  * After decoding the message.
@@ -23,9 +23,9 @@ public class ConnectorHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof MessageHolder) {
-            Channel channel = new NettyChannel(ctx.channel());
-            processor.handleMessage(channel, (MessageHolder) msg);
+        if (msg instanceof Message) {
+            Channel channel = NettyChannelFactory.newChannel(ctx.channel());
+            processor.handleMessage(channel, (Message) msg);
         } else {
             logger.warn("unexpected msg type received: " + msg.getClass());
             ReferenceCountUtil.release(msg);

@@ -27,7 +27,7 @@ public class ProtocolHeaderFactory {
     /**
      * Create PublishService Request ProtocolHeader.
      */
-    public static ProtocolHeader newPublishServiceRequestHeader(int bodyLength, byte serializerType) {
+    public static ProtocolHeader newPublishRequestHeader(int bodyLength, byte serializerType) {
         ProtocolHeader header = new ProtocolHeader();
         header.setMagic(ProtocolHeader.MAGIC);
         header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.REQUEST));
@@ -41,7 +41,7 @@ public class ProtocolHeaderFactory {
     /**
      * Create PublishService Response ProtocolHeader.
      */
-    public static ProtocolHeader newPublishServiceResponseHeader(int bodyLength, byte serializerType, int resultCode) {
+    public static ProtocolHeader newPublishResponseHeader(int bodyLength, byte serializerType, int resultCode) {
         ProtocolHeader header = new ProtocolHeader();
         header.setMagic(ProtocolHeader.MAGIC);
         header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.RESPONSE));
@@ -55,7 +55,7 @@ public class ProtocolHeaderFactory {
     /**
      * Create SubscribeService Request ProtocolHeader.
      */
-    public static ProtocolHeader newSubscribeServiceRequestHeader(int bodyLength, byte serializerType) {
+    public static ProtocolHeader newSubscribeRequestHeader(int bodyLength, byte serializerType) {
         ProtocolHeader header = new ProtocolHeader();
         header.setMagic(ProtocolHeader.MAGIC);
         header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.REQUEST));
@@ -69,7 +69,7 @@ public class ProtocolHeaderFactory {
     /**
      * Create SubscribeService Response ProtocolHeader.
      */
-    public static ProtocolHeader newSubscribeServiceResponseHeader(int bodyLength, byte serializerType, int resultCode) {
+    public static ProtocolHeader newSubscribeResponseHeader(int bodyLength, byte serializerType, int resultCode) {
         ProtocolHeader header = new ProtocolHeader();
         header.setMagic(ProtocolHeader.MAGIC);
         header.setType(ProtocolHeader.type(serializerType, ProtocolHeader.RESPONSE));

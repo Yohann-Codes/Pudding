@@ -13,6 +13,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.pudding</groupId>
+            <artifactId>pudding-common</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.caucho</groupId>
             <artifactId>hessian</artifactId>
         </dependency>

@@ -115,11 +115,11 @@ public class NettyTcpConnector extends NettyConnector {
             future = bootstrap.connect(remoteAddress).sync();
         }
 
-        return NettyChannelFactory.newChannel(future);
+        return NettyChannelFactory.newChannel(future.channel());
     }
 
     @Override
-    public void processor(Processor processor) {
+    public void withProcessor(Processor processor) {
         checkNotNull(processor, "processor");
         this.processor = true;
         connectorHandler.setProcessor(processor);

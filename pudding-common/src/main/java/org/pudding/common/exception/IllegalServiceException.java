@@ -1,6 +1,11 @@
 package org.pudding.common.exception;
 
 /**
+ * Services do not conform to the requirements.
+ *
+ * 1). The service can only implement an interface.
+ * 2). The service interface must extend {@link java.io.Serializable}.
+ *
  * @author Yohann.
  */
 public class IllegalServiceException extends RuntimeException {

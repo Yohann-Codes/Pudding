@@ -1,6 +1,9 @@
 package org.pudding.serialization.api;
 
+import org.pudding.common.utils.ServiceLoaderUtil;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -14,7 +17,7 @@ public class SerializerFactory {
     private static Map<Byte, Serializer> serializerMap = new HashMap<>();
 
     static {
-        ServiceLoader<Serializer> serializers = ServiceLoader.load(Serializer.class);
+        List<Serializer> serializers = ServiceLoaderUtil.loadAll(Serializer.class);
         for (Serializer s : serializers) {
             serializerMap.put(s.type(), s);
         }

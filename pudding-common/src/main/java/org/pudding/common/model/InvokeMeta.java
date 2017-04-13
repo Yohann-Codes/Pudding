@@ -4,11 +4,12 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
- * 服务调用元数据, 代表唯一的一个方法.
+ * Invoke meta data.
  *
  * @author Yohann.
  */
 public class InvokeMeta implements Serializable {
+
     // 服务名称
     private String serviceName;
     // 方法名称

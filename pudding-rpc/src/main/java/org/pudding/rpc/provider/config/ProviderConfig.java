@@ -2,15 +2,17 @@ package org.pudding.rpc.provider.config;
 
 import org.pudding.common.constant.SerializerType;
 import org.pudding.common.constant.Timeout;
+import org.pudding.common.utils.Lists;
+
+import java.util.List;
 
 /**
- * 服务提供者配置.
+ * Configure the {@link org.pudding.rpc.provider.ServiceProvider}.
  *
  * @author Yohann.
  */
 public class ProviderConfig {
 
-    // Provider唯一的配置实例
     private static final ProviderConfig PROVIDER_CONFIG;
 
     static {
@@ -18,48 +20,78 @@ public class ProviderConfig {
     }
 
 
-    /** 序列化类型默认为Java原生 */
+    /** The serializer type, default: Java */
     private byte serializerType = SerializerType.JAVA;
 
-    /** 注册中心地址, 格式: host:port */
-    private String registryAddress = "";
+    /** The registry address, single address format: "host:port" */
+    private String[] registryAddress = null;
 
-    /** 工作线程数量, 默认: 2*CPU */
-    private int nWorkers = Runtime.getRuntime().availableProcessors() * 2;
+    /** The number of worker thread, default: 2*CPU */
+    private int workers = Runtime.getRuntime().availableProcessors() * 2;
 
-    /** 服务发布超时时间, 默认: 15s */
+    /** The deadline of pushlishing service, default: 15s */
     private int publishTimeout = Timeout.PUBLISH_TIMEOUT;
 
 
-    public static void serializerType(byte serializerType) {
+    /**
+     * Set the serializer type.
+     */
+    public static void setSerializerType(byte serializerType) {
         PROVIDER_CONFIG.serializerType = serializerType;
     }
 
-    public static byte serializerType() {
+    /**
+     * Return the serializer type.
+     */
+    public static byte getSerializerType() {
         return PROVIDER_CONFIG.serializerType;
     }
 
-    public static void registryAddress(String registryAddress) {
-        PROVIDER_CONFIG.registryAddress = registryAddress;
+    /**
+     * Set the registry address, there may be multiple.
+     *
+     * @param registryAddress "host:port"
+     */
+    public static void setRegistryAddress(String... registryAddress) {
+        List<String> addrs = Lists.newArrayList();
+        for (String addr : registryAddress) {
+            addrs.add(addr);
+        }
+        PROVIDER_CONFIG.registryAddress = (String[]) addrs.toArray();
     }
 
-    public static String registryAddress() {
+    /**
+     * Return the registry address.
+     */
+    public static String[] getRegistryAddress() {
         return PROVIDER_CONFIG.registryAddress;
     }
 
-    public static void nWorkers(int nWorkers) {
-        PROVIDER_CONFIG.nWorkers = nWorkers;
+    /**
+     * Set the number of worker thread.
+     */
+    public static void setWorkers(int workers) {
+        PROVIDER_CONFIG.workers = workers;
     }
 
-    public static int nWorkers() {
-        return PROVIDER_CONFIG.nWorkers;
+    /**
+     * Return the number of worker thread.
+     */
+    public static int getWorkers() {
+        return PROVIDER_CONFIG.workers;
     }
 
-    public static void publishTimeout(int publishTimeout) {
+    /**
+     * Set the deadline of pushlishing service.
+     */
+    public static void setPublishTimeout(int publishTimeout) {
         PROVIDER_CONFIG.publishTimeout = publishTimeout;
     }
 
-    public static int publishTimeout() {
+    /**
+     * Return the deadline of pusglishling service.
+     */
+    public static int getPublishTimeout() {
         return PROVIDER_CONFIG.publishTimeout;
     }
 }

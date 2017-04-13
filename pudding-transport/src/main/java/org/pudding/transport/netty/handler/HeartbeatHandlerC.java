@@ -4,8 +4,8 @@ import io.netty.channel.*;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.log4j.Logger;
-import org.pudding.common.protocol.MessageHolder;
-import org.pudding.common.utils.MessageHolderFactory;
+import org.pudding.common.protocol.Message;
+import org.pudding.common.utils.MessageFactory;
 
 /**
  * The heatbeat handler of connector.
@@ -36,7 +36,7 @@ public class HeartbeatHandlerC extends ChannelInboundHandlerAdapter {
     }
 
     private ChannelFuture heartbeat(ChannelHandlerContext ctx) {
-        MessageHolder holder = MessageHolderFactory.newHeartbeatHolder();
-        return ctx.writeAndFlush(holder);
+        Message message = MessageFactory.newHeartbeatMessage();
+        return ctx.writeAndFlush(message);
     }
 }

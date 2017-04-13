@@ -6,7 +6,7 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.log4j.Logger;
-import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.protocol.Message;
 import org.pudding.common.protocol.ProtocolHeader;
 
 /**
@@ -39,8 +39,8 @@ public class HeartbeatHandlerS extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof MessageHolder) {
-            MessageHolder holder = (MessageHolder) msg;
+        if (msg instanceof Message) {
+            Message holder = (Message) msg;
             ProtocolHeader header = holder.getHeader();
             byte packetCode = ProtocolHeader.dataPacketCode(header.getType());
             if (packetCode == ProtocolHeader.HEATBEAT) {

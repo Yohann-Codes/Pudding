@@ -1,9 +1,7 @@
 package org.pudding.common.utils;
 
-import org.pudding.common.exception.IllegalAddrFormatException;
-
 /**
- * 自定义地址解析工具(host:port).
+ * 字符串地址工具(host:port).
  *
  * @author Yohann.
  */
@@ -18,7 +16,7 @@ public class AddressUtil {
         }
         String[] s = address.split(":");
         if (s.length != 2) {
-            throw new IllegalAddrFormatException();
+            throw new IllegalArgumentException("address: " + address);
         }
     }
 
@@ -36,5 +34,13 @@ public class AddressUtil {
     public static int port(String address) {
         String[] s = address.split(":");
         return Integer.parseInt(s[1]);
+    }
+
+    /**
+     * Return string address.
+     * e.g. "host:port"
+     */
+    public static String stringAddress(String host, int port) {
+        return host + ":" + port;
     }
 }

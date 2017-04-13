@@ -1,6 +1,5 @@
 package org.pudding.transport.netty;
 
-import io.netty.channel.ChannelFuture;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.ChannelFactory;
 
@@ -9,17 +8,17 @@ import org.pudding.transport.api.ChannelFactory;
  *
  * @author Yohann.
  */
-public class NettyChannelFactory implements ChannelFactory<ChannelFuture> {
+public class NettyChannelFactory implements ChannelFactory<io.netty.channel.Channel> {
 
     public static final ChannelFactory FACTORY_INSTANCE = new NettyChannelFactory();
 
     @SuppressWarnings("unchecked")
-    public static Channel newChannel(ChannelFuture future) {
-        return FACTORY_INSTANCE.newInstance(future);
+    public static Channel newChannel(io.netty.channel.Channel channel) {
+        return FACTORY_INSTANCE.newInstance(channel);
     }
 
     @Override
-    public Channel newInstance(ChannelFuture future) {
-        return new NettyChannel(future.channel());
+    public Channel newInstance(io.netty.channel.Channel channel) {
+        return new NettyChannel(channel);
     }
 }

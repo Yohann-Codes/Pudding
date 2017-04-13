@@ -111,11 +111,11 @@ public class NettyTcpAcceptor extends NettyAcceptor {
         ChannelFuture future = bootstrap.bind(localAddress).sync();
         logger.info("listening on " + localAddress);
 
-        return NettyChannelFactory.newChannel(future);
+        return NettyChannelFactory.newChannel(future.channel());
     }
 
     @Override
-    public void processor(Processor processor) {
+    public void withProcessor(Processor processor) {
         checkNotNull(processor, "processor");
         this.processor = true;
         acceptorHandler.setProcessor(processor);

@@ -37,7 +37,7 @@ public interface Acceptor {
     /**
      * Binds the rpc processor.
      */
-    void processor(Processor processor);
+    void withProcessor(Processor processor);
 
     /**
      * Shutdown the server gracefully.

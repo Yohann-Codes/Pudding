@@ -28,7 +28,7 @@ public interface Connector {
     /**
      * Binds the rpc processor.
      */
-    void processor(Processor processor);
+    void withProcessor(Processor processor);
 
     /**
      * Shutdown the client gracefully;

@@ -9,7 +9,7 @@ import org.pudding.transport.netty.NettyTcpAcceptor;
 public class Server {
     public static void main(String[] args) {
         Acceptor acceptor = new NettyTcpAcceptor();
-        acceptor.processor(new MyProcessor());
+        acceptor.withProcessor(new MyProcessor());
         try {
             acceptor.bind(20001);
         } catch (InterruptedException e) {

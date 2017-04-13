@@ -3,6 +3,7 @@ package org.pudding.transport.netty;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelPipeline;
+import org.apache.log4j.Logger;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.ChannelListener;
 import org.pudding.transport.netty.connection.ConnectionWatchdog;
@@ -15,6 +16,7 @@ import java.net.SocketAddress;
  * @author Yohann.
  */
 public class NettyChannel implements Channel {
+    private static final Logger logger = Logger.getLogger(NettyChannel.class);
 
     private final io.netty.channel.Channel channel;
     private final ChannelPipeline pipeline;
@@ -89,6 +91,7 @@ public class NettyChannel implements Channel {
     public void close() {
         try {
             channel.close().sync();
+            logger.info("close channel: " + channel);
         } catch (InterruptedException e) {
             // ignore
         }

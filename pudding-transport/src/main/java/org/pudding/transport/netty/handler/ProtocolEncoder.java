@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import org.pudding.common.protocol.MessageHolder;
+import org.pudding.common.protocol.Message;
 import org.pudding.common.protocol.ProtocolHeader;
 
 /**
@@ -13,9 +13,9 @@ import org.pudding.common.protocol.ProtocolHeader;
  * @author Yohann.
  */
 @ChannelHandler.Sharable
-public class ProtocolEncoder extends MessageToByteEncoder<MessageHolder> {
+public class ProtocolEncoder extends MessageToByteEncoder<Message> {
     @Override
-    protected void encode(ChannelHandlerContext ctx, MessageHolder msg, ByteBuf out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
         validate(msg);
 
         ProtocolHeader header = msg.getHeader();
@@ -30,7 +30,7 @@ public class ProtocolEncoder extends MessageToByteEncoder<MessageHolder> {
                 .writeBytes(body);
     }
 
-    private void validate(MessageHolder msg) {
+    private void validate(Message msg) {
         if (msg == null) {
             throw new NullPointerException("msg == null");
         }
