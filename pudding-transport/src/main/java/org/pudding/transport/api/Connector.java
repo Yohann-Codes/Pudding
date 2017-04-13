@@ -26,6 +26,17 @@ public interface Connector {
     Channel connect(SocketAddress remoteAddress) throws InterruptedException;
 
     /**
+     * Connects the {@link Channel}'s socket to a remote address.
+     * <p>
+     * Reconnection strategy:
+     * Select one address to reconnect.
+     *
+     * @param remoteAddress
+     * @return if failed, return null.
+     */
+    Channel connect(SocketAddress... remoteAddress) throws InterruptedException;
+
+    /**
      * Binds the rpc processor.
      */
     void withProcessor(Processor processor);

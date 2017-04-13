@@ -12,6 +12,8 @@ public class Server {
         acceptor.withProcessor(new MyProcessor());
         try {
             acceptor.bind(20001);
+            acceptor.bind(20002);
+            acceptor.bind(20003);
         } catch (InterruptedException e) {
             acceptor.shutdownGracefully();
         }

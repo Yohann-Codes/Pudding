@@ -7,6 +7,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.apache.log4j.Logger;
 import org.pudding.common.constant.IdleTime;
+import org.pudding.common.utils.RandomUtil;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Processor;
 import org.pudding.transport.netty.connection.ConnectionWatchdog;
@@ -113,6 +114,51 @@ public class NettyTcpConnector extends NettyConnector {
                 }
             });
             future = bootstrap.connect(remoteAddress).sync();
+        }
+
+        return NettyChannelFactory.newChannel(future.channel());
+    }
+
+    @Override
+    public Channel connect(SocketAddress... remoteAddress) throws InterruptedException {
+        checkProcessor();
+
+        // Select an address randomly
+        int size = remoteAddress.length;
+        SocketAddress selectedAddress;
+        if (size < 2) {
+            selectedAddress = remoteAddress[0];
+        } else {
+            int index = RandomUtil.getInt(size);
+            selectedAddress = remoteAddress[index];
+        }
+
+        final ConnectionWatchdog watchdog = new ConnectionWatchdog(bootstrap, timer, selectedAddress, remoteAddress) {
+
+            @Override
+            public ChannelHandler[] handlers() {
+                return new ChannelHandler[]{
+                        this,
+                        new ProtocolDecoder(),
+                        protocolEncoder,
+                        new IdleStateHandler(0, IdleTime.WRITER_IDLE_TIME, 0),
+                        heartbeatHandler,
+                        connectorHandler
+                };
+            }
+        };
+        watchdog.openAutoReconnection();
+
+        ChannelFuture future;
+        synchronized (bootstrap) { // Enture atomicity
+            bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel ch) throws Exception {
+                    ChannelPipeline pipeline = ch.pipeline();
+                    pipeline.addLast(watchdog.handlers());
+                }
+            });
+            future = bootstrap.connect(selectedAddress).sync();
         }
 
         return NettyChannelFactory.newChannel(future.channel());
