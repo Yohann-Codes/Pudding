@@ -10,7 +10,7 @@ import org.pudding.common.model.ServiceMeta;
 public interface ServiceMetaFactory {
 
     /**
-     * Create a {@link ServiceMeta} for publishing service.
+     * new a {@link ServiceMeta} for publishing service.
      *
      * @param service
      * @param serviceAddress
@@ -20,10 +20,10 @@ public interface ServiceMetaFactory {
     ServiceMeta newPublishMeta(Object service, String serviceAddress, int weight);
 
     /**
-     * Create a {@link ServiceMeta} for subscribing service.
+     * new a {@link ServiceMeta} for subscribing service.
      *
      * @param serviceName
-     * @return
+     * @return ServiceMeta
      */
     ServiceMeta newSubscribeMeta(String serviceName);
 }

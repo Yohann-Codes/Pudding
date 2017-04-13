@@ -4,6 +4,7 @@ import org.pudding.common.constant.SerializerType;
 import org.pudding.common.constant.Timeout;
 import org.pudding.common.utils.Lists;
 
+import java.net.SocketAddress;
 import java.util.List;
 
 /**
@@ -20,7 +21,7 @@ public class ProviderConfig {
     }
 
 
-    /** The serializer type, default: Java */
+    /** The serialization type, default: Java */
     private byte serializerType = SerializerType.JAVA;
 
     /** The registry address, single address format: "host:port" */
@@ -34,14 +35,14 @@ public class ProviderConfig {
 
 
     /**
-     * Set the serializer type.
+     * Set the serialization type.
      */
     public static void setSerializerType(byte serializerType) {
         PROVIDER_CONFIG.serializerType = serializerType;
     }
 
     /**
-     * Return the serializer type.
+     * Return the serialization type.
      */
     public static byte getSerializerType() {
         return PROVIDER_CONFIG.serializerType;
@@ -57,7 +58,11 @@ public class ProviderConfig {
         for (String addr : registryAddress) {
             addrs.add(addr);
         }
-        PROVIDER_CONFIG.registryAddress = (String[]) addrs.toArray();
+        registryAddress = new String[addrs.size()];
+        for (int i = 0; i < registryAddress.length; i++) {
+            registryAddress[i] = addrs.get(i);
+        }
+        PROVIDER_CONFIG.registryAddress = registryAddress;
     }
 
     /**

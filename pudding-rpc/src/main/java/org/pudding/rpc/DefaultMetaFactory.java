@@ -1,9 +1,8 @@
-package org.pudding.rpc.provider;
+package org.pudding.rpc;
 
 import org.pudding.common.exception.IllegalServiceException;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.utils.AddressUtil;
-import org.pudding.rpc.ServiceMetaFactory;
 
 import java.io.Serializable;
 
@@ -16,12 +15,29 @@ public class DefaultMetaFactory implements ServiceMetaFactory {
 
     private static final ServiceMetaFactory FACTORY_INSTANCE = new DefaultMetaFactory();
 
+    /**
+     * Create a {@link ServiceMeta} for publishing service.
+     *
+     * @param service
+     * @param serviceAddress
+     * @param weight
+     * @return ServiceMeta.
+     */
     public static ServiceMeta createPublishMeta(Object service, String serviceAddress, int weight) {
         return FACTORY_INSTANCE.newPublishMeta(service, serviceAddress, weight);
     }
 
+    /**
+     * Create a {@link ServiceMeta} for subscribing service.
+     *
+     * @param serviceName
+     * @return ServiceMeta
+     */
     public static ServiceMeta createSubscribeMeta(String serviceName) {
         return FACTORY_INSTANCE.newSubscribeMeta(serviceName);
+    }
+
+    private DefaultMetaFactory() {
     }
 
     @Override

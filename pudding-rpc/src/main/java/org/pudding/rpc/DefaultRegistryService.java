@@ -7,7 +7,7 @@ import org.pudding.common.utils.RandomUtil;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Connector;
 import org.pudding.transport.api.Processor;
-import org.pudding.transport.netty.NettyTcpConnector;
+import org.pudding.transport.netty.NettyTransportFactory;
 
 import java.net.SocketAddress;
 
@@ -19,16 +19,23 @@ import java.net.SocketAddress;
 public class DefaultRegistryService extends AbstractRegistryService {
     private static final Logger logger = Logger.getLogger(DefaultRegistryService.class);
 
-    public static final Processor PROCESSOR = new RegistryServiceProcessor();
+    // Process the registry task
+    private static final Processor REGISTRY_PROCESSOR = new RegistryProcessor();
 
-    private final Connector connector = new NettyTcpConnector();
+    private final Connector connector = NettyTransportFactory.createTcpConnector();
 
     // Registry channel
     private Channel channel;
     private volatile boolean isConnected = false;
 
+    public DefaultRegistryService() {
+        connector.withProcessor(REGISTRY_PROCESSOR);
+    }
+
     @Override
     public void connectRegistry(SocketAddress... address) {
+        checkNotShutdown();
+
         int size = address.length;
         SocketAddress selectedAddress;
 
@@ -42,14 +49,16 @@ public class DefaultRegistryService extends AbstractRegistryService {
 
         synchronized (this) {
             if (isConnected) {
-                throw new IllegalStateException("has connected to registry: " + channel);
+                throw new IllegalStateException("has connected with registry: " + channel);
             }
             try {
                 // Connect to registry
                 channel = connector.connect(selectedAddress);
                 isConnected = true;
+
+                logger.info("connect with registry: " + selectedAddress);
             } catch (InterruptedException e) {
-                logger.warn("connect to registry failed: " + selectedAddress);
+                logger.warn("connect with registry failed: " + selectedAddress);
             }
         }
     }
@@ -58,9 +67,12 @@ public class DefaultRegistryService extends AbstractRegistryService {
     public void disconnectRegistry() {
         synchronized (this) {
             if (!isConnected) {
-                throw new IllegalStateException("not connect to registry");
+                throw new IllegalStateException("not connect with registry");
             }
             channel.close();
+
+            logger.info("disconnect with registry: " + channel);
+
             channel = null;
             isConnected = false;
         }
@@ -81,7 +93,16 @@ public class DefaultRegistryService extends AbstractRegistryService {
 
     }
 
-    private static class RegistryServiceProcessor implements Processor {
+    @Override
+    public void shutdown() {
+        super.shutdown();
+        connector.shutdownGracefully();
+    }
+
+    /**
+     * The processor about registry.
+     */
+    private static class RegistryProcessor implements Processor {
 
         @Override
         public void handleMessage(Channel channel, Message holder) {

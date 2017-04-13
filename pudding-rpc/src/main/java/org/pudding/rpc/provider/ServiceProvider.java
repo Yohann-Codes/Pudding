@@ -15,7 +15,7 @@ import org.pudding.common.model.ServiceMeta;
 public interface ServiceProvider {
 
     /**
-     * Connect to registry (only one).
+     * Connect with registry (only one).
      * <p>
      * Notice:
      * You must call {@link org.pudding.rpc.provider.config.ProviderConfig#setRegistryAddress(String...)}
@@ -24,7 +24,7 @@ public interface ServiceProvider {
     ServiceProvider connectRegistry();
 
     /**
-     * Connect to registry (only one).
+     * Connect with registry (only one).
      *
      * @param registryAddress
      */
@@ -46,7 +46,7 @@ public interface ServiceProvider {
 
     /**
      * Publish a service.
-     *
+     * <p>
      * Notice:
      * You must start service before invoke this method. Otherwise, throw {@link IllegalStateException}.
      *
@@ -56,7 +56,7 @@ public interface ServiceProvider {
 
     /**
      * Publish multiple service.
-     *
+     * <p>
      * Notice:
      * You must start service before invoke this method. Otherwise, throw {@link IllegalStateException}.
      *
@@ -93,7 +93,7 @@ public interface ServiceProvider {
     ServiceProvider unpublishAllService();
 
     /**
-     * Stop a service.
+     * Stop the specified service.
      *
      * @param serviceMeta
      */
@@ -113,6 +113,10 @@ public interface ServiceProvider {
 
     /**
      * Shutdown the {@link ServiceProvider}.
+     * <p>
+     * Notice:
+     * If you call the method to shudown the current {@link ServiceProvider}, you must new a {@link ServiceProvider}'s
+     * instance before connect with registry or start a service. Otherwise, throw {@link IllegalStateException}.
      */
     void shutdown();
 }

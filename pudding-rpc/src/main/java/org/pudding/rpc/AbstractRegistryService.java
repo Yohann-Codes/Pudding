@@ -61,11 +61,13 @@ public abstract class AbstractRegistryService implements RegistryService {
     @Override
     public void shutdown() {
         isShutdown = true;
+        executor.shutdownNow();
     }
 
-    @Override
-    public boolean isShutdown() {
-        return isShutdown;
+    protected void checkNotShutdown() {
+        if (isShutdown) {
+            throw new IllegalStateException("the instance has shutdown");
+        }
     }
 
     protected abstract void doRegister(ServiceMeta serviceMeta);

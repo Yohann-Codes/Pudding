@@ -6,12 +6,11 @@ import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.utils.Lists;
 import org.pudding.common.utils.Maps;
 import org.pudding.common.utils.ServiceLoaderUtil;
-import org.pudding.rpc.DefaultRegistryService;
 import org.pudding.rpc.RegistryService;
 import org.pudding.rpc.provider.config.ProviderConfig;
 import org.pudding.transport.api.Acceptor;
 import org.pudding.transport.api.Channel;
-import org.pudding.transport.netty.NettyTcpAcceptor;
+import org.pudding.transport.netty.NettyTransportFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -21,6 +20,7 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * The default implementation of {@link ServiceProvider}.
+ * <p>
  * Suggest use singleton.
  *
  * @author Yohann.
@@ -29,23 +29,20 @@ public class DefaultServiceProvider implements ServiceProvider {
     private static final Logger logger = Logger.getLogger(DefaultServiceProvider.class);
 
     // Bind service
-    private final Acceptor acceptor = new NettyTcpAcceptor();
+    private final Acceptor acceptor = NettyTransportFactory.createTcpAcceptor();
     // Create instance Based on SPI
     private final RegistryService registryService = ServiceLoaderUtil.loadFirst(RegistryService.class);
+    private final ClientService clientService = new DefaultClientService();
 
     // Hold service that has started
     private final ConcurrentMap<ServiceMeta, Channel> startedServices = Maps.newConcurrentHashMap();
 
     private volatile boolean allPublished = false;
 
-    public DefaultServiceProvider() {
-        acceptor.withProcessor(DefaultRegistryService.PROCESSOR);
-    }
-
     @Override
     public ServiceProvider connectRegistry() {
         String[] stringAddress = ProviderConfig.getRegistryAddress();
-        validate(stringAddress);
+        checkAddress(stringAddress);
         SocketAddress[] address = parseToSocketAddress(stringAddress);
         registryService.connectRegistry(address);
         return this;
@@ -53,7 +50,7 @@ public class DefaultServiceProvider implements ServiceProvider {
 
     @Override
     public ServiceProvider connectRegistry(String... registryAddress) {
-        validate(registryAddress);
+        checkAddress(registryAddress);
         SocketAddress[] address = parseToSocketAddress(registryAddress);
         registryService.connectRegistry(address);
         return this;
@@ -89,15 +86,9 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     private void doStart(ServiceMeta serviceMeta) {
-        SocketAddress[] address = parseToSocketAddress(serviceMeta.getAddress());
-        Channel channel;
-        try {
-            channel = acceptor.bind(address[0]);
+        synchronized (this) {
+            Channel channel = clientService.startService(serviceMeta);
             startedServices.put(serviceMeta, channel);
-
-            logger.info("start service: " + serviceMeta);
-        } catch (InterruptedException e) {
-            acceptor.shutdownGracefully();
         }
     }
 
@@ -175,10 +166,10 @@ public class DefaultServiceProvider implements ServiceProvider {
     public ServiceProvider stopAllService() {
         synchronized (startedServices) {
             for (Map.Entry<ServiceMeta, Channel> entry : startedServices.entrySet()) {
-                entry.getValue().close();
-                startedServices.remove(entry.getKey());
-
-                logger.info("stop service: " + entry.getKey());
+                ServiceMeta meta = entry.getKey();
+                Channel channel = entry.getValue();
+                clientService.stopService(meta, channel);
+                startedServices.remove(meta);
             }
         }
         return this;
@@ -190,18 +181,17 @@ public class DefaultServiceProvider implements ServiceProvider {
         }
 
         Channel channel = startedServices.get(serviceMeta);
-        channel.close();
+        clientService.stopService(serviceMeta, channel);
         startedServices.remove(serviceMeta);
-
-        logger.info("stop service: " + serviceMeta);
     }
 
     @Override
     public void shutdown() {
-
+        registryService.shutdown();
+        clientService.shutdown();
     }
 
-    private void validate(String[] address) {
+    private void checkAddress(String[] address) {
         if (address == null || address.length < 1) {
             throw new IllegalStateException("invalid registry address, please check address");
         }

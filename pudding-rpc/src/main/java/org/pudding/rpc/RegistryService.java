@@ -6,7 +6,7 @@ import org.pudding.transport.api.Processor;
 import java.net.SocketAddress;
 
 /**
- * Registry service.
+ * Registry service (interact with registry server).
  * <p>
  * 1). Connect to registry server.
  * 2). Register service.
@@ -51,12 +51,7 @@ public interface RegistryService {
     void subscribe(ServiceMeta serviceMeta);
 
     /**
-     * Shutdown task queue.
+     * Shutdown resource.
      */
     void shutdown();
-
-    /**
-     * Return true if the task queue has shutdown, or false.
-     */
-    boolean isShutdown();
 }
