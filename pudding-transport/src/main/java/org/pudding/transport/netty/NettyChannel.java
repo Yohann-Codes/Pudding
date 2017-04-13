@@ -90,6 +90,7 @@ public class NettyChannel implements Channel {
     @Override
     public void close() {
         try {
+            getWatchdog().closeAutoReconnection();
             channel.close().sync();
             logger.info("close channel: " + channel);
         } catch (InterruptedException e) {

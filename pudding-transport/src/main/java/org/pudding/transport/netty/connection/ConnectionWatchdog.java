@@ -80,13 +80,16 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
     @Override
     public void run(Timeout timeout) throws Exception {
 
-        bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            protected void initChannel(SocketChannel ch) throws Exception {
-                ch.pipeline().addLast(handlers());
-            }
-        });
-        ChannelFuture future = bootstrap.connect(remoteAddress);
+        ChannelFuture future;
+        synchronized (bootstrap) {
+            bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel ch) throws Exception {
+                    ch.pipeline().addLast(handlers());
+                }
+            });
+            future = bootstrap.connect(remoteAddress);
+        }
 
         future.addListener(new ChannelFutureListener() {
 
