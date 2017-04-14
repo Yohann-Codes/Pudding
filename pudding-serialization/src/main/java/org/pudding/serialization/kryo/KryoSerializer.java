@@ -36,6 +36,9 @@ public class KryoSerializer implements Serializer {
 
     @Override
     public <T> T readObject(byte[] bytes, Class<T> clazz) {
+        if (bytes == null) {
+            throw new NullPointerException("bytes == null");
+        }
         Input input = new Input(new ByteArrayInputStream(bytes));
         T object = kryo.readObject(input, clazz);
         input.close();

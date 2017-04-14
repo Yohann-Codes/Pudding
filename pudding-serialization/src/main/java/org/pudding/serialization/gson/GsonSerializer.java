@@ -35,6 +35,9 @@ public class GsonSerializer implements Serializer {
 
     @Override
     public <T> T readObject(byte[] bytes, Class<T> clazz) {
+        if (bytes == null) {
+            throw new NullPointerException("bytes == null");
+        }
         try {
             String json = new String(bytes, "utf-8");
             return gson.fromJson(json, clazz);
