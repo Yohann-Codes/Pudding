@@ -4,8 +4,8 @@ import io.netty.channel.*;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.log4j.Logger;
-import org.pudding.common.protocol.Message;
-import org.pudding.common.utils.MessageFactory;
+import org.pudding.transport.protocol.Message;
+import org.pudding.transport.protocol.ProtocolHeader;
 
 /**
  * The heatbeat handler of connector.
@@ -35,8 +35,25 @@ public class HeartbeatHandlerC extends ChannelInboundHandlerAdapter {
         }
     }
 
+    /**
+     * Create and send heatbeat.
+     *
+     * @param ctx
+     */
     private ChannelFuture heartbeat(ChannelHandlerContext ctx) {
-        Message message = MessageFactory.newHeartbeatMessage();
+        ProtocolHeader header = new ProtocolHeader();
+        header.setMagic(ProtocolHeader.MAGIC)
+                // The heatbeat can ignore serialization type
+                .setType(ProtocolHeader.type((byte) 0, ProtocolHeader.HEATBEAT))
+                .setSign((byte) 0)
+                .setInvokeId(0)
+                .setStatus(0)
+                .setBodyLength(0);
+
+        Message message = new Message();
+        message.setHeader(header)
+                .setBody(new byte[0]);
+
         return ctx.writeAndFlush(message);
     }
 }

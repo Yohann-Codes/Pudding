@@ -9,6 +9,6 @@ import org.pudding.rpc.provider.ServiceProvider;
 public class Provider {
     public static void main(String[] args) {
         ServiceProvider provider = new DefaultServiceProvider();
-        provider.connectRegistry("127.0.0.1:20002", "127.0.0.1:20003");
+        provider.connectRegistry("127.0.0.1:20001", "127.0.0.1:20002", "127.0.0.1:20003", "127.0.0.1:20004");
     }
 }

@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.apache.log4j.Logger;
-import org.pudding.common.protocol.Message;
-import org.pudding.common.protocol.ProtocolHeader;
+import org.pudding.transport.protocol.Message;
+import org.pudding.transport.protocol.ProtocolHeader;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         byte type = in.readByte();
         byte sign = in.readByte();
         long invokeId = in.readLong();
-        int resultCode = in.readInt();
+        int status = in.readInt();
         int bodyLength = in.readInt();
 
         // Check bodylength
@@ -47,7 +47,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         header.setType(type);
         header.setSign(sign);
         header.setInvokeId(invokeId);
-        header.setResultCode(resultCode);
+        header.setStatus(status);
         header.setBodyLength(bodyLength);
 
         Message holder = new Message();

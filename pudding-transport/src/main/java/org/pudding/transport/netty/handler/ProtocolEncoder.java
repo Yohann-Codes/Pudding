@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import org.pudding.common.protocol.Message;
-import org.pudding.common.protocol.ProtocolHeader;
+import org.pudding.transport.protocol.Message;
+import org.pudding.transport.protocol.ProtocolHeader;
 
 /**
  * The encoder.
@@ -25,7 +25,7 @@ public class ProtocolEncoder extends MessageToByteEncoder<Message> {
                 .writeByte(header.getType())
                 .writeByte(header.getSign())
                 .writeLong(header.getInvokeId())
-                .writeInt(header.getResultCode())
+                .writeInt(header.getStatus())
                 .writeInt(header.getBodyLength())
                 .writeBytes(body);
     }

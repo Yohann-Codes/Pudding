@@ -6,8 +6,8 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.log4j.Logger;
-import org.pudding.common.protocol.Message;
-import org.pudding.common.protocol.ProtocolHeader;
+import org.pudding.transport.protocol.Message;
+import org.pudding.transport.protocol.ProtocolHeader;
 
 /**
  * The heatbeat handler of Acceptor.
@@ -42,8 +42,8 @@ public class HeartbeatHandlerS extends ChannelInboundHandlerAdapter {
         if (msg instanceof Message) {
             Message holder = (Message) msg;
             ProtocolHeader header = holder.getHeader();
-            byte packetCode = ProtocolHeader.dataPacketCode(header.getType());
-            if (packetCode == ProtocolHeader.HEATBEAT) {
+            byte messageType = ProtocolHeader.messageType(header.getType());
+            if (messageType == ProtocolHeader.HEATBEAT) {
                 // Clear the number of heatbeat failure
                 count = 0;
 //                logger.info(ctx.channel() + " heatbeat");

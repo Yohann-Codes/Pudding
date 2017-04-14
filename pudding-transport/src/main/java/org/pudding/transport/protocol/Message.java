@@ -1,11 +1,11 @@
-package org.pudding.common.protocol;
+package org.pudding.transport.protocol;
 
 /**
  * Hold message.
  *
  * @author Yohann.
  */
-public class Message {
+public final class Message {
     private ProtocolHeader header;
     private byte[] body;
 
@@ -13,15 +13,17 @@ public class Message {
         return header;
     }
 
-    public void setHeader(ProtocolHeader header) {
+    public Message setHeader(ProtocolHeader header) {
         this.header = header;
+        return this;
     }
 
     public byte[] getBody() {
         return body;
     }
 
-    public void setBody(byte[] body) {
+    public Message setBody(byte[] body) {
         this.body = body;
+        return this;
     }
 }

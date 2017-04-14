@@ -1,6 +1,6 @@
 package org.pudding.transport.api;
 
-import org.pudding.common.protocol.Message;
+import org.pudding.transport.protocol.Message;
 
 /**
  * The processor that will be implemented by other module.
