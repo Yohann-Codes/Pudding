@@ -1,5 +1,7 @@
 package org.pudding.transport.api;
 
+import org.pudding.transport.netty.NettyTcpConnector;
+
 import java.net.SocketAddress;
 
 /**
@@ -31,10 +33,11 @@ public interface Connector {
      * Reconnection strategy:
      * Select one address to reconnect.
      *
+     * @param pattern
      * @param remoteAddress
      * @return if failed, return null.
      */
-    Channel connect(SocketAddress... remoteAddress) throws InterruptedException;
+    Channel connect( NettyTcpConnector.ReconnPattern pattern, SocketAddress... remoteAddress) throws InterruptedException;
 
     /**
      * Binds the rpc processor.

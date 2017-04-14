@@ -88,7 +88,8 @@ public class NettyTcpConnector extends NettyConnector {
     public Channel connect(SocketAddress remoteAddress) throws InterruptedException {
         checkProcessor();
 
-        final ConnectionWatchdog watchdog = new ConnectionWatchdog(bootstrap, timer, remoteAddress) {
+        final ConnectionWatchdog watchdog = new ConnectionWatchdog(
+                bootstrap, timer, remoteAddress, ReconnPattern.CONNECT_OLD_ADDRESS) {
 
             @Override
             public ChannelHandler[] handlers() {
@@ -120,20 +121,27 @@ public class NettyTcpConnector extends NettyConnector {
     }
 
     @Override
-    public Channel connect(SocketAddress... remoteAddress) throws InterruptedException {
+    public Channel connect(ReconnPattern reconnPattern, SocketAddress... remoteAddress) throws InterruptedException {
         checkProcessor();
 
-        // Select an address randomly
-        int size = remoteAddress.length;
         SocketAddress selectedAddress;
-        if (size < 2) {
-            selectedAddress = remoteAddress[0];
+        if (reconnPattern == ReconnPattern.CONNECT_RANDOM_ADDRESS) {
+            // Select an address randomly
+            int size = remoteAddress.length;
+            if (size < 2) {
+                selectedAddress = remoteAddress[0];
+            } else {
+                int index = RandomUtil.getInt(size);
+                selectedAddress = remoteAddress[index];
+            }
+        } else if (reconnPattern == ReconnPattern.CONNECT_PREVIOUS_ADDRESS) {
+            selectedAddress = remoteAddress[remoteAddress.length -1];
         } else {
-            int index = RandomUtil.getInt(size);
-            selectedAddress = remoteAddress[index];
+            throw new IllegalArgumentException("invalid pattern");
         }
 
-        final ConnectionWatchdog watchdog = new ConnectionWatchdog(bootstrap, timer, selectedAddress, remoteAddress) {
+        final ConnectionWatchdog watchdog = new ConnectionWatchdog(
+                bootstrap, timer, selectedAddress, remoteAddress, reconnPattern) {
 
             @Override
             public ChannelHandler[] handlers() {
@@ -200,5 +208,20 @@ public class NettyTcpConnector extends NettyConnector {
         if (!processor) {
             throw new IllegalStateException("invalid processor, please set processor");
         }
+    }
+
+    /**
+     * The reconnection pattern.
+     */
+    public enum ReconnPattern {
+
+        // Select old address
+        CONNECT_OLD_ADDRESS,
+
+        // Select a address randomly
+        CONNECT_RANDOM_ADDRESS,
+
+        // Select the previous address
+        CONNECT_PREVIOUS_ADDRESS
     }
 }

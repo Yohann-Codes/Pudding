@@ -35,4 +35,14 @@ public class ConnectorHandler extends ChannelInboundHandlerAdapter {
     public void setProcessor(Processor processor) {
         this.processor = processor;
     }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        processor.handleConnection(NettyChannelFactory.newChannel(ctx.channel()));
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        processor.handleDisconnection(NettyChannelFactory.newChannel(ctx.channel()));
+    }
 }

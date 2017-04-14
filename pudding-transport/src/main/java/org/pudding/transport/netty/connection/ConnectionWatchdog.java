@@ -9,12 +9,15 @@ import io.netty.util.TimerTask;
 import org.apache.log4j.Logger;
 import org.pudding.common.utils.RandomUtil;
 import org.pudding.transport.netty.ChannelHandlerHolder;
+import org.pudding.transport.netty.NettyTcpConnector;
 
 import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Watch the connection.
+ * Reconnection.
+ * 1) Single address.
+ * 2) Multiple address.
  *
  * @author Yohann.
  */
@@ -35,22 +38,28 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
     private volatile int state;
     private int attempts;
 
-    private boolean isMultiAddress;
+    // The number of crash server
+    private volatile int crashNumber;
 
-    public ConnectionWatchdog(Bootstrap bootstrap, Timer timer, SocketAddress remoteAddress) {
+    // The reconnection pattern
+    private NettyTcpConnector.ReconnPattern reconnPattern;
+
+    public ConnectionWatchdog(Bootstrap bootstrap, Timer timer, SocketAddress remoteAddress,
+                              NettyTcpConnector.ReconnPattern reconnPattern) {
         this.bootstrap = bootstrap;
         this.timer = timer;
         singleAddress = remoteAddress;
         realAddress = remoteAddress;
-        isMultiAddress = false;
+        this.reconnPattern = reconnPattern;
     }
 
-    public ConnectionWatchdog(Bootstrap bootstrap, Timer timer, SocketAddress realAddress, SocketAddress[] remoteAddress) {
+    public ConnectionWatchdog(Bootstrap bootstrap, Timer timer, SocketAddress realAddress,
+                              SocketAddress[] remoteAddress, NettyTcpConnector.ReconnPattern reconnPattern) {
         this.bootstrap = bootstrap;
         this.timer = timer;
         this.realAddress = realAddress;
         multiAddress = remoteAddress;
-        isMultiAddress = true;
+        this.reconnPattern = reconnPattern;
     }
 
     public void openAutoReconnection() {
@@ -83,6 +92,8 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
                 logger.info("try to reconnect to " + realAddress);
             } else {
                 logger.warn("stop trying reconnect to " + realAddress);
+
+                ctx.fireChannelInactive();
                 return;
             }
             long timeout = 2 << attempts;
@@ -95,23 +106,30 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
     @Override
     public void run(Timeout timeout) throws Exception {
 
-        if (isMultiAddress) {
-            // multiple address pattern
-            int size = multiAddress.length;
-            if (size < 2) {
-                realAddress = multiAddress[0];
-            } else {
-                // Select an address randomly
-                int index = RandomUtil.getInt(size);
-                realAddress = multiAddress[index];
-            }
-        } else {
-            // single address pattern
-            realAddress = singleAddress;
-        }
-
         ChannelFuture future;
         synchronized (bootstrap) {
+            if (reconnPattern == NettyTcpConnector.ReconnPattern.CONNECT_OLD_ADDRESS) {
+                realAddress = singleAddress;
+            }
+            if (reconnPattern == NettyTcpConnector.ReconnPattern.CONNECT_RANDOM_ADDRESS) {
+                int size = multiAddress.length;
+                if (size < 2) {
+                    realAddress = multiAddress[0];
+                } else {
+                    // Select an address randomly
+                    int index = RandomUtil.getInt(size);
+                    realAddress = multiAddress[index];
+                }
+            }
+            if (reconnPattern == NettyTcpConnector.ReconnPattern.CONNECT_PREVIOUS_ADDRESS) {
+                crashNumber++;
+                int addrIndex = multiAddress.length - 1 - crashNumber;
+                if (addrIndex < 0) {
+                    return;
+                }
+                realAddress = multiAddress[addrIndex];
+            }
+
             bootstrap.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel ch) throws Exception {
