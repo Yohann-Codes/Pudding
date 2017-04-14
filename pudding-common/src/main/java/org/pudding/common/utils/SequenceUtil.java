@@ -3,23 +3,21 @@ package org.pudding.common.utils;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Id .
+ * Sequence generator.
  *
  * @author Yohann.
  */
-public class IdUtil {
-    private static Object invokeIdLock = new Object();
+public class SequenceUtil {
+    private static AtomicLong sequence = new AtomicLong(1);
 
-    /** 远程调用Id */
-    private static AtomicLong invokeId = new AtomicLong(1);
+    public static long generateSequence() {
 
-    public static long invokeId() {
-        synchronized (invokeIdLock) {
-            if (Long.MAX_VALUE - invokeId.get() < 1) {
-                // 重新从0开始生成
-                invokeId.set(1);
+        synchronized (SequenceUtil.class) {
+            if (Long.MAX_VALUE - sequence.get() < 1) {
+                // Reset id zero
+                sequence.set(1);
             }
-            return invokeId.getAndIncrement();
+            return sequence.getAndIncrement();
         }
     }
 }

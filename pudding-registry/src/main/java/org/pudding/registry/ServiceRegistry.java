@@ -5,28 +5,28 @@ import org.pudding.transport.api.Channel;
 import java.net.SocketAddress;
 
 /**
- * Service registry.
+ * Service registry_cluster.
  *
  * @author Yohann.
  */
 public interface ServiceRegistry {
 
     /**
-     * Start registry.
+     * Start registry_cluster.
      *
      * @param port
      */
     Channel startRegistry(int port);
 
     /**
-     * Start registry.
+     * Start registry_cluster.
      *
      * @param address
      */
     Channel startRegistry(SocketAddress address);
 
     /**
-     * Close registry.
+     * Close registry_cluster.
      */
     void closeRegistry();
 }

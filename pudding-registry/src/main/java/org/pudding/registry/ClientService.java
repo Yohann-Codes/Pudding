@@ -12,14 +12,14 @@ import java.net.SocketAddress;
 public interface ClientService {
 
     /**
-     * Start registry server to listen.
+     * Start registry_cluster server to listen.
      *
      * @param localAddress
      */
     Channel startRegistry(SocketAddress localAddress);
 
     /**
-     * Close registry server.
+     * Close registry_cluster server.
      */
     void closeRegistry();
 

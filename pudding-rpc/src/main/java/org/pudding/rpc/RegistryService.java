@@ -6,9 +6,9 @@ import org.pudding.transport.api.Processor;
 import java.net.SocketAddress;
 
 /**
- * Registry service (interact with registry server).
+ * Registry service (interact with registry_cluster server).
  * <p>
- * 1). Connect to registry server.
+ * 1). Connect to registry_cluster server.
  * 2). Register service.
  * 3). Unregister service.
  * 4). Subscribe service.
@@ -18,14 +18,14 @@ import java.net.SocketAddress;
 public interface RegistryService {
 
     /**
-     * Connect to registry server.
+     * Connect to registry_cluster server.
      *
      * @param address
      */
     void connectRegistry(SocketAddress... address);
 
     /**
-     * Disconnect to registry.
+     * Disconnect to registry_cluster.
      */
     void disconnectRegistry();
 

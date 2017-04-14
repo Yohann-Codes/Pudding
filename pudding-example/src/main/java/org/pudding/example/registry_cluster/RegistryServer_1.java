@@ -1,4 +1,4 @@
-package org.pudding.example.registry;
+package org.pudding.example.registry_cluster;
 
 import org.pudding.registry.DefaultServiceRegistry;
 import org.pudding.registry.PuddingServiceRegistry;

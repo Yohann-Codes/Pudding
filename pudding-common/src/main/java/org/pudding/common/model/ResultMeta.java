@@ -1,11 +1,13 @@
 package org.pudding.common.model;
 
+import java.io.Serializable;
+
 /**
  * Result meta data.
  *
  * @author Yohann.
  */
-public class ResultMeta {
+public class ResultMeta implements Serializable {
 
     // 返回值
     private Object result;

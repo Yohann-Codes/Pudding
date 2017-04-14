@@ -24,7 +24,7 @@ public class ProviderConfig {
     /** The serialization type, default: Java */
     private byte serializerType = SerializerType.JAVA;
 
-    /** The registry address, single address format: "host:port" */
+    /** The registry_cluster address, single address format: "host:port" */
     private String[] registryAddress = null;
 
     /** The number of worker thread, default: 2*CPU */
@@ -49,7 +49,7 @@ public class ProviderConfig {
     }
 
     /**
-     * Set the registry address, there may be multiple.
+     * Set the registry_cluster address, there may be multiple.
      *
      * @param registryAddress "host:port"
      */
@@ -66,7 +66,7 @@ public class ProviderConfig {
     }
 
     /**
-     * Return the registry address.
+     * Return the registry_cluster address.
      */
     public static String[] getRegistryAddress() {
         return PROVIDER_CONFIG.registryAddress;

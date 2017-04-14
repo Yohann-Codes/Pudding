@@ -9,6 +9,8 @@ import org.pudding.transport.api.Channel;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The default implementation of {@link PuddingServiceRegistry}.
@@ -18,8 +20,33 @@ import java.util.List;
 public class DefaultServiceRegistry implements PuddingServiceRegistry {
     private static final Logger logger = Logger.getLogger(DefaultServiceRegistry.class);
 
-    private final ClusterService clusterService = new DefaultClusterService();
-    private final ClientService clientService = new DefaultClientService();
+    private ClusterService clusterService;
+    private ClientService clientService;
+
+    private int workers;
+    private final ExecutorService executor;
+
+    public DefaultServiceRegistry() {
+        this(RegistryConfig.getWorkers());
+    }
+
+    public DefaultServiceRegistry(int workers) {
+        validate(workers);
+        this.workers = workers;
+        executor = Executors.newFixedThreadPool(workers);
+        initService();
+    }
+
+    private void initService() {
+        clusterService = new DefaultClusterService(executor);
+        clientService = new DefaultClientService(executor);
+    }
+
+    private void validate(int workers) {
+        if (workers < 1) {
+            throw new IllegalArgumentException("workers: " + workers);
+        }
+    }
 
     @Override
     public Channel startRegistry(int port) {
@@ -65,9 +92,15 @@ public class DefaultServiceRegistry implements PuddingServiceRegistry {
     }
 
     @Override
+    public int workers() {
+        return workers;
+    }
+
+    @Override
     public void shutdown() {
         clusterService.shutdown();
         clientService.shutdown();
+        executor.shutdown();
     }
 
     @Override

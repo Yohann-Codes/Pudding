@@ -6,6 +6,8 @@ import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.utils.Lists;
 import org.pudding.common.utils.Maps;
 import org.pudding.common.utils.ServiceLoaderUtil;
+import org.pudding.rpc.DefaultMetaFactory;
+import org.pudding.rpc.DefaultRegistryService;
 import org.pudding.rpc.RegistryService;
 import org.pudding.rpc.provider.config.ProviderConfig;
 import org.pudding.transport.api.Acceptor;
@@ -17,6 +19,8 @@ import java.net.SocketAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The default implementation of {@link ServiceProvider}.
@@ -28,16 +32,38 @@ import java.util.concurrent.ConcurrentMap;
 public class DefaultServiceProvider implements ServiceProvider {
     private static final Logger logger = Logger.getLogger(DefaultServiceProvider.class);
 
-    // Bind service
-    private final Acceptor acceptor = NettyTransportFactory.createTcpAcceptor();
-    // Create instance Based on SPI
-    private final RegistryService registryService = ServiceLoaderUtil.loadFirst(RegistryService.class);
-    private final ClientService clientService = new DefaultClientService();
-
     // Hold service that has started
     private final ConcurrentMap<ServiceMeta, Channel> startedServices = Maps.newConcurrentHashMap();
 
     private volatile boolean allPublished = false;
+
+    private RegistryService registryService;
+    private ClientService clientService;
+
+    private int workers;
+    private final ExecutorService executor;
+
+    public DefaultServiceProvider() {
+        this(ProviderConfig.getWorkers());
+    }
+
+    public DefaultServiceProvider(int workers) {
+        validate(workers);
+        this.workers = workers;
+        executor = Executors.newFixedThreadPool(workers);
+        initService();
+    }
+
+    private void initService() {
+        registryService = new DefaultRegistryService(executor);
+        clientService = new DefaultClientService(executor);
+    }
+
+    private void validate(int workers) {
+        if (workers < 1) {
+            throw new IllegalArgumentException("workers: " + workers);
+        }
+    }
 
     @Override
     public ServiceProvider connectRegistry() {
@@ -175,6 +201,11 @@ public class DefaultServiceProvider implements ServiceProvider {
         return this;
     }
 
+    @Override
+    public int workers() {
+        return workers;
+    }
+
     private void doStop(ServiceMeta serviceMeta) {
         if (!startedServices.containsKey(serviceMeta)) {
             throw new IllegalStateException("service not start: " + serviceMeta);
@@ -189,11 +220,12 @@ public class DefaultServiceProvider implements ServiceProvider {
     public void shutdown() {
         registryService.shutdown();
         clientService.shutdown();
+        executor.shutdown();
     }
 
     private void checkAddress(String[] address) {
         if (address == null || address.length < 1) {
-            throw new IllegalStateException("invalid registry address, please check address");
+            throw new IllegalStateException("invalid registry_cluster address, please check address");
         }
     }
 }

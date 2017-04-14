@@ -2,22 +2,20 @@ package org.pudding.rpc;
 
 import org.apache.log4j.Logger;
 import org.pudding.common.model.ServiceMeta;
-import org.pudding.common.utils.Maps;
 import org.pudding.rpc.provider.config.ProviderConfig;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
-import org.pudding.transport.api.ChannelListener;
-import org.pudding.transport.protocol.Message;
 import org.pudding.transport.api.Channel;
+import org.pudding.transport.api.ChannelListener;
 import org.pudding.transport.api.Connector;
 import org.pudding.transport.api.Processor;
 import org.pudding.transport.netty.NettyTcpConnector;
 import org.pudding.transport.netty.NettyTransportFactory;
+import org.pudding.transport.protocol.Message;
 import org.pudding.transport.protocol.ProtocolHeader;
 
 import java.net.SocketAddress;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
 
 /**
  * The default implementation of {@link RegistryService}.
@@ -32,18 +30,15 @@ public class DefaultRegistryService extends AbstractRegistryService {
 
     private final Connector connector = NettyTransportFactory.createTcpConnector();
 
-    // Not receive ack at present
-    private final ConcurrentMap<Long, MessageNonAck> messagesNonAck = Maps.newConcurrentHashMap();
-
     // Registry channel
     private volatile Channel channel;
     private volatile boolean isConnected = false;
 
-    public DefaultRegistryService() {
+    private final ExecutorService executor;
+
+    public DefaultRegistryService(ExecutorService executor) {
         connector.withProcessor(registryProcessor);
-        Thread t = new Thread(new AckTimeoutWatchdog(), "ack-timeout-watchdog");
-        t.setDaemon(true);
-        t.start();
+        this.executor = executor;
     }
 
     @Override
@@ -85,46 +80,55 @@ public class DefaultRegistryService extends AbstractRegistryService {
 
     @Override
     protected void doRegister(final ServiceMeta serviceMeta) {
-        byte serializerType = ProviderConfig.getSerializerType();
-        Serializer serializer = SerializerFactory.getSerializer(serializerType);
-        byte[] body = serializer.writeObject(serviceMeta);
 
-        ProtocolHeader header = new ProtocolHeader();
-        header.setMagic(ProtocolHeader.MAGIC)
-                .setType(ProtocolHeader.type(serializerType, ProtocolHeader.REQUEST))
-                .setSign(ProtocolHeader.PUBLISH_SERVICE)
-                .setInvokeId(0)
-                .setStatus(0)
-                .setBodyLength(body.length);
+        Runnable registerTask = new Runnable() {
 
-        final Message message = new Message();
-        message.setHeader(header)
-                .setBody(body);
+            @Override
+            public void run() {
+                byte serializerType = ProviderConfig.getSerializerType();
+                Serializer serializer = SerializerFactory.getSerializer(serializerType);
+                byte[] body = serializer.writeObject(serviceMeta);
 
-        if (channel == null) {
-            throw new IllegalStateException("not connect with registry");
-        }
-        if (channel.isActive()) {
-            channel.write(message, new ChannelListener() {
-                @Override
-                public void operationSuccess(Channel channel) {
-                    logger.info("write success, channel:" + channel + ", " + serviceMeta);
+                ProtocolHeader header = new ProtocolHeader();
+                header.setMagic(ProtocolHeader.MAGIC)
+                        .setType(ProtocolHeader.type(serializerType, ProtocolHeader.REQUEST))
+                        .setSign(ProtocolHeader.PUBLISH_SERVICE)
+                        .setInvokeId(0)
+                        .setStatus(0)
+                        .setBodyLength(body.length);
 
-                    MessageNonAck messageNonAck = new MessageNonAck(message.getSequence(), channel, message);
-                    messagesNonAck.put(message.getSequence(), messageNonAck);
+                final Message message = new Message();
+                message.setHeader(header)
+                        .setBody(body);
 
-                    // ------------------
-                    System.out.println("debug: " + messagesNonAck);
+                if (channel == null) {
+                    throw new IllegalStateException("not connect with registry");
                 }
+                if (channel.isActive()) {
+                    channel.write(message, new ChannelListener() {
+                        @Override
+                        public void operationSuccess(Channel channel) {
+                            logger.info("write success, channel:" + channel + ", " + serviceMeta);
 
-                @Override
-                public void operationFailure(Channel channel, Throwable cause) {
-                    logger.warn("write failed, channel:" + channel + ", " + serviceMeta);
+                            MessageNonAck messageNonAck = new MessageNonAck(message.getSequence(), channel, message);
+                            messagesNonAck.put(message.getSequence(), messageNonAck);
+
+                            // ------------------
+                            System.out.println("debug: " + messagesNonAck);
+                        }
+
+                        @Override
+                        public void operationFailure(Channel channel, Throwable cause) {
+                            logger.warn("write failed, channel:" + channel + ", " + serviceMeta);
+                        }
+                    });
+                } else {
+                    logger.warn("write failed, channel is not active, channel:" + channel + ", " + serviceMeta);
                 }
-            });
-        } else {
-            logger.warn("write failed, channel is not active, channel:" + channel + ", " + serviceMeta);
-        }
+            }
+        };
+
+        executor.execute(registerTask);
     }
 
     @Override
@@ -141,50 +145,6 @@ public class DefaultRegistryService extends AbstractRegistryService {
     public void shutdown() {
         super.shutdown();
         connector.shutdownGracefully();
-    }
-
-    private class MessageNonAck {
-        private final long sequence;
-        private final long timestamp;
-        private final Channel channel;
-        private final Message message;
-
-        public MessageNonAck(long sequence, Channel channel, Message message) {
-            timestamp = System.currentTimeMillis();
-            this.sequence = sequence;
-            this.channel = channel;
-            this.message = message;
-        }
-    }
-
-    private class AckTimeoutWatchdog implements Runnable {
-
-        @Override
-        public void run() {
-            for (; ; ) {
-                try {
-                    for (MessageNonAck m : messagesNonAck.values()) {
-                        if (System.currentTimeMillis() - m.timestamp > TimeUnit.SECONDS.toMillis(5)) {
-
-                            // remove, need new timestamp
-                            if (messagesNonAck.remove(m.sequence) == null) {
-                                continue;
-                            }
-
-                            if (m.channel.isActive()) {
-                                MessageNonAck msgNonAck = new MessageNonAck(m.sequence, m.channel, m.message);
-                                messagesNonAck.put(msgNonAck.sequence, msgNonAck);
-                                m.channel.write(m.message);
-                            }
-                        }
-                    }
-
-                    Thread.sleep(300);
-                } catch (InterruptedException e) {
-                    logger.error("ack timeout watchdog error", e);
-                }
-            }
-        }
     }
 
     /**

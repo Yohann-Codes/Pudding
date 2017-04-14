@@ -1,7 +1,7 @@
 package org.pudding.registry;
 
 import org.apache.log4j.Logger;
-import org.pudding.common.protocol.Message;
+import org.pudding.transport.protocol.Message;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Connector;
 import org.pudding.transport.api.Processor;
@@ -9,13 +9,14 @@ import org.pudding.transport.netty.NettyTcpConnector;
 import org.pudding.transport.netty.NettyTransportFactory;
 
 import java.net.SocketAddress;
+import java.util.concurrent.ExecutorService;
 
 /**
  * The default implementation of {@link ClusterService}.
  *
  * @author Yohann.
  */
-public class DefaultClusterService implements ClusterService {
+public class DefaultClusterService extends AcknowledgeManager implements ClusterService {
     private static final Logger logger = Logger.getLogger(DefaultClusterService.class);
 
     // Process the cluster task
@@ -28,8 +29,11 @@ public class DefaultClusterService implements ClusterService {
 
     private volatile boolean isShutdown = false;
 
-    public DefaultClusterService() {
+    private final ExecutorService executor;
+
+    public DefaultClusterService(ExecutorService executor) {
         connector.withProcessor(clusterProcessor);
+        this.executor = executor;
     }
 
     @Override
@@ -37,10 +41,12 @@ public class DefaultClusterService implements ClusterService {
         checkNotShutdown();
 
         try {
-            // Connect to last server of cluster
-            channel = connector.connect(NettyTcpConnector.ReconnPattern.CONNECT_PREVIOUS_ADDRESS, prevAddress);
+            synchronized (connector) {
+                // Connect to last server of cluster
+                channel = connector.connect(NettyTcpConnector.ReconnPattern.CONNECT_PREVIOUS_ADDRESS, prevAddress);
+                logger.info("connect with registry cluster server, channel: " + channel);
+            }
 
-            logger.info("connect with registry cluster server, channel: " + channel);
         } catch (InterruptedException e) {
             logger.warn("connect with registry cluster server failed, channel: " + channel);
         }

@@ -61,14 +61,14 @@ public class RegistryConfig {
     }
 
     /**
-     * Set address of registry cluster.
+     * Set address of registry_cluster cluster.
      */
     public static void setClusterAddress(String... clusterAddress) {
         REGISTRY_CONFIG.clusterAddress = clusterAddress;
     }
 
     /**
-     * Return address of registry cluster.
+     * Return address of registry_cluster cluster.
      */
     public static String[] getClusterAddress() {
         return REGISTRY_CONFIG.clusterAddress;

@@ -1,20 +1,21 @@
 package org.pudding.registry;
 
 import org.apache.log4j.Logger;
-import org.pudding.common.protocol.Message;
+import org.pudding.transport.protocol.Message;
 import org.pudding.transport.api.Acceptor;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Processor;
 import org.pudding.transport.netty.NettyTransportFactory;
 
 import java.net.SocketAddress;
+import java.util.concurrent.ExecutorService;
 
 /**
  * The default implementation of {@link ClientService}.
  *
  * @author Yohann.
  */
-public class DefaultClientService implements ClientService {
+public class DefaultClientService extends AcknowledgeManager implements ClientService {
     private static final Logger logger = Logger.getLogger(DefaultClusterService.class);
 
     // Process the client(provider/consumer) task
@@ -26,8 +27,11 @@ public class DefaultClientService implements ClientService {
 
     private volatile boolean isShutdown = false;
 
-    public DefaultClientService() {
+    private final ExecutorService executor;
+
+    public DefaultClientService(ExecutorService executor) {
         acceptor.withProcessor(clientProcessor);
+        this.executor = executor;
     }
 
     @Override
@@ -77,16 +81,23 @@ public class DefaultClientService implements ClientService {
         @Override
         public void handleMessage(Channel channel, Message holder) {
 
+            executor.execute(new Runnable() {
+
+                @Override
+                public void run() {
+
+                }
+            });
         }
 
         @Override
         public void handleConnection(Channel channel) {
-
+            // Noop
         }
 
         @Override
         public void handleDisconnection(Channel channel) {
-
+            // Noop
         }
     }
 }

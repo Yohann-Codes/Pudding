@@ -5,7 +5,7 @@ import org.pudding.common.model.ServiceMeta;
 /**
  * Service Provider:
  * <p>
- * 1) connect to registry.
+ * 1) connect to registry_cluster.
  * 2) start service.
  * 3) publish service.
  * 4) unpublish service.
@@ -15,16 +15,16 @@ import org.pudding.common.model.ServiceMeta;
 public interface ServiceProvider {
 
     /**
-     * Connect with registry (only one).
+     * Connect with registry_cluster (only one).
      * <p>
      * Notice:
      * You must call {@link org.pudding.rpc.provider.config.ProviderConfig#setRegistryAddress(String...)}
-     * to configure the registry address before invoke this method. Otherwise, throw {@link IllegalStateException}.
+     * to configure the registry_cluster address before invoke this method. Otherwise, throw {@link IllegalStateException}.
      */
     ServiceProvider connectRegistry();
 
     /**
-     * Connect with registry (only one).
+     * Connect with registry_cluster (only one).
      *
      * @param registryAddress
      */
@@ -112,11 +112,16 @@ public interface ServiceProvider {
     ServiceProvider stopAllService();
 
     /**
+     * Return the number of worker thread.
+     */
+    int workers();
+
+    /**
      * Shutdown the {@link ServiceProvider}.
      * <p>
      * Notice:
      * If you call the method to shudown the current {@link ServiceProvider}, you must new a {@link ServiceProvider}'s
-     * instance before connect with registry or start a service. Otherwise, throw {@link IllegalStateException}.
+     * instance before connect with registry_cluster or start a service. Otherwise, throw {@link IllegalStateException}.
      */
     void shutdown();
 }
