@@ -125,7 +125,7 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
                 crashNumber++;
                 int addrIndex = multiAddress.length - 1 - crashNumber;
                 if (addrIndex < 0) {
-                    logger.warn("all registry servers crashed");
+                    logger.warn("all the other registry servers have crashed");
                     return;
                 }
                 realAddress = multiAddress[addrIndex];

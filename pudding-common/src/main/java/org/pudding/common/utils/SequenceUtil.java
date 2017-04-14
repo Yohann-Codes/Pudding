@@ -3,7 +3,7 @@ package org.pudding.common.utils;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Id生成工具.
+ * Id .
  *
  * @author Yohann.
  */

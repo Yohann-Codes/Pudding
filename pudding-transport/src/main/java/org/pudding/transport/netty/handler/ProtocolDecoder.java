@@ -43,16 +43,16 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         in.readBytes(body);
 
         ProtocolHeader header = new ProtocolHeader();
-        header.setMagic(ProtocolHeader.MAGIC);
-        header.setType(type);
-        header.setSign(sign);
-        header.setInvokeId(invokeId);
-        header.setStatus(status);
-        header.setBodyLength(bodyLength);
+        header.setMagic(ProtocolHeader.MAGIC)
+                .setType(type)
+                .setSign(sign)
+                .setInvokeId(invokeId)
+                .setStatus(status)
+                .setBodyLength(bodyLength);
 
         Message holder = new Message();
-        holder.setHeader(header);
-        holder.setBody(body);
+        holder.setHeader(header)
+                .setBody(body);
 
         out.add(holder);
     }

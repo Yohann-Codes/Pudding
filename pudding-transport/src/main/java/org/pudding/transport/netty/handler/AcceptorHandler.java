@@ -38,6 +38,7 @@ public class AcceptorHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        logger.info("accept connection channel:" + ctx.channel());
         processor.handleConnection(NettyChannelFactory.newChannel(ctx.channel()));
     }
 
