@@ -8,20 +8,20 @@ package org.pudding.registry;
 public interface PuddingServiceRegistry extends ServiceRegistry {
 
     /**
-     * Join up registry cluster, which is connect with other registry servers.
+     * Join up registry cluster, which is connect with the previous registry server.
      * <p>
      * Notice:
-     * You must call {@link org.pudding.registry.config.RegistryConfig#setClusterAddress(String...) to configure
+     * You must call {@link org.pudding.registry.config.RegistryConfig#setClusterAddress(String) to configure
      * the registry cluster address before invoke this method. Otherwise, throw {@link IllegalStateException}.
      */
     void joinUpCluster();
 
     /**
-     * Join up registry cluster, which is connect with other registry servers.
+     * Join up registry cluster, which is connect with the previous registry server.
      *
-     * @param clusterAddress all registry's address
+     * @param prevAddress all registry's address
      */
-    void joinUpCluster(String... clusterAddress);
+    void joinUpCluster(String... prevAddress);
 
     /**
      * Drop out cluster, which is disconnect with other registry servers.

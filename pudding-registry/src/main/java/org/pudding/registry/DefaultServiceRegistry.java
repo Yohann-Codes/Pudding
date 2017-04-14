@@ -33,16 +33,14 @@ public class DefaultServiceRegistry implements PuddingServiceRegistry {
 
     @Override
     public void joinUpCluster() {
-        String[] stringAddress = RegistryConfig.getClusterAddress();
-        checkAddress(stringAddress);
-        SocketAddress[] address = parseToSocketAddress(stringAddress);
+        String[] prevAddress = RegistryConfig.getClusterAddress();
+        SocketAddress[] address = parseToSocketAddress(prevAddress);
         clusterService.connectCluster(address);
     }
 
     @Override
-    public void joinUpCluster(String... clusterAddress) {
-        checkAddress(clusterAddress);
-        SocketAddress[] address = parseToSocketAddress(clusterAddress);
+    public void joinUpCluster(String... prevAddress) {
+        SocketAddress[] address = parseToSocketAddress(prevAddress);
         clusterService.connectCluster(address);
     }
 
@@ -75,11 +73,5 @@ public class DefaultServiceRegistry implements PuddingServiceRegistry {
     @Override
     public void closeRegistry() {
         clientService.closeRegistry();
-    }
-
-    private void checkAddress(String[] address) {
-        if (address == null || address.length < 1) {
-            throw new IllegalStateException("invalid registry address, please check address");
-        }
     }
 }

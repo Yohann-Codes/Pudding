@@ -12,9 +12,9 @@ public interface ClusterService {
     /**
      * Connect with registry cluster.
      *
-     * @param clusterAddress
+     * @param prevAddress
      */
-    void connectCluster(SocketAddress... clusterAddress);
+    void connectCluster(SocketAddress... prevAddress);
 
     /**
      * Disconnect with registry cluster.

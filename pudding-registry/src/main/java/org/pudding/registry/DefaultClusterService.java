@@ -2,15 +2,13 @@ package org.pudding.registry;
 
 import org.apache.log4j.Logger;
 import org.pudding.common.protocol.Message;
-import org.pudding.common.utils.Maps;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Connector;
 import org.pudding.transport.api.Processor;
+import org.pudding.transport.netty.NettyTcpConnector;
 import org.pudding.transport.netty.NettyTransportFactory;
 
 import java.net.SocketAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * The default implementation of {@link ClusterService}.
@@ -21,46 +19,38 @@ public class DefaultClusterService implements ClusterService {
     private static final Logger logger = Logger.getLogger(DefaultClusterService.class);
 
     // Process the cluster task
-    private static final Processor CLUSTER_PROCESSOR = new RegistryProcessor();
+    private final Processor clusterProcessor = new RegistryProcessor();
 
     private final Connector connector = NettyTransportFactory.createTcpConnector();
 
-    // Other registry server channel
-    private final ConcurrentMap<SocketAddress, Channel> registryServers = Maps.newConcurrentHashMap();
+    // Cluster channel
+    private volatile Channel channel;
 
     private volatile boolean isShutdown = false;
 
     public DefaultClusterService() {
-        connector.withProcessor(CLUSTER_PROCESSOR);
+        connector.withProcessor(clusterProcessor);
     }
 
     @Override
-    public void connectCluster(SocketAddress... clusterAddress) {
+    public void connectCluster(SocketAddress... prevAddress) {
         checkNotShutdown();
 
-        for (SocketAddress address : clusterAddress) {
-            synchronized (this) {
-                try {
-                    // Connect to one server of cluster
-                    Channel channel = connector.connect(address);
-                    registryServers.put(address, channel);
+        try {
+            // Connect to last server of cluster
+            channel = connector.connect(NettyTcpConnector.ReconnPattern.CONNECT_PREVIOUS_ADDRESS, prevAddress);
 
-                    logger.info("connect with registry cluster server: " + address);
-                } catch (InterruptedException e) {
-                    logger.warn("connect with registry cluster server failed: " + address);
-                }
-            }
+            logger.info("connect with registry cluster server, channel: " + channel);
+        } catch (InterruptedException e) {
+            logger.warn("connect with registry cluster server failed, channel: " + channel);
         }
     }
 
     @Override
     public void disconnectCluster() {
-        for (Map.Entry<SocketAddress, Channel> entry : registryServers.entrySet()) {
-            synchronized (registryServers) {
-                entry.getValue().close();
-                registryServers.remove(entry.getKey());
-                logger.info("disconnect with registry cluster server: " + entry.getKey());
-            }
+        if (channel != null) {
+            channel.close();
+            logger.info("disconnect with registry cluster server, channel:" + channel);
         }
     }
 
@@ -80,10 +70,20 @@ public class DefaultClusterService implements ClusterService {
     /**
      * The processor about cluster.
      */
-    private static class RegistryProcessor implements Processor {
+    private class RegistryProcessor implements Processor {
 
         @Override
         public void handleMessage(Channel channel, Message holder) {
+
+        }
+
+        @Override
+        public void handleConnection(Channel channel) {
+            DefaultClusterService.this.channel = channel;
+        }
+
+        @Override
+        public void handleDisconnection(Channel channel) {
 
         }
     }

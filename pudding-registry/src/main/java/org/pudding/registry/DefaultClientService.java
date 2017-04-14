@@ -18,7 +18,7 @@ public class DefaultClientService implements ClientService {
     private static final Logger logger = Logger.getLogger(DefaultClusterService.class);
 
     // Process the client(provider/consumer) task
-    private static final Processor CLIENT_PROCESSOR = new ClientProcessor();
+    private final Processor clientProcessor = new ClientProcessor();
 
     private final Acceptor acceptor = NettyTransportFactory.createTcpAcceptor();
 
@@ -27,7 +27,7 @@ public class DefaultClientService implements ClientService {
     private volatile boolean isShutdown = false;
 
     public DefaultClientService() {
-        acceptor.withProcessor(CLIENT_PROCESSOR);
+        acceptor.withProcessor(clientProcessor);
     }
 
     @Override
@@ -38,11 +38,11 @@ public class DefaultClientService implements ClientService {
             synchronized (acceptor) {
                 channel = acceptor.bind(localAddress);
 
-                logger.info("start registry server: " + localAddress);
+                logger.info("start registry server, channel:" + channel);
                 return channel;
             }
         } catch (InterruptedException e) {
-            logger.warn("start registry failed: " + localAddress, e);
+            logger.warn("start registry failed: " + channel, e);
         }
 
         return null; // Never get here
@@ -52,7 +52,7 @@ public class DefaultClientService implements ClientService {
     public void closeRegistry() {
         channel.close();
 
-        logger.info("close registry: " + channel);
+        logger.info("close registry, channel:" + channel);
         channel = null;
     }
 
@@ -72,10 +72,20 @@ public class DefaultClientService implements ClientService {
     /**
      * The processor about client(provider/consumer).
      */
-    private static class ClientProcessor implements Processor {
+    private class ClientProcessor implements Processor {
 
         @Override
         public void handleMessage(Channel channel, Message holder) {
+
+        }
+
+        @Override
+        public void handleConnection(Channel channel) {
+
+        }
+
+        @Override
+        public void handleDisconnection(Channel channel) {
 
         }
     }

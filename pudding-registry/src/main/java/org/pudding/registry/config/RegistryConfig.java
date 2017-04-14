@@ -6,7 +6,7 @@ import org.pudding.common.utils.Lists;
 import java.util.List;
 
 /**
- * Congfigure registry.
+ * Congfigure {@link org.pudding.registry.ServiceRegistry}.
  *
  * @author Yohann.
  */
@@ -64,14 +64,6 @@ public class RegistryConfig {
      * Set address of registry cluster.
      */
     public static void setClusterAddress(String... clusterAddress) {
-        List<String> addrs = Lists.newArrayList();
-        for (String addr : clusterAddress) {
-            addrs.add(addr);
-        }
-        clusterAddress = new String[addrs.size()];
-        for (int i = 0; i < clusterAddress.length; i++) {
-            clusterAddress[i] = addrs.get(i);
-        }
         REGISTRY_CONFIG.clusterAddress = clusterAddress;
     }
 
