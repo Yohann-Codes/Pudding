@@ -1,6 +1,7 @@
 package org.pudding.rpc.provider;
 
 import org.pudding.common.model.ServiceMeta;
+import org.pudding.rpc.RpcConfig;
 
 /**
  * Service Provider:
@@ -18,7 +19,7 @@ public interface ServiceProvider {
      * Connect with registry_cluster (only one).
      * <p>
      * Notice:
-     * You must call {@link org.pudding.rpc.provider.config.ProviderConfig#setRegistryAddress(String...)}
+     * You must call {@link RpcConfig#setRegistryAddress(String...)}
      * to configure the registry_cluster address before invoke this method. Otherwise, throw {@link IllegalStateException}.
      */
     ServiceProvider connectRegistry();

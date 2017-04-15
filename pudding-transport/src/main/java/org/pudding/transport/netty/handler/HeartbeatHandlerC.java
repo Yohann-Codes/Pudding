@@ -4,6 +4,7 @@ import io.netty.channel.*;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.log4j.Logger;
+import org.pudding.common.utils.SequenceUtil;
 import org.pudding.transport.protocol.Message;
 import org.pudding.transport.protocol.ProtocolHeader;
 
@@ -46,7 +47,7 @@ public class HeartbeatHandlerC extends ChannelInboundHandlerAdapter {
                 // The heatbeat can ignore serialization type
                 .setType(ProtocolHeader.type((byte) 0, ProtocolHeader.HEATBEAT))
                 .setSign((byte) 0)
-                .setInvokeId(0)
+                .setSequence(SequenceUtil.generateSequence())
                 .setStatus(0)
                 .setBodyLength(0);
 

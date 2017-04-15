@@ -5,8 +5,6 @@ import java.io.Serializable;
 /**
  * @author Yohann.
  */
-public interface MyServiceA extends Serializable {
-    int add(int a, int b);
-
+public interface MyServiceB extends Serializable {
     int subtract(int a, int b);
 }

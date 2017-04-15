@@ -50,6 +50,7 @@ public abstract class AbstractRegistryService implements RegistryService {
     public void register(ServiceMeta serviceMeta) {
         try {
             taskQueue.put(serviceMeta);
+            logger.info("publish service: " + serviceMeta);
         } catch (InterruptedException e) {
             logger.warn("put service meta to taskQueue: " + serviceMeta);
         }
@@ -96,6 +97,16 @@ public abstract class AbstractRegistryService implements RegistryService {
             this.channel = channel;
             this.message = message;
         }
+
+        @Override
+        public String toString() {
+            return "MessageNonAck{" +
+                    "sequence=" + sequence +
+                    ", timestamp=" + timestamp +
+                    ", channel=" + channel +
+                    ", message=" + message +
+                    '}';
+        }
     }
 
     protected class AckTimeoutWatchdog implements Runnable {
@@ -116,6 +127,8 @@ public abstract class AbstractRegistryService implements RegistryService {
                                 MessageNonAck msgNonAck = new MessageNonAck(m.sequence, m.channel, m.message);
                                 messagesNonAck.put(msgNonAck.sequence, msgNonAck);
                                 m.channel.write(m.message);
+
+                                logger.info("ack timeout, rewrite message, channel:" + m.channel);
                             }
                         }
                     }

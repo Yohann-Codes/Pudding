@@ -2,7 +2,7 @@ package org.pudding.rpc;
 
 import org.apache.log4j.Logger;
 import org.pudding.common.model.ServiceMeta;
-import org.pudding.rpc.provider.config.ProviderConfig;
+import org.pudding.common.utils.SequenceUtil;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
 import org.pudding.transport.api.Channel;
@@ -80,20 +80,21 @@ public class DefaultRegistryService extends AbstractRegistryService {
 
     @Override
     protected void doRegister(final ServiceMeta serviceMeta) {
-
         Runnable registerTask = new Runnable() {
 
             @Override
             public void run() {
-                byte serializerType = ProviderConfig.getSerializerType();
-                Serializer serializer = SerializerFactory.getSerializer(serializerType);
+                byte serializationType = RpcConfig.getSerializationType();
+                Serializer serializer = SerializerFactory.getSerializer(serializationType);
                 byte[] body = serializer.writeObject(serviceMeta);
+
+                final long sequence = SequenceUtil.generateSequence();
 
                 ProtocolHeader header = new ProtocolHeader();
                 header.setMagic(ProtocolHeader.MAGIC)
-                        .setType(ProtocolHeader.type(serializerType, ProtocolHeader.REQUEST))
+                        .setType(ProtocolHeader.type(serializationType, ProtocolHeader.REQUEST))
                         .setSign(ProtocolHeader.PUBLISH_SERVICE)
-                        .setInvokeId(0)
+                        .setSequence(sequence)
                         .setStatus(0)
                         .setBodyLength(body.length);
 
@@ -108,22 +109,21 @@ public class DefaultRegistryService extends AbstractRegistryService {
                     channel.write(message, new ChannelListener() {
                         @Override
                         public void operationSuccess(Channel channel) {
-                            logger.info("write success, channel:" + channel + ", " + serviceMeta);
+                            logger.info("publish-service:write success; serviceMeta:" + serviceMeta + "; channel:" + channel);
 
-                            MessageNonAck messageNonAck = new MessageNonAck(message.getSequence(), channel, message);
-                            messagesNonAck.put(message.getSequence(), messageNonAck);
+                            MessageNonAck messageNonAck = new MessageNonAck(sequence, channel, message);
+                            messagesNonAck.put(sequence, messageNonAck);
 
-                            // ------------------
-                            System.out.println("debug: " + messagesNonAck);
+                            logger.info("put-ack:" + messageNonAck);
                         }
 
                         @Override
                         public void operationFailure(Channel channel, Throwable cause) {
-                            logger.warn("write failed, channel:" + channel + ", " + serviceMeta);
+                            logger.warn("publish-service:write failed; serviceMeta:" + serviceMeta + "; channel:" + channel);
                         }
                     });
                 } else {
-                    logger.warn("write failed, channel is not active, channel:" + channel + ", " + serviceMeta);
+                    logger.warn("publish-service:write failed, channel is not active; serviceMeta:" + serviceMeta + "; channel:" + channel);
                 }
             }
         };
@@ -148,13 +148,85 @@ public class DefaultRegistryService extends AbstractRegistryService {
     }
 
     /**
-     * The processor about registry_cluster.
+     * The processor about registry.
      */
     private class RegistryProcessor implements Processor {
 
         @Override
-        public void handleMessage(Channel channel, Message holder) {
+        public void handleMessage(final Channel channel, final Message holder) {
+            executor.execute(new Runnable() {
 
+                @Override
+                public void run() {
+                    ProtocolHeader header = holder.getHeader();
+                    byte[] body = holder.getBody();
+
+                    // Parse header
+                    byte serializationType = ProtocolHeader.serializationType(header.getType());
+                    byte messageType = ProtocolHeader.messageType(header.getType());
+                    long sequence = header.getSequence();
+                    byte sign = header.getSign();
+
+                    switch (messageType) {
+                        case ProtocolHeader.REQUEST:
+                            // Reply ack
+                            replyAcknowledge(channel, sequence);
+                            break;
+
+                        case ProtocolHeader.RESPONSE:
+                            break;
+
+                        case ProtocolHeader.ACK:
+                            handleAcknowledge(sequence);
+                            break;
+
+                        default:
+                            logger.warn("invalid message type: " + messageType);
+                    }
+                }
+            });
+        }
+
+        /**
+         * Reply ACK to peer.
+         */
+        private void replyAcknowledge(Channel channel, final long sequence) {
+            ProtocolHeader header = new ProtocolHeader();
+            header.setMagic(ProtocolHeader.MAGIC)
+                    .setType(ProtocolHeader.type((byte) 0, ProtocolHeader.ACK))
+                    .setSign((byte) 0)
+                    .setSequence(sequence)
+                    .setStatus(0)
+                    .setBodyLength(0);
+
+            Message message = new Message();
+            message.setHeader(header)
+                    .setBody(new byte[0]);
+
+            if (channel.isActive()) {
+                channel.write(message, new ChannelListener() {
+                    @Override
+                    public void operationSuccess(Channel channel) {
+                        logger.info("ack:write success; sequence:" + sequence + "; channel:" + channel);
+                    }
+
+                    @Override
+                    public void operationFailure(Channel channel, Throwable cause) {
+                        logger.warn("ack:write failed; sequence:" + sequence + "; channel:" + channel, cause);
+                    }
+                });
+            } else {
+                logger.warn("ack:write failed, channel is not active; sequence:" + sequence + "; channel:" + channel);
+            }
+        }
+
+        /**
+         * Handle ACK from peer.
+         */
+        private void handleAcknowledge(long sequence) {
+            logger.info("ack:receive; sequence:" + sequence);
+            MessageNonAck ack = messagesNonAck.remove(sequence);
+            logger.info("ack: remove; ack:" + ack);
         }
 
         @Override
@@ -164,7 +236,7 @@ public class DefaultRegistryService extends AbstractRegistryService {
 
         @Override
         public void handleDisconnection(Channel channel) {
-
+            // Noop
         }
     }
 }

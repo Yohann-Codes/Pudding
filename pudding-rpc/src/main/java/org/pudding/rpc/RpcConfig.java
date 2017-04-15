@@ -1,28 +1,27 @@
-package org.pudding.rpc.provider.config;
+package org.pudding.rpc;
 
 import org.pudding.common.constant.SerializerType;
 import org.pudding.common.constant.Timeout;
 import org.pudding.common.utils.Lists;
 
-import java.net.SocketAddress;
 import java.util.List;
 
 /**
- * Configure the {@link org.pudding.rpc.provider.ServiceProvider}.
+ * Configure the {@link org.pudding.rpc.provider.ServiceProvider} and {@link org.pudding.rpc.consumer.ServiceConsumer}.
  *
  * @author Yohann.
  */
-public class ProviderConfig {
+public class RpcConfig {
 
-    private static final ProviderConfig PROVIDER_CONFIG;
+    private static final RpcConfig RPC_CONFIG;
 
     static {
-        PROVIDER_CONFIG = new ProviderConfig();
+        RPC_CONFIG = new RpcConfig();
     }
 
 
     /** The serialization type, default: Java */
-    private byte serializerType = SerializerType.JAVA;
+    private byte serializationType = SerializerType.JAVA;
 
     /** The registry_cluster address, single address format: "host:port" */
     private String[] registryAddress = null;
@@ -37,15 +36,15 @@ public class ProviderConfig {
     /**
      * Set the serialization type.
      */
-    public static void setSerializerType(byte serializerType) {
-        PROVIDER_CONFIG.serializerType = serializerType;
+    public static void setSerializationType(byte serializationType) {
+        RPC_CONFIG.serializationType = serializationType;
     }
 
     /**
      * Return the serialization type.
      */
-    public static byte getSerializerType() {
-        return PROVIDER_CONFIG.serializerType;
+    public static byte getSerializationType() {
+        return RPC_CONFIG.serializationType;
     }
 
     /**
@@ -62,41 +61,41 @@ public class ProviderConfig {
         for (int i = 0; i < registryAddress.length; i++) {
             registryAddress[i] = addrs.get(i);
         }
-        PROVIDER_CONFIG.registryAddress = registryAddress;
+        RPC_CONFIG.registryAddress = registryAddress;
     }
 
     /**
      * Return the registry_cluster address.
      */
     public static String[] getRegistryAddress() {
-        return PROVIDER_CONFIG.registryAddress;
+        return RPC_CONFIG.registryAddress;
     }
 
     /**
      * Set the number of worker thread.
      */
     public static void setWorkers(int workers) {
-        PROVIDER_CONFIG.workers = workers;
+        RPC_CONFIG.workers = workers;
     }
 
     /**
      * Return the number of worker thread.
      */
     public static int getWorkers() {
-        return PROVIDER_CONFIG.workers;
+        return RPC_CONFIG.workers;
     }
 
     /**
      * Set the deadline of pushlishing service.
      */
     public static void setPublishTimeout(int publishTimeout) {
-        PROVIDER_CONFIG.publishTimeout = publishTimeout;
+        RPC_CONFIG.publishTimeout = publishTimeout;
     }
 
     /**
      * Return the deadline of pusglishling service.
      */
     public static int getPublishTimeout() {
-        return PROVIDER_CONFIG.publishTimeout;
+        return RPC_CONFIG.publishTimeout;
     }
 }

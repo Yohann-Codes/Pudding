@@ -5,14 +5,10 @@ import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.utils.Lists;
 import org.pudding.common.utils.Maps;
-import org.pudding.common.utils.ServiceLoaderUtil;
-import org.pudding.rpc.DefaultMetaFactory;
 import org.pudding.rpc.DefaultRegistryService;
 import org.pudding.rpc.RegistryService;
-import org.pudding.rpc.provider.config.ProviderConfig;
-import org.pudding.transport.api.Acceptor;
+import org.pudding.rpc.RpcConfig;
 import org.pudding.transport.api.Channel;
-import org.pudding.transport.netty.NettyTransportFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -44,7 +40,7 @@ public class DefaultServiceProvider implements ServiceProvider {
     private final ExecutorService executor;
 
     public DefaultServiceProvider() {
-        this(ProviderConfig.getWorkers());
+        this(RpcConfig.getWorkers());
     }
 
     public DefaultServiceProvider(int workers) {
@@ -67,7 +63,7 @@ public class DefaultServiceProvider implements ServiceProvider {
 
     @Override
     public ServiceProvider connectRegistry() {
-        String[] stringAddress = ProviderConfig.getRegistryAddress();
+        String[] stringAddress = RpcConfig.getRegistryAddress();
         checkAddress(stringAddress);
         SocketAddress[] address = parseToSocketAddress(stringAddress);
         registryService.connectRegistry(address);

@@ -32,7 +32,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
 
         byte type = in.readByte();
         byte sign = in.readByte();
-        long invokeId = in.readLong();
+        long sequence = in.readLong();
         int status = in.readInt();
         int bodyLength = in.readInt();
 
@@ -46,7 +46,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         header.setMagic(ProtocolHeader.MAGIC)
                 .setType(type)
                 .setSign(sign)
-                .setInvokeId(invokeId)
+                .setSequence(sequence)
                 .setStatus(status)
                 .setBodyLength(bodyLength);
 

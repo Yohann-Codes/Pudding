@@ -42,7 +42,7 @@ public final class ProtocolHeader {
     private short magic;
     private byte type; // high 4 bits: serializerType; low 4 bits: messageType
     private byte sign;
-    private long invokeId; // <invokeId, invoke, result>
+    private long sequence; // <sequence, request, ack>
     private int status; // response status
     private int bodyLength; // body length
 
@@ -85,12 +85,12 @@ public final class ProtocolHeader {
         return this;
     }
 
-    public long getInvokeId() {
-        return invokeId;
+    public long getSequence() {
+        return sequence;
     }
 
-    public ProtocolHeader setInvokeId(long invokeId) {
-        this.invokeId = invokeId;
+    public ProtocolHeader setSequence(long sequence) {
+        this.sequence = sequence;
         return this;
     }
 
@@ -118,7 +118,7 @@ public final class ProtocolHeader {
                 "magic=" + magic +
                 ", type=" + type +
                 ", sign=" + sign +
-                ", invokeId=" + invokeId +
+                ", sequence=" + sequence +
                 ", status=" + status +
                 ", bodyLength=" + bodyLength +
                 '}';

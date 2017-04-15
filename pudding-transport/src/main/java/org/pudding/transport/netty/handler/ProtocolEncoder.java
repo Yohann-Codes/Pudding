@@ -24,7 +24,7 @@ public class ProtocolEncoder extends MessageToByteEncoder<Message> {
         out.writeShort(header.getMagic())
                 .writeByte(header.getType())
                 .writeByte(header.getSign())
-                .writeLong(header.getInvokeId())
+                .writeLong(header.getSequence())
                 .writeInt(header.getStatus())
                 .writeInt(header.getBodyLength())
                 .writeBytes(body);
