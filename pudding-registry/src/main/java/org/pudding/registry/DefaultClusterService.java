@@ -1,12 +1,19 @@
 package org.pudding.registry;
 
 import org.apache.log4j.Logger;
+import org.pudding.common.model.ServiceMeta;
+import org.pudding.common.utils.SequenceUtil;
+import org.pudding.registry.config.RegistryConfig;
+import org.pudding.serialization.api.Serializer;
+import org.pudding.serialization.api.SerializerFactory;
+import org.pudding.transport.api.ChannelListener;
 import org.pudding.transport.protocol.Message;
 import org.pudding.transport.api.Channel;
 import org.pudding.transport.api.Connector;
 import org.pudding.transport.api.Processor;
 import org.pudding.transport.netty.NettyTcpConnector;
 import org.pudding.transport.netty.NettyTransportFactory;
+import org.pudding.transport.protocol.ProtocolHeader;
 
 import java.net.SocketAddress;
 import java.util.concurrent.ExecutorService;
@@ -24,8 +31,9 @@ public class DefaultClusterService extends AcknowledgeManager implements Cluster
 
     private final Connector connector = NettyTransportFactory.createTcpConnector();
 
-    // Cluster channel
     private volatile Channel channel;
+
+    private ClientService clientService;
 
     private volatile boolean isShutdown = false;
 
@@ -46,7 +54,6 @@ public class DefaultClusterService extends AcknowledgeManager implements Cluster
                 channel = connector.connect(NettyTcpConnector.ReconnPattern.CONNECT_PREVIOUS_ADDRESS, prevAddress);
                 logger.info("connect with registry cluster server, channel: " + channel);
             }
-
         } catch (InterruptedException e) {
             logger.warn("connect with registry cluster server failed, channel: " + channel);
         }
@@ -58,6 +65,103 @@ public class DefaultClusterService extends AcknowledgeManager implements Cluster
             channel.close();
             logger.info("disconnect with registry cluster server, channel:" + channel);
         }
+    }
+
+    @Override
+    public void servicePublishSync(long originId, final ServiceMeta serviceMeta) {
+        byte serializationType = RegistryConfig.getSerializationType();
+        Serializer serializer = SerializerFactory.getSerializer(serializationType);
+        byte[] body = serializer.writeObject(serviceMeta);
+
+        final long sequence = originId;
+
+        ProtocolHeader header = new ProtocolHeader();
+        header.setMagic(ProtocolHeader.MAGIC)
+                .setType(ProtocolHeader.type(serializationType, ProtocolHeader.CLUSTER_SYNC))
+                .setSign(ProtocolHeader.PUBLISH_SERVICE)
+                .setSequence(sequence)
+                .setStatus(0)
+                .setBodyLength(body.length);
+
+        final Message message = new Message();
+        message.setHeader(header)
+                .setBody(body);
+
+        if (channel != null) {
+            if (channel.isActive()) {
+                channel.write(message, new ChannelListener() {
+                    @Override
+                    public void operationSuccess(Channel channel) {
+                        logger.info("sync-publish-service-write success; serviceMeta:" + serviceMeta + "; channel:" + channel);
+
+                        MessageNonAck messageNonAck = new MessageNonAck(sequence, channel, message);
+                        messagesNonAck.put(sequence, messageNonAck);
+
+                        logger.info("put-ack:" + messageNonAck);
+                    }
+
+                    @Override
+                    public void operationFailure(Channel channel, Throwable cause) {
+                        logger.warn("sync-publish-service-write failed; serviceMeta:" + serviceMeta + "; channel:" + channel);
+                    }
+                });
+            } else {
+                logger.warn("sync-publish-service-write failed: channel is not active; serviceMeta:" + serviceMeta + ", channel:" + channel);
+            }
+        } else {
+            logger.warn("sync-publish-service-write failed: channel is null; serviceMeta:" + serviceMeta);
+        }
+    }
+
+    @Override
+    public void serviceUnpublishSync(long originId, final ServiceMeta serviceMeta) {
+        byte serializationType = RegistryConfig.getSerializationType();
+        Serializer serializer = SerializerFactory.getSerializer(serializationType);
+        byte[] body = serializer.writeObject(serviceMeta);
+
+        final long sequence = originId;
+
+        ProtocolHeader header = new ProtocolHeader();
+        header.setMagic(ProtocolHeader.MAGIC)
+                .setType(ProtocolHeader.type(serializationType, ProtocolHeader.CLUSTER_SYNC))
+                .setSign(ProtocolHeader.UNPUBLISH_SERVICE)
+                .setSequence(sequence)
+                .setStatus(0)
+                .setBodyLength(body.length);
+
+        final Message message = new Message();
+        message.setHeader(header)
+                .setBody(body);
+
+        if (channel != null) {
+            if (channel.isActive()) {
+                channel.write(message, new ChannelListener() {
+                    @Override
+                    public void operationSuccess(Channel channel) {
+                        logger.info("sync-unpublish-service-write success; serviceMeta:" + serviceMeta + "; channel:" + channel);
+
+                        MessageNonAck messageNonAck = new MessageNonAck(sequence, channel, message);
+                        messagesNonAck.put(sequence, messageNonAck);
+
+                        logger.info("put-ack:" + messageNonAck);
+                    }
+
+                    @Override
+                    public void operationFailure(Channel channel, Throwable cause) {
+                        logger.warn("sync-unpublish-service-write failed; serviceMeta:" + serviceMeta + "; channel:" + channel);
+                    }
+                });
+            } else {
+                logger.warn("sync-unpublish-service-write failed: channel is not active; serviceMeta:" + serviceMeta + ", channel:" + channel);
+            }
+        } else {
+            logger.warn("sync-unpublish-service-write failed: channel is null; serviceMeta:" + serviceMeta);
+        }
+    }
+
+    @Override
+    public void withClientService(ClientService service) {
+        clientService = service;
     }
 
     @Override
@@ -79,8 +183,39 @@ public class DefaultClusterService extends AcknowledgeManager implements Cluster
     private class RegistryProcessor implements Processor {
 
         @Override
-        public void handleMessage(Channel channel, Message holder) {
+        public void handleMessage(final Channel channel, final Message holder) {
+            executor.execute(new Runnable() {
 
+                @Override
+                public void run() {
+                    ProtocolHeader header = holder.getHeader();
+                    byte[] body = holder.getBody();
+
+                    // Parse header
+                    byte serializationType = ProtocolHeader.serializationType(header.getType());
+                    byte messageType = ProtocolHeader.messageType(header.getType());
+                    long sequence = header.getSequence();
+                    byte sign = header.getSign();
+
+                    switch (messageType) {
+                        case ProtocolHeader.ACK:
+                            handleAcknowledge(sequence);
+                            break;
+
+                        default:
+                            logger.warn("invalid message type: " + messageType);
+                    }
+                }
+            });
+        }
+
+        /**
+         * Handle ACK from peer.
+         */
+        private void handleAcknowledge(long sequence) {
+            logger.info("ack-receive; sequence:" + sequence);
+            MessageNonAck ack = messagesNonAck.remove(sequence);
+            logger.info("ack-remove; ack:" + ack);
         }
 
         @Override
@@ -90,7 +225,7 @@ public class DefaultClusterService extends AcknowledgeManager implements Cluster
 
         @Override
         public void handleDisconnection(Channel channel) {
-
+            DefaultClusterService.this.channel = null;
         }
     }
 }

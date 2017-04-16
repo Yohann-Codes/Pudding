@@ -57,6 +57,8 @@ public class AcknowledgeManager {
                                 MessageNonAck msgNonAck = new MessageNonAck(m.sequence, m.channel, m.message);
                                 messagesNonAck.put(msgNonAck.sequence, msgNonAck);
                                 m.channel.write(m.message);
+
+                                logger.info("ack timeout, rewrite message, channel:" + m.channel);
                             }
                         }
                     }

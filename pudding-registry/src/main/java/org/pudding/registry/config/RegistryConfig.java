@@ -20,7 +20,7 @@ public class RegistryConfig {
 
 
     /** The serialization type, default: Java */
-    private byte serializerType = SerializerType.JAVA;
+    private byte serializationType = SerializerType.JAVA;
 
     /** The port of listening, default: 20000 */
     private int port = 20000;
@@ -35,15 +35,15 @@ public class RegistryConfig {
     /**
      * Set serialization type.
      */
-    public static void setSerializerType(byte serializerType) {
-        REGISTRY_CONFIG.serializerType = serializerType;
+    public static void setSerializationType(byte serializationType) {
+        REGISTRY_CONFIG.serializationType = serializationType;
     }
 
     /**
      * Return serialization type.
      */
-    public static byte getSerializerType() {
-        return REGISTRY_CONFIG.serializerType;
+    public static byte getSerializationType() {
+        return REGISTRY_CONFIG.serializationType;
     }
 
     /**

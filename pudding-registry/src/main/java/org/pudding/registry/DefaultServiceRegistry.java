@@ -40,6 +40,8 @@ public class DefaultServiceRegistry implements PuddingServiceRegistry {
     private void initService() {
         clusterService = new DefaultClusterService(executor);
         clientService = new DefaultClientService(executor);
+        clusterService.withClientService(clientService);
+        clientService.withClusterService(clusterService);
     }
 
     private void validate(int workers) {

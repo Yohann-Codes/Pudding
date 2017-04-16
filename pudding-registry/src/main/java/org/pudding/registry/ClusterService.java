@@ -1,5 +1,7 @@
 package org.pudding.registry;
 
+import org.pudding.common.model.ServiceMeta;
+
 import java.net.SocketAddress;
 
 /**
@@ -20,6 +22,29 @@ public interface ClusterService {
      * Disconnect with registry_cluster cluster.
      */
     void disconnectCluster();
+
+    /**
+     * Sync the service that has published.
+     *
+     * @param originId
+     * @param serviceMeta
+     */
+    void servicePublishSync(long originId, ServiceMeta serviceMeta);
+
+    /**
+     * Sync the service that has unpublished.
+     *
+     * @param originId
+     * @param serviceMeta
+     */
+    void serviceUnpublishSync(long originId, ServiceMeta serviceMeta);
+
+    /**
+     * Bind the {@link ClientService}.
+     *
+     * @param service
+     */
+    void withClientService(ClientService service);
 
     /**
      * Shutdown resource.
