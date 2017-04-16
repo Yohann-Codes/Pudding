@@ -22,9 +22,10 @@ public final class ProtocolHeader {
 
     /** Message Type, low 4 bits */
     public static final byte REQUEST = 0x01; // request
+    public static final byte CLUSTER_SYNC = 0x03; // cluster sync
     public static final byte RESPONSE = 0x02; // response
-    public static final byte HEATBEAT = 0x03; // heatbeat
-    public static final byte ACK = 0x04; // ack
+    public static final byte HEATBEAT = 0x04; // heatbeat
+    public static final byte ACK = 0x05; // ack
 
     /** Sign */
     public static final byte PUBLISH_SERVICE = 0x01; // publish service
