@@ -52,6 +52,23 @@ public class ServiceMeta implements Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+        if (o instanceof ServiceMeta) {
+            ServiceMeta meta = (ServiceMeta) o;
+            boolean name = meta.getName().equals(this.name);
+            boolean address = meta.getAddress().equals(this.address);
+            if (name && address) {
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
+
+    @Override
     public String toString() {
         return "ServiceMeta{" +
                 "name='" + name + '\'' +

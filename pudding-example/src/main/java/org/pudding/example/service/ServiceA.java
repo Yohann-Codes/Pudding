@@ -5,6 +5,6 @@ import java.io.Serializable;
 /**
  * @author Yohann.
  */
-public interface MyServiceA extends Serializable {
+public interface ServiceA extends Serializable {
     int add(int a, int b);
 }

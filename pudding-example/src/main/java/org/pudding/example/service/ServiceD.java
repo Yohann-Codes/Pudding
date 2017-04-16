@@ -5,6 +5,6 @@ import java.io.Serializable;
 /**
  * @author Yohann.
  */
-public interface ServiceC extends Serializable {
-    int multiply(int a, int b);
+public interface ServiceD extends Serializable {
+    int divide(int a, int b);
 }

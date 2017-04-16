@@ -3,9 +3,9 @@ package org.pudding.example.service;
 /**
  * @author Yohann.
  */
-public class ServiceCImpl implements ServiceC {
+public class ServiceDImpl implements ServiceD {
     @Override
-    public int multiply(int a, int b) {
-        return a * b;
+    public int divide(int a, int b) {
+        return a / b;
     }
 }

@@ -8,8 +8,8 @@ package org.pudding.common.constant;
 public class IdleTime {
 
     /** Acceptor readerIdleTime, default: 63s, allow 3 seconds delay */
-    public static final int READER_IDLE_TIME = 63;
+    public static final int READER_IDLE_TIME = 7;
 
     /** Connector writerIdleTime, default: 60s */
-    public static final int WRITER_IDLE_TIME = 60;
+    public static final int WRITER_IDLE_TIME = 5;
 }

@@ -3,7 +3,7 @@ package org.pudding.example.service;
 /**
  * @author Yohann.
  */
-public class MyServiceBImpl implements MyServiceB {
+public class ServiceBImpl implements ServiceB {
 
     @Override
     public int subtract(int a, int b) {
