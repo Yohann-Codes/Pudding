@@ -16,8 +16,8 @@ import java.util.concurrent.*;
 public abstract class AbstractRegistryService implements RegistryService {
     private static final Logger logger = Logger.getLogger(AbstractRegistryService.class);
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final BlockingQueue<ServiceMeta> taskQueue = new LinkedBlockingQueue<>(1024);
+    private final ExecutorService registerExecutor = Executors.newSingleThreadExecutor();
+    private final BlockingQueue<ServiceMeta> registerTaskQueue = new LinkedBlockingQueue<>(1024);
 
     // Not receive ack at present
     protected final ConcurrentMap<Long, MessageNonAck> messagesNonAck = Maps.newConcurrentHashMap();
@@ -26,13 +26,13 @@ public abstract class AbstractRegistryService implements RegistryService {
     private volatile boolean isShutdown = false;
 
     public AbstractRegistryService() {
-        executor.execute(new Runnable() {
+        registerExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 while (!isShutdown) {
                     ServiceMeta meta;
                     try {
-                        meta = taskQueue.take();
+                        meta = registerTaskQueue.take();
                         doRegister(meta);
                     } catch (InterruptedException e) {
                         logger.warn("take from taskQueue");
@@ -49,7 +49,7 @@ public abstract class AbstractRegistryService implements RegistryService {
     @Override
     public void register(ServiceMeta serviceMeta) {
         try {
-            taskQueue.put(serviceMeta);
+            registerTaskQueue.put(serviceMeta);
             logger.info("publish service: " + serviceMeta);
         } catch (InterruptedException e) {
             logger.warn("put service meta to taskQueue: " + serviceMeta);
@@ -58,7 +58,7 @@ public abstract class AbstractRegistryService implements RegistryService {
 
     @Override
     public void unregister(ServiceMeta serviceMeta) {
-
+        doUnregister(serviceMeta);
     }
 
     @Override
@@ -69,7 +69,7 @@ public abstract class AbstractRegistryService implements RegistryService {
     @Override
     public void shutdown() {
         isShutdown = true;
-        executor.shutdownNow();
+        registerExecutor.shutdownNow();
     }
 
     protected void checkNotShutdown() {

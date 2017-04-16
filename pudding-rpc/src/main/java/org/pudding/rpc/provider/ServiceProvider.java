@@ -6,7 +6,7 @@ import org.pudding.rpc.RpcConfig;
 /**
  * Service Provider:
  * <p>
- * 1) connect to registry_cluster.
+ * 1) connect to registry.
  * 2) start service.
  * 3) publish service.
  * 4) unpublish service.

@@ -29,7 +29,7 @@ public class RpcConfig {
     /** The number of worker thread, default: 2*CPU */
     private int workers = Runtime.getRuntime().availableProcessors() * 2;
 
-    /** The deadline of pushlishing service, default: 15s */
+    /** The deadline of pushlishing service, default: 30s */
     private int publishTimeout = Timeout.PUBLISH_TIMEOUT;
 
 

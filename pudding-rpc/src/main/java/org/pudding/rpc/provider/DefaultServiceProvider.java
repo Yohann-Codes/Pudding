@@ -2,9 +2,7 @@ package org.pudding.rpc.provider;
 
 import org.apache.log4j.Logger;
 import org.pudding.common.model.ServiceMeta;
-import org.pudding.common.utils.AddressUtil;
-import org.pudding.common.utils.Lists;
-import org.pudding.common.utils.Maps;
+import org.pudding.common.utils.*;
 import org.pudding.rpc.DefaultRegistryService;
 import org.pudding.rpc.RegistryService;
 import org.pudding.rpc.RpcConfig;
@@ -12,11 +10,16 @@ import org.pudding.transport.api.Channel;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The default implementation of {@link ServiceProvider}.
@@ -30,6 +33,8 @@ public class DefaultServiceProvider implements ServiceProvider {
 
     // Hold service that has started
     private final ConcurrentMap<ServiceMeta, Channel> startedServices = Maps.newConcurrentHashMap();
+    // Hold service that has published
+    private final ConcurrentSet<ServiceMeta> publishedServices = Sets.newConcurrentSet();
 
     private volatile boolean allPublished = false;
 
@@ -38,6 +43,10 @@ public class DefaultServiceProvider implements ServiceProvider {
 
     private int workers;
     private final ExecutorService executor;
+
+    public final Lock lock = new ReentrantLock();
+    public final Condition notComplete = lock.newCondition();
+    public volatile boolean timeout = true;
 
     public DefaultServiceProvider() {
         this(RpcConfig.getWorkers());
@@ -51,7 +60,7 @@ public class DefaultServiceProvider implements ServiceProvider {
     }
 
     private void initService() {
-        registryService = new DefaultRegistryService(executor);
+        registryService = new DefaultRegistryService(this, executor);
         clientService = new DefaultClientService(executor);
     }
 
@@ -121,6 +130,10 @@ public class DefaultServiceProvider implements ServiceProvider {
             throw new IllegalStateException("service not start: " + serviceMeta);
         }
         registryService.register(serviceMeta);
+        publishedServices.add(serviceMeta);
+
+        // blocking
+        waitCompletePublish();
         return this;
     }
 
@@ -136,7 +149,11 @@ public class DefaultServiceProvider implements ServiceProvider {
         // Entrue all services have started
         for (ServiceMeta meta : serviceMeta) {
             registryService.register(meta);
+            publishedServices.add(meta);
         }
+
+        // blocking
+        waitCompletePublish();
         return this;
     }
 
@@ -149,24 +166,40 @@ public class DefaultServiceProvider implements ServiceProvider {
             for (Map.Entry<ServiceMeta, Channel> entry : startedServices.entrySet()) {
                 ServiceMeta meta = entry.getKey();
                 registryService.register(meta);
+                publishedServices.add(meta);
             }
             allPublished = true;
         }
+
+        // blocking
+        waitCompletePublish();
         return this;
     }
 
     @Override
     public ServiceProvider unpulishService(ServiceMeta serviceMeta) {
+        registryService.unregister(serviceMeta);
+        publishedServices.remove(serviceMeta);
         return this;
     }
 
     @Override
     public ServiceProvider unpulishServices(ServiceMeta... serviceMeta) {
+        for (ServiceMeta meta : serviceMeta) {
+            registryService.unregister(meta);
+            publishedServices.remove(meta);
+        }
         return this;
     }
 
     @Override
     public ServiceProvider unpublishAllService() {
+        Iterator<ServiceMeta> it = publishedServices.iterator();
+        while (it.hasNext()) {
+            ServiceMeta meta = it.next();
+            registryService.unregister(meta);
+            it.remove();
+        }
         return this;
     }
 
@@ -195,6 +228,25 @@ public class DefaultServiceProvider implements ServiceProvider {
             }
         }
         return this;
+    }
+
+    /**
+     * Blocking current thread.
+     */
+    private void waitCompletePublish() {
+        lock.lock();
+        try {
+            notComplete.await(RpcConfig.getPublishTimeout(), TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            logger.warn("blockCurrent", e);
+        } finally {
+            lock.unlock();
+        }
+        if (timeout) {
+            logger.warn("publish service failed");
+        } else {
+            logger.info("publish service successful");
+        }
     }
 
     @Override
