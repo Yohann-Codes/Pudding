@@ -26,7 +26,5 @@ public class ProviderServer_1 {
         provider.startServices(serviceMetaA, serviceMetaB);
 
         provider.publishAllService();
-
-        provider.unpublishAllService();
     }
 }
