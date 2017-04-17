@@ -6,6 +6,7 @@ import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.model.SubscriberMeta;
 import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.utils.Maps;
+import org.pudding.common.utils.SequenceUtil;
 import org.pudding.registry.config.RegistryConfig;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
@@ -297,6 +298,10 @@ public class DefaultClientService extends AcknowledgeManager implements ClientSe
          * Handle publish service of cluster.
          */
         private void handleClusterPublishService(final long sequence, byte serializationType, byte[] body) {
+
+            // dispatch service to subscribers
+            dispatchService(serializationType, body);
+
             if (nonSyncPublishServices.containsKey(sequence)) {
                 // is the origin registry server
                 // response the client
@@ -345,9 +350,64 @@ public class DefaultClientService extends AcknowledgeManager implements ClientSe
         }
 
         /**
+         * Dispatch service to subscribers.
+         */
+        private void dispatchService(byte serializationType, byte[] body) {
+            Serializer serializer = SerializerFactory.getSerializer(serializationType);
+            ServiceMeta serviceMeta = serializer.readObject(body, ServiceMeta.class);
+
+            List<Channel> channels = subscriberContainer.getChannels(serviceMeta.getName());
+            if (channels != null && channels.size() > 0) {
+                for (Channel channel : channels) {
+                    serializationType = RegistryConfig.getSerializationType();
+                    serializer = SerializerFactory.getSerializer(serializationType);
+                    body = serializer.writeObject(serviceMeta);
+
+                    final long sequence = SequenceUtil.generateSequence();
+
+                    ProtocolHeader header = new ProtocolHeader();
+                    header.setMagic(ProtocolHeader.MAGIC)
+                            .setType(ProtocolHeader.type(RegistryConfig.getSerializationType(), ProtocolHeader.REQUEST))
+                            .setSign(ProtocolHeader.DISPATCH_SERVICE)
+                            .setSequence(sequence)
+                            .setStatus(0)
+                            .setBodyLength(body.length);
+
+                    final Message message = new Message();
+                    message.setHeader(header)
+                            .setBody(body);
+
+                    if (channel.isActive()) {
+                        channel.write(message, new ChannelListener() {
+                            @Override
+                            public void operationSuccess(Channel channel) {
+                                logger.info("dispatch-service-write success; sequence:" + sequence + "; channel:" + channel);
+
+                                MessageNonAck messageNonAck = new MessageNonAck(sequence, channel, message);
+                                messagesNonAck.put(sequence, messageNonAck);
+                                logger.info("put-ack:" + messageNonAck);
+                            }
+
+                            @Override
+                            public void operationFailure(Channel channel, Throwable cause) {
+                                logger.warn("dispatch-service-write failed; sequence:" + sequence + "; channel:" + channel, cause);
+                            }
+                        });
+                    } else {
+                        logger.warn("dispatch-service-write failed, channel is not active; sequence:" + sequence + "; channel:" + channel);
+                    }
+                }
+            }
+        }
+
+        /**
          * Handle unpublish service of cluster.
          */
         private void handleClusterUnpublishService(final long sequence, byte serializationType, byte[] body) {
+
+            // notice subscribers that service offline
+            noticeOffline(serializationType, body);
+
             if (nonSyncUnpublishServices.containsKey(sequence)) {
                 // is the origin registry server
                 // response the client
@@ -393,6 +453,57 @@ public class DefaultClientService extends AcknowledgeManager implements ClientSe
 
             long originId = sequence;
             clusterService.serviceUnpublishSync(originId, serviceMeta);
+        }
+
+        /**
+         * Notice subscribers that service offline.
+         */
+        private void noticeOffline(byte serializationType, byte[] body) {
+            Serializer serializer = SerializerFactory.getSerializer(serializationType);
+            ServiceMeta serviceMeta = serializer.readObject(body, ServiceMeta.class);
+
+            List<Channel> channels = subscriberContainer.getChannels(serviceMeta.getName());
+            if (channels != null && channels.size() > 0) {
+                for (Channel channel : channels) {
+                    serializationType = RegistryConfig.getSerializationType();
+                    serializer = SerializerFactory.getSerializer(serializationType);
+                    body = serializer.writeObject(serviceMeta);
+
+                    final long sequence = SequenceUtil.generateSequence();
+
+                    ProtocolHeader header = new ProtocolHeader();
+                    header.setMagic(ProtocolHeader.MAGIC)
+                            .setType(ProtocolHeader.type(RegistryConfig.getSerializationType(), ProtocolHeader.REQUEST))
+                            .setSign(ProtocolHeader.OFFLINE_SERVICE)
+                            .setSequence(sequence)
+                            .setStatus(0)
+                            .setBodyLength(body.length);
+
+                    final Message message = new Message();
+                    message.setHeader(header)
+                            .setBody(body);
+
+                    if (channel.isActive()) {
+                        channel.write(message, new ChannelListener() {
+                            @Override
+                            public void operationSuccess(Channel channel) {
+                                logger.info("notice-service-offline-write success; sequence:" + sequence + "; channel:" + channel);
+
+                                MessageNonAck messageNonAck = new MessageNonAck(sequence, channel, message);
+                                messagesNonAck.put(sequence, messageNonAck);
+                                logger.info("put-ack:" + messageNonAck);
+                            }
+
+                            @Override
+                            public void operationFailure(Channel channel, Throwable cause) {
+                                logger.warn("notice-service-offline-write failed; sequence:" + sequence + "; channel:" + channel, cause);
+                            }
+                        });
+                    } else {
+                        logger.warn("notice-service-offline-write failed, channel is not active; sequence:" + sequence + "; channel:" + channel);
+                    }
+                }
+            }
         }
 
         /**

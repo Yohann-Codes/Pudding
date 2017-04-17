@@ -290,6 +290,14 @@ public class DefaultRegistryService extends AbstractRegistryService {
                         case ProtocolHeader.REQUEST:
                             // Reply ack
                             replyAcknowledge(channel, sequence);
+                            switch (sign) {
+                                case ProtocolHeader.DISPATCH_SERVICE:
+                                    handleDispatchService(serializationType, body);
+                                    break;
+                                case ProtocolHeader.OFFLINE_SERVICE:
+                                    handleServiceOffline(serializationType, body);
+                                    break;
+                            }
                             break;
 
                         case ProtocolHeader.RESPONSE:
@@ -351,6 +359,24 @@ public class DefaultRegistryService extends AbstractRegistryService {
         }
 
         /**
+         * Handle the service has dispatched.
+         */
+        private void handleDispatchService(byte serializationType, byte[] body) {
+            Serializer serializer = SerializerFactory.getSerializer(serializationType);
+            ServiceMeta serviceMeta = serializer.readObject(body, ServiceMeta.class);
+            localServiceContainer.put(serviceMeta);
+        }
+
+        /**
+         * Handle the service offline.
+         */
+        private void handleServiceOffline(byte serializationType, byte[] body) {
+            Serializer serializer = SerializerFactory.getSerializer(serializationType);
+            ServiceMeta serviceMeta = serializer.readObject(body, ServiceMeta.class);
+            localServiceContainer.remove(serviceMeta);
+        }
+
+        /**
          * Handle the response message of publishing service.
          */
         private void handlePublishResponse(long sequence, int status) {
@@ -391,11 +417,7 @@ public class DefaultRegistryService extends AbstractRegistryService {
                 // cache the service to local
                 for (ServiceMeta meta : dispatchMeta.getServiceMetas()) {
                     localServiceContainer.put(meta);
-
-                    // ---------------------
-                    System.out.println("debug: " + localServiceContainer);
                 }
-
 
                 synchronized (nonCompleteSubServices) {
                     nonCompleteSubServices.remove(sequence);
