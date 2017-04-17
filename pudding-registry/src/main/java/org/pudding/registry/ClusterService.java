@@ -1,6 +1,7 @@
 package org.pudding.registry;
 
 import org.pudding.common.model.ServiceMeta;
+import org.pudding.common.model.SubscriberMeta;
 
 import java.net.SocketAddress;
 
@@ -38,6 +39,14 @@ public interface ClusterService {
      * @param serviceMeta
      */
     void serviceUnpublishSync(long originId, ServiceMeta serviceMeta);
+
+    /**
+     * Sync the subscriber.
+     *
+     * @param originId
+     * @param subscriberMeta
+     */
+    void serviceSubscribeSync(long originId, SubscriberMeta subscriberMeta);
 
     /**
      * Bind the {@link ClientService}.

@@ -2,6 +2,7 @@ package org.pudding.registry;
 
 import org.apache.log4j.Logger;
 import org.pudding.common.model.ServiceMeta;
+import org.pudding.common.model.SubscriberMeta;
 import org.pudding.common.utils.SequenceUtil;
 import org.pudding.registry.config.RegistryConfig;
 import org.pudding.serialization.api.Serializer;
@@ -138,7 +139,7 @@ public class DefaultClusterService extends AcknowledgeManager implements Cluster
                 channel.write(message, new ChannelListener() {
                     @Override
                     public void operationSuccess(Channel channel) {
-                        logger.info("sync-unpublish-service-write success; serviceMeta:" + serviceMeta + "; channel:" + channel);
+                        logger.info("sync-subscribe-service-write success; serviceMeta:" + serviceMeta + "; channel:" + channel);
 
                         MessageNonAck messageNonAck = new MessageNonAck(sequence, channel, message);
                         messagesNonAck.put(sequence, messageNonAck);
@@ -148,14 +149,60 @@ public class DefaultClusterService extends AcknowledgeManager implements Cluster
 
                     @Override
                     public void operationFailure(Channel channel, Throwable cause) {
-                        logger.warn("sync-unpublish-service-write failed; serviceMeta:" + serviceMeta + "; channel:" + channel);
+                        logger.warn("sync-subscribe-service-write failed; serviceMeta:" + serviceMeta + "; channel:" + channel);
                     }
                 });
             } else {
-                logger.warn("sync-unpublish-service-write failed: channel is not active; serviceMeta:" + serviceMeta + ", channel:" + channel);
+                logger.warn("sync-subscribe-service-write failed: channel is not active; serviceMeta:" + serviceMeta + ", channel:" + channel);
             }
         } else {
-            logger.warn("sync-unpublish-service-write failed: channel is null; serviceMeta:" + serviceMeta);
+            logger.warn("sync-subscribe-service-write failed: channel is null; serviceMeta:" + serviceMeta);
+        }
+    }
+
+    @Override
+    public void serviceSubscribeSync(long originId, final SubscriberMeta subscriberMeta) {
+        byte serializationType = RegistryConfig.getSerializationType();
+        Serializer serializer = SerializerFactory.getSerializer(serializationType);
+        byte[] body = serializer.writeObject(subscriberMeta);
+
+        final long sequence = originId;
+
+        ProtocolHeader header = new ProtocolHeader();
+        header.setMagic(ProtocolHeader.MAGIC)
+                .setType(ProtocolHeader.type(serializationType, ProtocolHeader.CLUSTER_SYNC))
+                .setSign(ProtocolHeader.SUBSCRIBE_SERVICE)
+                .setSequence(sequence)
+                .setStatus(0)
+                .setBodyLength(body.length);
+
+        final Message message = new Message();
+        message.setHeader(header)
+                .setBody(body);
+
+        if (channel != null) {
+            if (channel.isActive()) {
+                channel.write(message, new ChannelListener() {
+                    @Override
+                    public void operationSuccess(Channel channel) {
+                        logger.info("sync-subscribe-service-write success; subscriberMeta:" + subscriberMeta + "; channel:" + channel);
+
+                        MessageNonAck messageNonAck = new MessageNonAck(sequence, channel, message);
+                        messagesNonAck.put(sequence, messageNonAck);
+
+                        logger.info("put-ack:" + messageNonAck);
+                    }
+
+                    @Override
+                    public void operationFailure(Channel channel, Throwable cause) {
+                        logger.warn("sync-subscribe-service-write failed; subscriberMeta:" + subscriberMeta + "; channel:" + channel);
+                    }
+                });
+            } else {
+                logger.warn("sync-subscribe-service-write failed: channel is not active; subscriberMeta:" + subscriberMeta + ", channel:" + channel);
+            }
+        } else {
+            logger.warn("sync-subscribe-service-write failed: channel is null; subscriberMeta:" + subscriberMeta);
         }
     }
 

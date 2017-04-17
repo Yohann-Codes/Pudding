@@ -1,9 +1,11 @@
 package org.pudding.registry;
 
 import org.apache.log4j.Logger;
+import org.pudding.common.model.DispatchMeta;
 import org.pudding.common.model.ServiceMeta;
+import org.pudding.common.model.SubscriberMeta;
+import org.pudding.common.utils.AddressUtil;
 import org.pudding.common.utils.Maps;
-import org.pudding.common.utils.SequenceUtil;
 import org.pudding.registry.config.RegistryConfig;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
@@ -16,6 +18,7 @@ import org.pudding.transport.netty.NettyTransportFactory;
 import org.pudding.transport.protocol.ProtocolHeader;
 
 import java.net.SocketAddress;
+import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
@@ -32,10 +35,12 @@ public class DefaultClientService extends AcknowledgeManager implements ClientSe
 
     private final Acceptor acceptor = NettyTransportFactory.createTcpAcceptor();
 
-    private final ServiceRegContainer serviceRegContainer = new ServiceRegContainer();
+    private final RegistryContainer registryContainer = new RegistryContainer();
+    private final SubscriberContainer subscriberContainer = new SubscriberContainer();
 
     private final ConcurrentMap<Long, Channel> nonSyncPublishServices = Maps.newConcurrentHashMap();
     private final ConcurrentMap<Long, Channel> nonSyncUnpublishServices = Maps.newConcurrentHashMap();
+    private final ConcurrentMap<Long, Channel> nonSyncSubscribeServices = Maps.newConcurrentHashMap();
 
     private ClusterService clusterService;
 
@@ -78,16 +83,32 @@ public class DefaultClientService extends AcknowledgeManager implements ClientSe
 
     @Override
     public void registerService(ServiceMeta serviceMeta) {
-        serviceRegContainer.put(serviceMeta);
+        registryContainer.put(serviceMeta);
         logger.info("register-service success; serviceMeta:" + serviceMeta);
-        logger.info(serviceRegContainer);
+        logger.info(registryContainer);
     }
 
     @Override
     public void unregisterService(ServiceMeta serviceMeta) {
-        serviceRegContainer.remove(serviceMeta);
+        registryContainer.remove(serviceMeta);
         logger.info("unregister-service success; serviceMeta:" + serviceMeta);
-        logger.info(serviceRegContainer);
+        logger.info(registryContainer);
+    }
+
+    public boolean subscribeService(ServiceMeta serviceMeta, Channel channel) {
+
+        // look up service
+        List<ServiceMeta> services = registryContainer.get(serviceMeta.getName());
+        if (services != null) {
+            // save subscriber
+            String name = serviceMeta.getName();
+            String host = AddressUtil.host(channel.remoteAddress().toString());
+            subscriberContainer.putHost(name, host);
+            subscriberContainer.putChannel(name, channel);
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -139,6 +160,10 @@ public class DefaultClientService extends AcknowledgeManager implements ClientSe
                                     break;
                                 case ProtocolHeader.UNPUBLISH_SERVICE:
                                     handleUnpublishService(sequence, channel, serializationType, body);
+                                    break;
+                                case ProtocolHeader.SUBSCRIBE_SERVICE:
+                                    handleSubscribeService(sequence, channel, serializationType, body);
+                                    break;
                                 default:
                                     logger.warn("invalid sign: " + sign);
                             }
@@ -154,6 +179,9 @@ public class DefaultClientService extends AcknowledgeManager implements ClientSe
                                     break;
                                 case ProtocolHeader.UNPUBLISH_SERVICE:
                                     handleClusterUnpublishService(sequence, serializationType, body);
+                                    break;
+                                case ProtocolHeader.SUBSCRIBE_SERVICE:
+                                    handleClusterSubscribeService(sequence, serializationType, body);
                                     break;
                                 default:
                                     logger.warn("invalid sign: " + sign);
@@ -238,6 +266,31 @@ public class DefaultClientService extends AcknowledgeManager implements ClientSe
             nonSyncUnpublishServices.put(originId, channel);
 
             clusterService.serviceUnpublishSync(originId, serviceMeta);
+        }
+
+        /**
+         * Handle subscribe service.
+         */
+        private void handleSubscribeService(long sequence, Channel channel, byte serializationType, byte[] body) {
+            Serializer serializer = SerializerFactory.getSerializer(serializationType);
+            ServiceMeta serviceMeta = serializer.readObject(body, ServiceMeta.class);
+
+            // subscribe service
+            boolean subscribe = subscribeService(serviceMeta, channel);
+
+            if (subscribe) {
+                // subscribe successful
+                // cluster sync
+                // save origin regsitry server
+                long originId = sequence;
+                String host = AddressUtil.host(channel.remoteAddress().toString());
+                SubscriberMeta subscriberMeta = new SubscriberMeta(serviceMeta.getName(), host);
+                nonSyncSubscribeServices.put(originId, channel);
+                clusterService.serviceSubscribeSync(originId, subscriberMeta);
+            } else {
+                // subscribe failed
+                // do nothing, waiting for the client timeout
+            }
         }
 
         /**
@@ -342,15 +395,97 @@ public class DefaultClientService extends AcknowledgeManager implements ClientSe
             clusterService.serviceUnpublishSync(originId, serviceMeta);
         }
 
+        /**
+         * Handle subscribe service of cluster.
+         */
+        private void handleClusterSubscribeService(final long sequence, byte serializationType, byte[] body) {
+            Serializer serializer = SerializerFactory.getSerializer(serializationType);
+            SubscriberMeta subscriberMeta = serializer.readObject(body, SubscriberMeta.class);
 
-        @Override
-        public void handleConnection(Channel channel) {
-            // Noop
+            if (nonSyncSubscribeServices.containsKey(sequence)) {
+                // is the origin registry server
+                // response the client
+                Channel channel = nonSyncSubscribeServices.get(sequence);
+                nonSyncSubscribeServices.remove(sequence);
+
+                String serviceName = subscriberMeta.getServiceName();
+                List<ServiceMeta> metaList = registryContainer.get(serviceName);
+                if (metaList == null) {
+                    return;
+                }
+
+                DispatchMeta dispatchMeta = new DispatchMeta(serviceName, metaList);
+
+                serializationType = RegistryConfig.getSerializationType();
+                serializer = SerializerFactory.getSerializer(serializationType);
+                body = serializer.writeObject(dispatchMeta);
+
+                ProtocolHeader header = new ProtocolHeader();
+                header.setMagic(ProtocolHeader.MAGIC)
+                        .setType(ProtocolHeader.type(RegistryConfig.getSerializationType(), ProtocolHeader.RESPONSE))
+                        .setSign(ProtocolHeader.SUBSCRIBE_SERVICE)
+                        .setSequence(sequence)
+                        .setStatus(ProtocolHeader.SUCCESS)
+                        .setBodyLength(body.length);
+
+                Message message = new Message();
+                message.setHeader(header)
+                        .setBody(body);
+
+                if (channel.isActive()) {
+                    channel.write(message, new ChannelListener() {
+                        @Override
+                        public void operationSuccess(Channel channel) {
+                            logger.info("response-subscribe-write success; sequence:" + sequence + "; channel:" + channel);
+                        }
+
+                        @Override
+                        public void operationFailure(Channel channel, Throwable cause) {
+                            logger.warn("response-subscribe-write failed; sequence:" + sequence + "; channel:" + channel, cause);
+                        }
+                    });
+                } else {
+                    logger.warn("response-subscribe-write failed, channel is not active; sequence:" + sequence + "; channel:" + channel);
+                }
+
+                return;
+            }
+
+            // save subscriber's host
+            subscriberContainer.putHost(subscriberMeta.getServiceName(), subscriberMeta.getSubscriberHost());
+
+            long originId = sequence;
+            clusterService.serviceSubscribeSync(originId, subscriberMeta);
         }
 
         @Override
-        public void handleDisconnection(Channel channel) {
-            // Noop
+        public void handleConnection(final Channel channel) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    // check for subscribers
+                    String host = AddressUtil.host(channel.remoteAddress().toString());
+                    List<String> serviceNameList = subscriberContainer.getServiceName(host);
+                    for (String serviceName : serviceNameList) {
+                        subscriberContainer.putChannel(serviceName, channel);
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void handleDisconnection(final Channel channel) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    // clear subscribe channel
+                    String host = AddressUtil.host(channel.remoteAddress().toString());
+                    List<String> serviceNameList = subscriberContainer.getServiceName(host);
+                    for (String serviceName : serviceNameList) {
+                        subscriberContainer.clearChannel(serviceName);
+                    }
+                }
+            });
         }
     }
 }

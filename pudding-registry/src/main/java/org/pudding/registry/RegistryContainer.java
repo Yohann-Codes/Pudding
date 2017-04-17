@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @author Yohann.
  */
-public class ServiceRegContainer {
+public class RegistryContainer {
 
     private ConcurrentMap<String, List<ServiceMeta>> services = Maps.newConcurrentHashMap();
 
@@ -52,15 +52,10 @@ public class ServiceRegContainer {
         }
     }
 
-    public Map<String, List<ServiceMeta>> get(ServiceMeta meta) {
-        String name = meta.getName();
-
+    public List<ServiceMeta> get(String serviceName) {
         synchronized (services) {
-            if (services.containsKey(name)) {
-                List<ServiceMeta> metaList = services.get(name);
-                Map<String, List<ServiceMeta>> metas = Maps.newHashMap();
-                metas.put(name, metaList);
-                return metas;
+            if (services.containsKey(serviceName)) {
+                return services.get(serviceName);
             }
             return null;
         }
@@ -68,6 +63,6 @@ public class ServiceRegContainer {
 
     @Override
     public String toString() {
-        return "ServiceRegContainer: " +  services;
+        return "RegistryContainer: " +  services;
     }
 }

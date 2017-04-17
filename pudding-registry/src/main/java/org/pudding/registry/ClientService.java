@@ -1,9 +1,12 @@
 package org.pudding.registry;
 
+import org.pudding.common.model.DispatchMeta;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.transport.api.Channel;
 
 import java.net.SocketAddress;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Client service (interact with provider/consumer servers).
@@ -37,6 +40,13 @@ public interface ClientService {
      * @param serviceMeta
      */
     void unregisterService(ServiceMeta serviceMeta);
+
+    /**
+     * Subscribe service.
+     *
+     * @param serviceMeta
+     */
+    boolean subscribeService(ServiceMeta serviceMeta, Channel channel);
 
     /**
      * Bind the {@link ClusterService}.
