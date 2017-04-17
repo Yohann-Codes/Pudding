@@ -1,4 +1,4 @@
-package org.pudding.registry;
+package org.pudding.rpc.consumer;
 
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.utils.Lists;
@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @author Yohann.
  */
-public class ServiceRegContainer {
+public class LocalServiceContainer {
 
     private ConcurrentMap<String, List<ServiceMeta>> services = Maps.newConcurrentHashMap();
 
@@ -51,8 +51,17 @@ public class ServiceRegContainer {
         }
     }
 
+    public List<ServiceMeta> get(String serviceName) {
+        synchronized (services) {
+            if (services.containsKey(serviceName)) {
+                return services.get(serviceName);
+            }
+            return null;
+        }
+    }
+
     @Override
     public String toString() {
-        return "ServiceRegContainer: " +  services;
+        return "LocalServiceContainer: " +  services;
     }
 }

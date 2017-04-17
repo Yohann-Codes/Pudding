@@ -247,6 +247,7 @@ public class DefaultServiceProvider implements ServiceProvider {
         } else {
             logger.info("publish service successful");
         }
+        timeout = true; // reset
     }
 
     @Override

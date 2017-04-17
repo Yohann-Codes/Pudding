@@ -17,7 +17,9 @@ public abstract class AbstractRegistryService implements RegistryService {
     private static final Logger logger = Logger.getLogger(AbstractRegistryService.class);
 
     private final ExecutorService registerExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService subscribeExecutor = Executors.newSingleThreadExecutor();
     private final BlockingQueue<ServiceMeta> registerTaskQueue = new LinkedBlockingQueue<>(1024);
+    private final BlockingQueue<ServiceMeta> subscribeTaskQueue = new LinkedBlockingQueue<>(1024);
 
     // Not receive ack at present
     protected final ConcurrentMap<Long, MessageNonAck> messagesNonAck = Maps.newConcurrentHashMap();
@@ -26,6 +28,15 @@ public abstract class AbstractRegistryService implements RegistryService {
     private volatile boolean isShutdown = false;
 
     public AbstractRegistryService() {
+        initRegisterQueue();
+        initSubscribeQueue();
+
+        Thread t = new Thread(new AckTimeoutWatchdog(), "ack-timeout-watchdog");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void initRegisterQueue() {
         registerExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -40,10 +51,23 @@ public abstract class AbstractRegistryService implements RegistryService {
                 }
             }
         });
+    }
 
-        Thread t = new Thread(new AckTimeoutWatchdog(), "ack-timeout-watchdog");
-        t.setDaemon(true);
-        t.start();
+    private void initSubscribeQueue() {
+        subscribeExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                while (!isShutdown) {
+                    ServiceMeta meta;
+                    try {
+                        meta = subscribeTaskQueue.take();
+                        doSubscribe(meta);
+                    } catch (InterruptedException e) {
+                        logger.warn("take from taskQueue");
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -63,13 +87,19 @@ public abstract class AbstractRegistryService implements RegistryService {
 
     @Override
     public void subscribe(ServiceMeta serviceMeta) {
-
+        try {
+            subscribeTaskQueue.put(serviceMeta);
+            logger.info("subscribe service: " + serviceMeta);
+        } catch (InterruptedException e) {
+            logger.warn("put service meta to taskQueue: " + serviceMeta);
+        }
     }
 
     @Override
     public void shutdown() {
         isShutdown = true;
-        registerExecutor.shutdownNow();
+        registerExecutor.shutdown();
+        subscribeExecutor.shutdown();
     }
 
     protected void checkNotShutdown() {

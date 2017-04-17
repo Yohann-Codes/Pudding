@@ -1,9 +1,12 @@
 package org.pudding.rpc;
 
 import org.apache.log4j.Logger;
+import org.pudding.common.model.DispatchMeta;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.utils.Maps;
 import org.pudding.common.utils.SequenceUtil;
+import org.pudding.rpc.consumer.DefaultServiceConsumer;
+import org.pudding.rpc.consumer.LocalServiceContainer;
 import org.pudding.rpc.provider.DefaultServiceProvider;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
@@ -19,9 +22,6 @@ import org.pudding.transport.protocol.ProtocolHeader;
 import java.net.SocketAddress;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The default implementation of {@link RegistryService}.
@@ -37,17 +37,28 @@ public class DefaultRegistryService extends AbstractRegistryService {
     private final Connector connector = NettyTransportFactory.createTcpConnector();
 
     private final ConcurrentMap<Long, ServiceMeta> nonCompleteRegServices = Maps.newConcurrentHashMap();
+    private final ConcurrentMap<Long, ServiceMeta> nonCompleteSubServices = Maps.newConcurrentHashMap();
+
+    private final LocalServiceContainer localServiceContainer = new LocalServiceContainer();
 
     // Registry channel
     private volatile Channel channel;
     private volatile boolean isConnected = false;
 
     private final ExecutorService executor;
-    private final DefaultServiceProvider provider;
+
+    private DefaultServiceProvider provider;
+    private DefaultServiceConsumer consumer;
 
     public DefaultRegistryService(DefaultServiceProvider provider, ExecutorService executor) {
         connector.withProcessor(registryProcessor);
         this.provider = provider;
+        this.executor = executor;
+    }
+
+    public DefaultRegistryService(DefaultServiceConsumer consumer, ExecutorService executor) {
+        connector.withProcessor(registryProcessor);
+        this.consumer = consumer;
         this.executor = executor;
     }
 
@@ -195,8 +206,57 @@ public class DefaultRegistryService extends AbstractRegistryService {
     }
 
     @Override
-    protected void doSubscribe(ServiceMeta serviceMeta) {
+    protected void doSubscribe(final ServiceMeta serviceMeta) {
+        Runnable registerTask = new Runnable() {
 
+            @Override
+            public void run() {
+                byte serializationType = RpcConfig.getSerializationType();
+                Serializer serializer = SerializerFactory.getSerializer(serializationType);
+                byte[] body = serializer.writeObject(serviceMeta);
+
+                final long sequence = SequenceUtil.generateSequence();
+
+                ProtocolHeader header = new ProtocolHeader();
+                header.setMagic(ProtocolHeader.MAGIC)
+                        .setType(ProtocolHeader.type(serializationType, ProtocolHeader.REQUEST))
+                        .setSign(ProtocolHeader.SUBSCRIBE_SERVICE)
+                        .setSequence(sequence)
+                        .setStatus(0)
+                        .setBodyLength(body.length);
+
+                final Message message = new Message();
+                message.setHeader(header)
+                        .setBody(body);
+
+                if (channel == null) {
+                    throw new IllegalStateException("not connect with registry");
+                }
+                if (channel.isActive()) {
+                    channel.write(message, new ChannelListener() {
+                        @Override
+                        public void operationSuccess(Channel channel) {
+                            logger.info("subscribe-service-write success; serviceMeta:" + serviceMeta + "; channel:" + channel);
+
+                            MessageNonAck messageNonAck = new MessageNonAck(sequence, channel, message);
+                            messagesNonAck.put(sequence, messageNonAck);
+                            logger.info("put-ack:" + messageNonAck);
+
+                            nonCompleteSubServices.put(sequence, serviceMeta);
+                        }
+
+                        @Override
+                        public void operationFailure(Channel channel, Throwable cause) {
+                            logger.warn("subscribe-service-write failed; serviceMeta:" + serviceMeta + "; channel:" + channel);
+                        }
+                    });
+                } else {
+                    logger.warn("subscribe-service-write failed, channel is not active; serviceMeta:" + serviceMeta + "; channel:" + channel);
+                }
+            }
+        };
+
+        executor.execute(registerTask);
     }
 
     @Override
@@ -239,6 +299,9 @@ public class DefaultRegistryService extends AbstractRegistryService {
                                     break;
                                 case ProtocolHeader.UNPUBLISH_SERVICE:
                                     handleUnpublishResponse(status);
+                                    break;
+                                case ProtocolHeader.SUBSCRIBE_SERVICE:
+                                    handleSubscribeResponse(sequence, serializationType, body, status);
                                     break;
                             }
                             break;
@@ -314,6 +377,37 @@ public class DefaultRegistryService extends AbstractRegistryService {
                 logger.info("unpublish service successful");
             } else {
                 logger.warn("unpublish service failed");
+            }
+        }
+
+        /**
+         * Handle the response message of subscribing service.
+         */
+        private void handleSubscribeResponse(long sequence, byte serializationType, byte[] body, int status) {
+            if (status == ProtocolHeader.SUCCESS) {
+                // deserialize
+                Serializer serializer = SerializerFactory.getSerializer(serializationType);
+                DispatchMeta dispatchMeta = serializer.readObject(body, DispatchMeta.class);
+                // cache the service to local
+                for (ServiceMeta meta : dispatchMeta.getServiceMetas()) {
+                    localServiceContainer.put(meta);
+
+                    // ---------------------
+                    System.out.println("debug: " + localServiceContainer);
+                }
+
+
+                synchronized (nonCompleteSubServices) {
+                    nonCompleteSubServices.remove(sequence);
+                    if (nonCompleteSubServices.size() == 0) {
+                        // all service have subscribe successful
+                        // notify the thread of subscribing service
+                        consumer.timeout = false;
+                        consumer.lock.lock();
+                        consumer.notComplete.signalAll();
+                        consumer.lock.unlock();
+                    }
+                }
             }
         }
 
