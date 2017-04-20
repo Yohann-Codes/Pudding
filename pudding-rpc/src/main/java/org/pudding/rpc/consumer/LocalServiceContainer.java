@@ -14,20 +14,20 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class LocalServiceContainer {
 
-    private ConcurrentMap<String, List<ServiceMeta>> services = Maps.newConcurrentHashMap();
+    private static final ConcurrentMap<String, List<ServiceMeta>> SERVICES = Maps.newConcurrentHashMap();
 
     public void put(ServiceMeta meta) {
         String name = meta.getName();
         List<ServiceMeta> metas;
 
-        synchronized (services) {
-            if (services.containsKey(name)) {
-                metas = services.get(name);
+        synchronized (SERVICES) {
+            if (SERVICES.containsKey(name)) {
+                metas = SERVICES.get(name);
                 metas.add(meta);
             } else {
                 metas = Lists.newArrayList();
                 metas.add(meta);
-                services.put(name, metas);
+                SERVICES.put(name, metas);
             }
         }
     }
@@ -35,9 +35,9 @@ public class LocalServiceContainer {
     public void remove(ServiceMeta meta) {
         String name = meta.getName();
 
-        synchronized (services) {
-            if (services.containsKey(name)) {
-                List<ServiceMeta> metaList = services.get(name);
+        synchronized (SERVICES) {
+            if (SERVICES.containsKey(name)) {
+                List<ServiceMeta> metaList = SERVICES.get(name);
                 for (ServiceMeta m : metaList) {
                     if (m.equals(meta)) {
                         metaList.remove(m);
@@ -45,16 +45,16 @@ public class LocalServiceContainer {
                     }
                 }
                 if (metaList.size() == 0) {
-                    services.remove(name);
+                    SERVICES.remove(name);
                 }
             }
         }
     }
 
     public List<ServiceMeta> get(String serviceName) {
-        synchronized (services) {
-            if (services.containsKey(serviceName)) {
-                return services.get(serviceName);
+        synchronized (SERVICES) {
+            if (SERVICES.containsKey(serviceName)) {
+                return SERVICES.get(serviceName);
             }
             return null;
         }
@@ -62,6 +62,6 @@ public class LocalServiceContainer {
 
     @Override
     public String toString() {
-        return "LocalServiceContainer: " +  services;
+        return "LocalServiceContainer: " + SERVICES;
     }
 }

@@ -1,60 +1,125 @@
 package org.pudding.rpc.consumer.invoker;
 
+import org.pudding.common.constant.LoadBalanceStrategy;
 import org.pudding.rpc.RpcConfig;
-import org.pudding.rpc.consumer.config.ConsumerConfig;
 
 import java.lang.reflect.Proxy;
+import java.util.concurrent.ExecutorService;
 
 /**
- * 代理服务工厂.
+ * The proxy service factory.
  *
  * @author Yohann.
  */
-public class ProxyFactory {
+public class ServiceProxyFactory {
+
+    protected static ExecutorService executor;
 
     /**
-     * 创建同步代理服务.
-     * 用此代理调用方法为同步操作，会使请求线程阻塞.
+     * Create a synchronous invocation proxy service.
+     * <p>
+     * Notice:
+     * The request thread will be blocked when invoking a service.
      *
      * @param clazz
      * @param <T>
-     * @return
      */
     public static <T> T createSyncProxy(Class<T> clazz) {
-        return createSyncProxy(clazz, RpcConfig.getInvokeTimeout());
+        return createSyncProxy(clazz, RpcConfig.getInvokeTimeout(), RpcConfig.getLoadBalanceStrategy());
     }
 
     /**
-     * 创建同步代理服务.
-     * 用此代理调用方法为同步操作，会使请求线程阻塞.
+     * Create a synchronous invocation proxy service.
+     * <p>
+     * Notice:
+     * The request thread will be blocked when invoking a service.
      *
      * @param clazz
      * @param <T>
-     * @return
+     * @param timeout
      */
     public static <T> T createSyncProxy(Class<T> clazz, int timeout) {
+        return createSyncProxy(clazz, timeout, RpcConfig.getLoadBalanceStrategy());
+    }
+
+    /**
+     * Create a synchronous invocation proxy service.
+     * <p>
+     * Notice:
+     * The request thread will be blocked when invoking a service.
+     *
+     * @param clazz
+     * @param <T>
+     * @param loadBalanceStrategy
+     */
+    public static <T> T createSyncProxy(Class<T> clazz, LoadBalanceStrategy loadBalanceStrategy) {
+        return createSyncProxy(clazz, RpcConfig.getInvokeTimeout(), loadBalanceStrategy);
+    }
+
+    /**
+     * Create a synchronous invocation proxy service.
+     * <p>
+     * Notice:
+     * The request thread will be blocked when invoking a service.
+     *
+     * @param clazz
+     * @param <T>
+     * @param timeout
+     * @param loadBalanceStrategy
+     */
+    public static <T> T createSyncProxy(Class<T> clazz, int timeout, LoadBalanceStrategy loadBalanceStrategy) {
         if (timeout < 0) {
             throw new IllegalArgumentException("timeout: " + timeout);
         }
 
         @SuppressWarnings("unchecked")
         T proxy = (T) Proxy.newProxyInstance(clazz.getClassLoader(),
-                new Class[]{clazz}, new SyncInvocationHandler(timeout));
+                new Class[]{clazz}, new SyncInvocationHandler(timeout, loadBalanceStrategy, executor));
         return proxy;
     }
 
     /**
-     * 创建异步代理服务.
-     * 用此代理调用方法为异步操作，调用后直接返回，不会使线程阻塞.
+     * Create a asynchronous invocation proxy service.
      *
      * @param clazz
      * @param <T>
-     * @return
      */
     public static <T> T createAsyncProxy(Class<T> clazz) {
+        return createAsyncProxy(clazz, RpcConfig.getInvokeTimeout(), RpcConfig.getLoadBalanceStrategy());
+    }
+
+    /**
+     * Create a asynchronous invocation proxy service.
+     *
+     * @param clazz
+     * @param <T>
+     * @param timeout
+     */
+    public static <T> T createAsyncProxy(Class<T> clazz, int timeout) {
+        return createAsyncProxy(clazz, timeout, RpcConfig.getLoadBalanceStrategy());
+    }
+
+    /**
+     * Create a asynchronous invocation proxy service.
+     *
+     * @param clazz
+     * @param <T>
+     * @param loadBalanceStrategy
+     */
+    public static <T> T createAsyncProxy(Class<T> clazz, LoadBalanceStrategy loadBalanceStrategy) {
+        return createAsyncProxy(clazz, RpcConfig.getInvokeTimeout(), loadBalanceStrategy);
+    }
+
+    /**
+     * Create a asynchronous invocation proxy service.
+     *
+     * @param clazz
+     * @param <T>
+     */
+    public static <T> T createAsyncProxy(Class<T> clazz, int timeout, LoadBalanceStrategy loadBalanceStrategy) {
         @SuppressWarnings("unchecked")
         T proxy = (T) Proxy.newProxyInstance(clazz.getClassLoader(),
-                new Class[]{clazz}, new AsyncInvocationHandler());
+                new Class[]{clazz}, new AsyncInvocationHandler(timeout, loadBalanceStrategy, executor));
         return proxy;
     }
 }

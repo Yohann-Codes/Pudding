@@ -1,10 +1,13 @@
 package org.pudding.rpc;
 
+import org.pudding.common.constant.LoadBalanceStrategy;
 import org.pudding.common.constant.SerializerType;
 import org.pudding.common.constant.Timeout;
 import org.pudding.common.utils.Lists;
 
 import java.util.List;
+
+import static org.pudding.common.constant.LoadBalanceStrategy.*;
 
 /**
  * Configure the {@link org.pudding.rpc.provider.ServiceProvider} and {@link org.pudding.rpc.consumer.ServiceConsumer}.
@@ -17,6 +20,9 @@ public class RpcConfig {
 
     static {
         RPC_CONFIG = new RpcConfig();
+    }
+
+    private RpcConfig() {
     }
 
 
@@ -32,6 +38,14 @@ public class RpcConfig {
     /** The deadline of pushlishing service, default: 30s */
     private int publishTimeout = Timeout.PUBLISH_TIMEOUT;
 
+    /** The deadline of subscribing service, default: 30s */
+    private int subscribeTimeout = Timeout.SUBSCRIBE_TIMEOUT;
+
+    /** The deadline of invoking service, default: 10s */
+    private int invokeTimout = Timeout.INVOKE_TIMEOUT;
+
+    /** The load balance strategy, default: weighted random */
+    private LoadBalanceStrategy loadBalanceStrategy = WEIGHTED_RADOM;
 
     /**
      * Set the serialization type.
@@ -39,6 +53,7 @@ public class RpcConfig {
     public static void setSerializationType(byte serializationType) {
         RPC_CONFIG.serializationType = serializationType;
     }
+
 
     /**
      * Return the serialization type.
@@ -97,5 +112,47 @@ public class RpcConfig {
      */
     public static int getPublishTimeout() {
         return RPC_CONFIG.publishTimeout;
+    }
+
+    /**
+     * Set the deadline of subscribing service.
+     */
+    public static void setSubscribeTimeout(int subscribeTimeout) {
+        RPC_CONFIG.subscribeTimeout = subscribeTimeout;
+    }
+
+    /**
+     * Return the deadline of subscribing service.
+     */
+    public static int getSubscribeTimeout() {
+        return RPC_CONFIG.subscribeTimeout;
+    }
+
+    /**
+     * Set the deadline of invoking service.
+     */
+    public static void setInvokeTimeout(int invokeTimeout) {
+        RPC_CONFIG.invokeTimout = invokeTimeout;
+    }
+
+    /**
+     * Return the deadline of invoking service.
+     */
+    public static int getInvokeTimeout() {
+        return RPC_CONFIG.invokeTimout;
+    }
+
+    /**
+     * Set the strategy of loading balance.
+     */
+    public static void setLoadBalanceStrategy(LoadBalanceStrategy loadBalanceStrategy) {
+        RPC_CONFIG.loadBalanceStrategy = loadBalanceStrategy;
+    }
+
+    /**
+     * Return the strategy of loading balance.
+     */
+    public static LoadBalanceStrategy getLoadBalanceStrategy() {
+        return RPC_CONFIG.loadBalanceStrategy;
     }
 }

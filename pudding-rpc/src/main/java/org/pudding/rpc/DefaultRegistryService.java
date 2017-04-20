@@ -7,6 +7,7 @@ import org.pudding.common.utils.Maps;
 import org.pudding.common.utils.SequenceUtil;
 import org.pudding.rpc.consumer.DefaultServiceConsumer;
 import org.pudding.rpc.consumer.LocalServiceContainer;
+import org.pudding.rpc.consumer.router.Router;
 import org.pudding.rpc.provider.DefaultServiceProvider;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
@@ -271,13 +272,13 @@ public class DefaultRegistryService extends AbstractRegistryService {
     private class RegistryProcessor implements Processor {
 
         @Override
-        public void handleMessage(final Channel channel, final Message holder) {
+        public void handleMessage(final Channel channel, final Message message) {
             executor.execute(new Runnable() {
 
                 @Override
                 public void run() {
-                    ProtocolHeader header = holder.getHeader();
-                    byte[] body = holder.getBody();
+                    ProtocolHeader header = message.getHeader();
+                    byte[] body = message.getBody();
 
                     // Parse header
                     byte serializationType = ProtocolHeader.serializationType(header.getType());

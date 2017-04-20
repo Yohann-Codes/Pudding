@@ -1,4 +1,4 @@
-package org.pudding.registry;
+package org.pudding.rpc.consumer;
 
 import org.apache.log4j.Logger;
 import org.pudding.common.utils.Maps;
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Yohann.
  */
-public class AcknowledgeManager {
+public abstract class AcknowledgeManager {
     private static final Logger logger = Logger.getLogger(AcknowledgeManager.class);
 
     // Not receive ack at present

@@ -7,6 +7,7 @@ import org.pudding.common.utils.Lists;
 import org.pudding.rpc.DefaultRegistryService;
 import org.pudding.rpc.RegistryService;
 import org.pudding.rpc.RpcConfig;
+import org.pudding.rpc.consumer.invoker.ServiceProxyFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -25,7 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @author Yohann.
  */
-public class DefaultServiceConsumer implements ServiceConsumer {
+public class DefaultServiceConsumer extends ServiceProxyFactory implements ServiceConsumer {
     private static final Logger logger = Logger.getLogger(DefaultServiceConsumer.class);
 
     private RegistryService registryService;
@@ -45,6 +46,7 @@ public class DefaultServiceConsumer implements ServiceConsumer {
         validate(workers);
         this.workers = workers;
         executor = Executors.newFixedThreadPool(workers);
+        ServiceProxyFactory.executor = executor;
         initService();
     }
 
@@ -112,7 +114,7 @@ public class DefaultServiceConsumer implements ServiceConsumer {
     private void waitCompletePublish() {
         lock.lock();
         try {
-            notComplete.await(RpcConfig.getPublishTimeout(), TimeUnit.SECONDS);
+            notComplete.await(RpcConfig.getSubscribeTimeout(), TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             logger.warn("blockCurrent", e);
         } finally {

@@ -1,9 +1,17 @@
 package org.pudding.rpc.consumer.load_balance;
 
+import org.pudding.common.model.ServiceMeta;
+
 /**
- * The load balance strategy.
+ * load balancer.
+ * Select a {@link ServiceMeta}.
  *
  * @author Yohann.
  */
-public class LoadBalance {
+public interface LoadBalancer {
+
+    /**
+     * Select a channel of specific service.
+     */
+    ServiceMeta select(String serviceName);
 }

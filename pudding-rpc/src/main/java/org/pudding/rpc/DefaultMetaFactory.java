@@ -76,8 +76,8 @@ public class DefaultMetaFactory implements ServiceMetaFactory {
     }
 
     private void checkWeight(int weight) {
-        if (weight < 1 || weight > 99) {
-            throw new IllegalArgumentException("invalid weight: " + weight);
+        if (weight < 1 || weight > 10) {
+            throw new IllegalArgumentException("invalid weight: " + weight + ", must be (1, 10]");
         }
     }
 
