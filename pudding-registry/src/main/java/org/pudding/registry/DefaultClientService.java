@@ -136,13 +136,13 @@ public class DefaultClientService extends AcknowledgeManager implements ClientSe
     private class ClientProcessor implements Processor {
 
         @Override
-        public void handleMessage(final Channel channel, final Message holder) {
+        public void handleMessage(final Channel channel, final Message message) {
             executor.execute(new Runnable() {
 
                 @Override
                 public void run() {
-                    ProtocolHeader header = holder.getHeader();
-                    byte[] body = holder.getBody();
+                    ProtocolHeader header = message.getHeader();
+                    byte[] body = message.getBody();
 
                     // Parse header
                     byte serializationType = ProtocolHeader.serializationType(header.getType());
