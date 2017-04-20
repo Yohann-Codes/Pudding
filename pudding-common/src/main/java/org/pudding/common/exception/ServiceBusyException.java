@@ -1,25 +1,25 @@
 package org.pudding.common.exception;
 
 /**
- * Invocation timeout.
+ * Service busy.
  *
  * @author Yohann.
  */
-public class InvokeTimeoutException extends Exception {
+public class ServiceBusyException extends RuntimeException {
 
-    public InvokeTimeoutException() {
+    public ServiceBusyException() {
         super();
     }
 
-    public InvokeTimeoutException(String messge) {
+    public ServiceBusyException(String messge) {
         super(messge);
     }
 
-    public InvokeTimeoutException(Throwable cause) {
+    public ServiceBusyException(Throwable cause) {
         super(cause);
     }
 
-    public InvokeTimeoutException(String messge, Throwable cause) {
+    public ServiceBusyException(String messge, Throwable cause) {
         super(messge, cause);
     }
 }

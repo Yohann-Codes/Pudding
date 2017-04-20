@@ -1,25 +1,25 @@
 package org.pudding.common.exception;
 
 /**
- * Invocation failed.
+ * Not find service.
  *
  * @author Yohann.
  */
-public class InvokeFailedException extends RuntimeException {
+public class NotFindServiceException extends RuntimeException {
 
-    public InvokeFailedException() {
+    public NotFindServiceException() {
         super();
     }
 
-    public InvokeFailedException(String messge) {
+    public NotFindServiceException(String messge) {
         super(messge);
     }
 
-    public InvokeFailedException(Throwable cause) {
+    public NotFindServiceException(Throwable cause) {
         super(cause);
     }
 
-    public InvokeFailedException(String messge, Throwable cause) {
+    public NotFindServiceException(String messge, Throwable cause) {
         super(messge, cause);
     }
 }

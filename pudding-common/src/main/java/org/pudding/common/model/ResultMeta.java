@@ -11,27 +11,22 @@ public class ResultMeta implements Serializable {
 
     // 返回值
     private Object result;
-    // 结果码
-    private int resultCode;
 
-    public ResultMeta(Object result, int resultCode) {
+    public ResultMeta(Object result) {
         this.result = result;
-        this.resultCode = resultCode;
+    }
+
+    public void setResult(Object result) {
+        this.result = result;
     }
 
     public Object getResult() {
         return result;
     }
 
-    public int getResultCode() {
-        return resultCode;
-    }
-
     @Override
     public String toString() {
         return "ResultMeta{" +
-                "result=" + result +
-                ", resultCode=" + resultCode +
-                '}';
+                "result=" + result + '}';
     }
 }

@@ -1,12 +1,21 @@
 package org.pudding.common.constant;
 
 /**
- * 负载均衡策略.
+ * Load balancing strategy.
  *
  * @author Yohann.
  */
-public class LoadBalanceStrategy {
+public enum LoadBalanceStrategy {
 
-    /** 随机 */
-    public static final byte RANDOM = 0x01;
+    /** Random */
+    RANDOM,
+
+    /** Round */
+    ROUND,
+
+    /** Weighted random */
+    WEIGHTED_RADOM,
+
+    /** Weighted round */
+    WEIGHTED_ROUND
 }

@@ -1,28 +1,25 @@
 package org.pudding.common.exception;
 
 /**
- * Services do not conform to the requirements.
- *
- * 1). The service can only implement an interface.
- * 2). The service interface must extend {@link java.io.Serializable}.
+ * Invocation timeout.
  *
  * @author Yohann.
  */
-public class IllegalServiceException extends RuntimeException {
+public class InvokeTimeoutException extends RuntimeException {
 
-    public IllegalServiceException() {
+    public InvokeTimeoutException() {
         super();
     }
 
-    public IllegalServiceException(String messge) {
+    public InvokeTimeoutException(String messge) {
         super(messge);
     }
 
-    public IllegalServiceException(Throwable cause) {
+    public InvokeTimeoutException(Throwable cause) {
         super(cause);
     }
 
-    public IllegalServiceException(String messge, Throwable cause) {
+    public InvokeTimeoutException(String messge, Throwable cause) {
         super(messge, cause);
     }
 }
