@@ -13,9 +13,9 @@ public interface Processor {
      * Handle network message.
      *
      * @param channel
-     * @param holder
+     * @param message
      */
-    void handleMessage(Channel channel, Message holder);
+    void handleMessage(Channel channel, Message message);
 
     /**
      * Connect with ...

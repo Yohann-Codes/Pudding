@@ -37,7 +37,7 @@ public final class ProtocolHeader {
 
     /** Status */
     public static final int SUCCESS = 200; // success
-    public static final int SERVER_ERROR = 501; // server error
+    public static final int NOT_FIND_SERVICE = 501; // not find service
     public static final int SERVER_BUSY = 502; // server busy
 
     private short magic;
