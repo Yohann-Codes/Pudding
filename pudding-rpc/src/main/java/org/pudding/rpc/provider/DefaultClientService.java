@@ -6,6 +6,7 @@ import org.pudding.common.model.ResultMeta;
 import org.pudding.common.model.ServiceMeta;
 import org.pudding.common.utils.AddressUtil;
 import org.pudding.rpc.RpcConfig;
+import org.pudding.rpc.provider.flow_control.FlowController;
 import org.pudding.serialization.api.Serializer;
 import org.pudding.serialization.api.SerializerFactory;
 import org.pudding.transport.api.Acceptor;
@@ -35,10 +36,12 @@ public class DefaultClientService implements ClientService {
     private volatile boolean isShutdown = false;
 
     private final ExecutorService executor;
+    private final FlowController flowController;
 
     public DefaultClientService(ExecutorService executor) {
         acceptor.withProcessor(clientProcessor);
         this.executor = executor;
+        flowController = new FlowController();
     }
 
     @Override
@@ -159,6 +162,12 @@ public class DefaultClientService implements ClientService {
          * Handle invocation.
          */
         private void handleInvokeService(final long sequence, Channel channel, byte serializationType, byte[] body) {
+            // check the flow
+            if (flowController.overFlowThreshold()) {
+                serviceBusy(sequence, channel);
+                return;
+            }
+
             Serializer serializer = SerializerFactory.getSerializer(serializationType);
             InvokeMeta invokeMeta = serializer.readObject(body, InvokeMeta.class);
 
@@ -211,6 +220,27 @@ public class DefaultClientService implements ClientService {
                 } else {
                     logger.warn("invoke-response-write failed, channel is not active; resultMeta:" + resultMeta + "; channel:" + channel);
                 }
+            }
+        }
+
+        /**
+         * Over flow threshold。
+         */
+        private void serviceBusy(long sequence, Channel channel) {
+            if (channel.isActive()) {
+                ProtocolHeader header = new ProtocolHeader();
+                header.setMagic(ProtocolHeader.MAGIC)
+                        .setType(ProtocolHeader.type((byte) 0, ProtocolHeader.RESPONSE))
+                        .setSign(ProtocolHeader.INVOKE_SERVICE)
+                        .setSequence(sequence)
+                        .setStatus(ProtocolHeader.SERVER_BUSY)
+                        .setBodyLength(0);
+
+                final Message message = new Message();
+                message.setHeader(header)
+                        .setBody(new byte[0]);
+
+                channel.write(message);
             }
         }
 

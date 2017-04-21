@@ -1,5 +1,6 @@
 package org.pudding.rpc;
 
+import org.pudding.common.constant.Flow;
 import org.pudding.common.constant.LoadBalanceStrategy;
 import org.pudding.common.constant.SerializerType;
 import org.pudding.common.constant.Timeout;
@@ -46,6 +47,9 @@ public class RpcConfig {
 
     /** The load balance strategy, default: weighted random */
     private LoadBalanceStrategy loadBalanceStrategy = WEIGHTED_RADOM;
+
+    /** The thresold value of invocation flow */
+    private int flowThresold = Flow.FLOW_THRESHOLD;
 
     /**
      * Set the serialization type.
@@ -154,5 +158,19 @@ public class RpcConfig {
      */
     public static LoadBalanceStrategy getLoadBalanceStrategy() {
         return RPC_CONFIG.loadBalanceStrategy;
+    }
+
+    /**
+     * Set the flow thresold value.
+     */
+    public static void setFlowThresold(int flowThresold) {
+        RPC_CONFIG.flowThresold = flowThresold;
+    }
+
+    /**
+     * Return the flow thresold value.
+     */
+    public static int getFlowThresold() {
+        return RPC_CONFIG.flowThresold;
     }
 }
