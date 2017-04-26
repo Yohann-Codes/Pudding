@@ -28,7 +28,11 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         in.markReaderIndex();
 
         // Check magic
-        checkMagic(in);
+        if (in.readShort() != ProtocolHeader.MAGIC) {
+            logger.warn("wrong magic " + in.readShort() + " != " + ProtocolHeader.MAGIC);
+            in.resetReaderIndex();
+            return;
+        }
 
         byte type = in.readByte();
         byte sign = in.readByte();
@@ -36,8 +40,12 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         int status = in.readInt();
         int bodyLength = in.readInt();
 
-        // Check bodylength
-        checkBodyLength(in, bodyLength);
+        // Check body length
+        if (in.readableBytes() < bodyLength) {
+            logger.warn("readable bytes less than body " + in.readableBytes() + " < " + bodyLength);
+            in.resetReaderIndex();
+            return;
+        }
 
         byte[] body = new byte[bodyLength];
         in.readBytes(body);
@@ -55,21 +63,5 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
                 .setBody(body);
 
         out.add(holder);
-    }
-
-    private void checkMagic(ByteBuf in) {
-        if (in.readShort() != ProtocolHeader.MAGIC) {
-            logger.info("wrong magic " + in.readShort() + " != " + ProtocolHeader.MAGIC);
-            in.resetReaderIndex();
-            return;
-        }
-    }
-
-    private void checkBodyLength(ByteBuf in, int bodyLength) {
-        if (in.readableBytes() < bodyLength) {
-            logger.info("readable bytes less than body " + in.readableBytes() + " < " + bodyLength);
-            in.resetReaderIndex();
-            return;
-        }
     }
 }
